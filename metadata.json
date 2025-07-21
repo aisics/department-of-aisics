@@ -2,35 +2,43 @@
     "categories": [
         {
             "name": "CATEGORY_BASICS",
-            "path": "Basics"
+            "path": "Basics",
+            "icon": "📚"
         },
         {
             "name": "CATEGORY_NEURAL_NETWORKS",
-            "path": "Neural Networks"
+            "path": "Neural Networks",
+            "icon": "🧠"
         },
         {
             "name": "CATEGORY_MACHINE_LEARNING",
-            "path": "Machine Learning"
+            "path": "Machine Learning",
+            "icon": "🤖"
         },
         {
             "name": "CATEGORY_DEEP_LEARNING",
-            "path": "Deep Learning"
+            "path": "Deep Learning",
+            "icon": "🌊"
         },
         {
             "name": "CATEGORY_NLP",
-            "path": "NLP"
+            "path": "NLP",
+            "icon": "🗣️"
         },
         {
             "name": "CATEGORY_CV",
-            "path": "CV"
+            "path": "CV",
+            "icon": "👁️"
         },
         {
             "name": "CATEGORY_TUTORIALS",
-            "path": "Tutorials"
+            "path": "Tutorials",
+            "icon": "📝"
         },
         {
             "name": "CATEGORY_ETHICS",
-            "path": "Resources"
+            "path": "Resources",
+            "icon": "⚖️"
         }
     ]
 }

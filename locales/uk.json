@@ -1,6 +1,4 @@
 {
-  "SITE.TITLE": "Кафедра ШІзики",
-  "SITE.SUBTITLE": "",
   "CATEGORY_DEEP_LEARNING": "Глибоке навчання",
   "CATEGORY_BASICS": "Базові поняття",
   "CATEGORY_NEURAL_NETWORKS": "Нейронні мережі",
@@ -8,5 +6,13 @@
   "CATEGORY_NLP": "Обробка природної мови",
   "CATEGORY_CV": "Комп'ютерний зір",
   "CATEGORY_TUTORIALS": "Туторіали",
-  "CATEGORY_ETHICS": "Етика"
+  "CATEGORY_ETHICS": "Етика",
+  "site.title": "Кафедра ШІзики",
+  "site.subtitle": "Навчайтеся • Досліджуйте • Відкривайте",
+  "hero.title": "Штучний інтелект це просто!",
+  "hero.description": "Обирайте тему, що вас цікавить, і починайте навчатися!",
+  "nav.chooseJourney": "Оберіть ваш шлях",
+  "cta.startLearning": "Почати навчатися",
+  "cta.gitHub": "GitHub",
+  "search.placeholder": "Пошук"
 } 

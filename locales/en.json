@@ -1,6 +1,4 @@
 {
-  "SITE.TITLE": "Department of AIsics",
-  "SITE.SUBTITLE": "",
   "CATEGORY_DEEP_LEARNING": "Deep Learning",
   "CATEGORY_BASICS": "Basics",
   "CATEGORY_NEURAL_NETWORKS": "Neural Networks",
@@ -8,5 +6,13 @@
   "CATEGORY_NLP": "Natural Language Processing",
   "CATEGORY_CV": "Computer Vision",
   "CATEGORY_TUTORIALS": "Tutorials",
-  "CATEGORY_ETHICS": "Ethics"
+  "CATEGORY_ETHICS": "Ethics",
+  "site.title": "AI Education",
+  "site.subtitle": "Learn • Explore • Discover",
+  "hero.title": "Artificial Intelligence is simple!",
+  "hero.description": "Choose the topic you are interested in and start learning!",
+  "nav.chooseJourney": "Choose your journey",
+  "cta.startLearning": "Start learning",
+  "cta.gitHub": "GitHub",
+  "search.placeholder": "Search"
 } 

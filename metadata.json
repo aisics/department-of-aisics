@@ -1,0 +1,36 @@
+{
+    "categories": [
+        {
+            "name": "CATEGORY_BASICS",
+            "path": "Basics"
+        },
+        {
+            "name": "CATEGORY_NEURAL_NETWORKS",
+            "path": "Neural Networks"
+        },
+        {
+            "name": "CATEGORY_MACHINE_LEARNING",
+            "path": "Machine Learning"
+        },
+        {
+            "name": "CATEGORY_DEEP_LEARNING",
+            "path": "Deep Learning"
+        },
+        {
+            "name": "CATEGORY_NLP",
+            "path": "NLP"
+        },
+        {
+            "name": "CATEGORY_CV",
+            "path": "CV"
+        },
+        {
+            "name": "CATEGORY_TUTORIALS",
+            "path": "Tutorials"
+        },
+        {
+            "name": "CATEGORY_ETHICS",
+            "path": "Resources"
+        }
+    ]
+}

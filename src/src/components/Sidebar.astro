@@ -1,0 +1,163 @@
+---
+import { getTranslation, getCurrentLanguage } from '../utils/i18n';
+
+export interface Props {
+  categories: { [key: string]: any[] };
+  repoCategories?: Array<{ name: string; [key: string]: any }>;
+  currentPath?: string;
+}
+
+const { categories, repoCategories = [], currentPath = '' } = Astro.props;
+
+const currentLang = getCurrentLanguage();
+const t = (key: string) => getTranslation(currentLang, key);
+
+function getCategoryIcon(category: string, repoCategories: Array<{ name: string; icon?: string; [key: string]: any }>) {
+  // Ensure repoCategories is always an array
+  const safeRepoCategories = Array.isArray(repoCategories) ? repoCategories : [];
+  
+  // First try to find icon from repo metadata
+  const repoCategory = safeRepoCategories.find(cat => cat.name.toLowerCase() === category.toLowerCase());
+  if (repoCategory && repoCategory.icon) {
+    return repoCategory.icon;
+  }
+  
+  // Fallback to default icons
+  const icons: { [key: string]: string } = {
+    'basics': '📚',
+    'machine-learning': '🤖',
+    'deep-learning': '🧠',
+    'nlp': '💬',
+    'computer-vision': '👁️',
+    'ethics': '⚖️',
+    'applications': '🚀',
+    'tutorials': '🎯',
+    'research': '🔬',
+    'tools': '🛠️'
+  };
+  return icons[category.toLowerCase()] || '📄';
+}
+
+function getCategoryDisplayName(category: any, currentLang: string, t: (key: string) => string) {
+  // If it's a repo category object with name property
+  if (typeof category === 'object' && category.name) {
+    // Use the category name directly as the translation key
+    const translation = t(category.name);
+    
+    // If translation exists and is different from the key, use it
+    if (translation !== category.name) {
+      return translation;
+    }
+    
+    // Otherwise use the original name
+    return category.name;
+  }
+  
+  // If it's a string (fallback categories)
+  if (typeof category === 'string') {
+    const translation = t(category);
+    
+    if (translation !== category) {
+      return translation;
+    }
+    
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  }
+  
+  return 'Unknown Category';
+}
+---
+
+<aside class="w-64 h-screen sticky top-16 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+  <div class="p-6">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">{t('nav.categories')}</h2>
+    
+    <nav class="space-y-2">
+      {repoCategories.length > 0 ? (
+        repoCategories.map((category) => (
+          <div class="mb-4" key={category.name}>
+            <button 
+              class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onclick={`handleCategoryClick('${category.name}')`}
+            >
+              <span class="flex items-center">
+                <span class="mr-2">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
+                {getCategoryDisplayName(category, currentLang, t)}
+              </span>
+            </button>
+          </div>
+        ))
+      ) : (
+        Object.entries(categories).map(([categoryName, articles]) => (
+          <div class="mb-4" key={categoryName}>
+            <button 
+              class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              onclick={`handleCategoryClick('${categoryName}')`}
+            >
+              <span class="flex items-center">
+                <span class="mr-2">{getCategoryIcon(categoryName, repoCategories)}</span>
+                {getCategoryDisplayName(categoryName, currentLang, t)}
+              </span>
+            </button>
+          </div>
+        ))
+      )}
+    </nav>
+  </div>
+</aside>
+
+<!-- Sorry Popup Modal -->
+<div id="sorry-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+    <div class="text-center">
+      <div class="text-4xl mb-4">😔</div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">{t('popup.sorry.title')}</h3>
+      <p class="text-gray-600 mb-4">{t('popup.sorry.message')}</p>
+      <button 
+        onclick="closeSorryPopup()" 
+        class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+      >
+        {t('popup.sorry.button')}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function handleCategoryClick(category: string) {
+    // For now, all categories show the sorry popup since there's no content
+    showSorryPopup();
+  }
+  
+  function showSorryPopup() {
+    const popup = document.getElementById('sorry-popup');
+    if (popup) {
+      popup.classList.remove('hidden');
+    }
+  }
+  
+  function closeSorryPopup() {
+    const popup = document.getElementById('sorry-popup');
+    if (popup) {
+      popup.classList.add('hidden');
+    }
+  }
+  
+  // Close popup when clicking outside
+  document.addEventListener('click', (e) => {
+    const popup = document.getElementById('sorry-popup');
+    if (popup && e.target === popup) {
+      closeSorryPopup();
+    }
+  });
+  
+  // Close popup with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeSorryPopup();
+    }
+  });
+  
+  // Make function available globally
+  (window as any).handleCategoryClick = handleCategoryClick;
+  (window as any).closeSorryPopup = closeSorryPopup;

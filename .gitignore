@@ -1,2 +1,15 @@
 
-.DS_Store 
+# Node and dev-related ignores
+node_modules/
+src/.astro/
+src/node_modules/
+src/.env
+src/.env.*
+src/dist/
+src/build/
+src/.DS_Store
+src/.cache/
+src/coverage/
+src/npm-debug.log
+src/yarn-debug.log
+src/yarn-error.log 

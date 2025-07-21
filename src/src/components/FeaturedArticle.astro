@@ -1,0 +1,76 @@
+---
+import { getTranslation, getCurrentLanguage } from '../utils/i18n';
+
+export interface Props {
+  title: string;
+  description: string;
+  slug: string;
+  category: string;
+  tags: string[];
+  readingTime: number;
+  lastModified: string;
+  featured?: boolean;
+}
+
+const { title, description, slug, category, tags, readingTime, lastModified, featured = false } = Astro.props;
+
+const currentLang = getCurrentLanguage();
+const t = (key: string) => getTranslation(currentLang, key);
+---
+
+<article class="bg-gradient-to-r from-gray-950 to-gray-800 text-white rounded-2xl p-8 mb-8 relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary-500/20 to-accent-400/20 rounded-bl-full"></div>
+  <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-accent-400/20 to-primary-500/20 rounded-tr-full"></div>
+  
+  <div class="relative z-10">
+    <div class="flex items-center mb-4">
+      <span class="inline-block px-3 py-1 text-xs font-medium bg-accent-400 text-gray-900 rounded-full mr-3">
+        {t('articles.featured')}
+      </span>
+      <span class="inline-block px-3 py-1 text-xs font-medium bg-white/10 text-white rounded-full">
+        {category}
+      </span>
+    </div>
+    
+    <h2 class="text-3xl font-bold mb-4 leading-tight">
+      <a href={`/article/${slug}`} class="hover:text-accent-400 transition-colors">
+        {title}
+      </a>
+    </h2>
+    
+    <p class="text-gray-300 text-lg mb-6 leading-relaxed max-w-3xl">
+      {description}
+    </p>
+    
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex flex-wrap gap-2">
+        {tags.slice(0, 4).map(tag => (
+          <span key={tag} class="inline-block px-3 py-1 text-sm bg-white/10 text-white rounded-full">
+            #{tag}
+          </span>
+        ))}
+      </div>
+      
+      <div class="flex items-center text-sm text-gray-300">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {readingTime} {t('articles.minRead')}
+        <span class="mx-2">•</span>
+        {new Date(lastModified).toLocaleDateString()}
+      </div>
+    </div>
+    
+    <div class="mt-6">
+      <a 
+        href={`/article/${slug}`}
+        class="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+      >
+       {t('articles.readMore')}
+        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</article>

@@ -1,3 +1,5 @@
+import matter from 'gray-matter';
+
 interface GitHubFile {
   name: string;
   path: string;
@@ -19,6 +21,11 @@ interface ArticleMetadata {
   readingTime: number;
   lastModified: string;
   featured?: boolean;
+  author?: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  date?: string;
+  prerequisites?: string[];
+  relatedArticles?: string[];
 }
 
 // Configure your GitHub repository here
@@ -109,53 +116,69 @@ export async function fetchFileContent(path: string): Promise<string> {
 }
 
 export function parseMarkdownMetadata(content: string, path: string): ArticleMetadata {
-  const lines = content.split('\n');
-  let title = 'Untitled Article';
-  let description = '';
-  let category = 'General';
-  let tags: string[] = [];
-  let featured = false;
+  // Parse front matter
+  const { data: frontMatter, content: articleContent } = matter(content);
   
-  // Extract title from first # heading
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  if (titleMatch) {
-    title = titleMatch[1].trim();
-  }
+  // Extract category from path
+  const pathParts = path.split('/');
+  const category = pathParts.length > 1 
+    ? pathParts[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    : 'General';
   
-  // Extract description from first paragraph after title
-  const paragraphs = content.split('\n\n');
-  for (const paragraph of paragraphs) {
-    const cleaned = paragraph.trim().replace(/^#+\s+/, '');
-    if (cleaned && !cleaned.startsWith('#') && !cleaned.startsWith('```') && cleaned.length > 50) {
-      description = cleaned.substring(0, 200) + (cleaned.length > 200 ? '...' : '');
-      break;
+  // Use front matter data with fallbacks
+  let title = frontMatter.title || 'Untitled Article';
+  let description = frontMatter.description || '';
+  let tags = frontMatter.tags || [];
+  let featured = frontMatter.featured || false;
+  let author = frontMatter.author || 'Anonymous';
+  let difficulty = frontMatter.difficulty || undefined;
+  let date = frontMatter.date || new Date().toISOString();
+  let prerequisites = frontMatter.prerequisites || [];
+  let relatedArticles = frontMatter.relatedArticles || [];
+  
+  // If no title in front matter, extract from first # heading
+  if (!frontMatter.title) {
+    const titleMatch = articleContent.match(/^#\s+(.+)$/m);
+    if (titleMatch) {
+      title = titleMatch[1].trim();
     }
   }
   
-  // Infer category from path
-  const pathParts = path.split('/');
-  if (pathParts.length > 1) {
-    category = pathParts[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  // If no description in front matter, extract from first paragraph
+  if (!frontMatter.description) {
+    const paragraphs = articleContent.split('\n\n');
+    for (const paragraph of paragraphs) {
+      const cleaned = paragraph.trim().replace(/^#+\s+/, '');
+      if (cleaned && !cleaned.startsWith('#') && !cleaned.startsWith('```') && cleaned.length > 50) {
+        description = cleaned.substring(0, 200) + (cleaned.length > 200 ? '...' : '');
+        break;
+      }
+    }
   }
   
-  // Extract tags from content (look for common AI/ML keywords)
-  const keywords = [
-    'machine learning', 'deep learning', 'neural network', 'ai', 'artificial intelligence',
-    'python', 'tensorflow', 'pytorch', 'nlp', 'computer vision', 'reinforcement learning',
-    'supervised learning', 'unsupervised learning', 'classification', 'regression',
-    'neural networks', 'cnn', 'rnn', 'lstm', 'transformer', 'bert', 'gpt'
-  ];
+  // If no tags in front matter, extract from content
+  if (!frontMatter.tags || frontMatter.tags.length === 0) {
+    const keywords = [
+      'machine learning', 'deep learning', 'neural network', 'ai', 'artificial intelligence',
+      'python', 'tensorflow', 'pytorch', 'nlp', 'computer vision', 'reinforcement learning',
+      'supervised learning', 'unsupervised learning', 'classification', 'regression',
+      'neural networks', 'cnn', 'rnn', 'lstm', 'transformer', 'bert', 'gpt'
+    ];
+    
+    const contentLower = articleContent.toLowerCase();
+    tags = keywords.filter(keyword => 
+      contentLower.includes(keyword.toLowerCase())
+    ).map(tag => tag.replace(/\s+/g, '-'));
+    
+    // Remove duplicates and limit to 5 tags
+    tags = [...new Set(tags)].slice(0, 5);
+  }
   
-  const contentLower = content.toLowerCase();
-  tags = keywords.filter(keyword => 
-    contentLower.includes(keyword.toLowerCase())
-  ).map(tag => tag.replace(/\s+/g, '-'));
-  
-  // Remove duplicates and limit to 5 tags
-  tags = [...new Set(tags)].slice(0, 5);
+  // Calculate reading time from actual content (not including front matter)
+  const wordCount = articleContent.split(/\s+/).length;
+  const readingTime = frontMatter.readingTime || Math.ceil(wordCount / 200); // 200 WPM
   
   const slug = path.replace(/\.md$/, '').replace(/\//g, '-').toLowerCase();
-  const readingTime = Math.ceil(content.split(' ').length / 200); // Assume 200 WPM
   
   return {
     title,
@@ -164,8 +187,13 @@ export function parseMarkdownMetadata(content: string, path: string): ArticleMet
     tags,
     slug,
     readingTime,
-    lastModified: new Date().toISOString(), // GitHub API would provide this
-    featured
+    lastModified: date,
+    featured,
+    author,
+    difficulty,
+    date,
+    prerequisites,
+    relatedArticles
   };
 }
 
@@ -223,7 +251,8 @@ export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Pro
       const content = await fetchFileContent(matchingFile.path);
       if (content) {
         const metadata = parseMarkdownMetadata(content, matchingFile.path);
-        return { metadata, content };
+        const { content: articleContent } = matter(content);
+        return { metadata, content: articleContent };
       }
     }
     
@@ -237,7 +266,8 @@ export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Pro
       const content = await fetchFileContent(anyLangFile.path);
       if (content) {
         const metadata = parseMarkdownMetadata(content, anyLangFile.path);
-        return { metadata, content };
+        const { content: articleContent } = matter(content);
+        return { metadata, content: articleContent };
       }
     }
     

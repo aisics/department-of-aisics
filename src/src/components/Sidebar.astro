@@ -7,9 +7,11 @@ export interface Props {
   categories: { [key: string]: any[] };
   repoCategories?: Array<{ name: string; [key: string]: any }>;
   currentPath?: string;
+  currentSlug?: string;
+  currentCategory?: string;
 }
 
-const { categories, repoCategories = [], currentPath = '' } = Astro.props;
+const { categories, repoCategories = [], currentPath = '', currentSlug = '', currentCategory = '' } = Astro.props;
 
 const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
@@ -19,11 +21,10 @@ const articles = await fetchArticlesWithContent(lang);
 
 // Group articles by category
 const articlesByCategory = articles.reduce((acc, article) => {
-  const categoryKey = article.category.toUpperCase().replace(/\s+/g, '_');
-  if (!acc[categoryKey]) {
-    acc[categoryKey] = [];
+  if (!acc[article.category]) {
+    acc[article.category] = [];
   }
-  acc[categoryKey].push(article);
+  acc[article.category].push(article);
   return acc;
 }, {} as Record<string, ArticleMetadata[]>);
 
@@ -90,13 +91,17 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
     <nav class="space-y-2">
       {repoCategories.length > 0 ? (
         repoCategories.map((category) => {
-          const categoryKey = `CATEGORY_${category.path.toUpperCase().replace(/\s+/g, '_')}`;
-          const categoryArticles = articlesByCategory[categoryKey] || [];
+          const categoryArticles = articlesByCategory[category.path] || [];
+          const isCurrentCategory = category.path === currentCategory;
           
           return (
             <div class="mb-4" key={category.name}>
               <button 
-                class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                class={`w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium rounded-lg transition-colors ${
+                  isCurrentCategory 
+                    ? 'bg-gray-100 text-gray-900' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
                 onclick={`toggleCategory('${category.name}')`}
               >
                 <span class="flex items-center">
@@ -104,7 +109,7 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
                   {getCategoryDisplayName(category, lang, t)}
                 </span>
                 <svg 
-                  class="w-4 h-4 transition-transform category-chevron"
+                  class={`w-4 h-4 transition-transform category-chevron ${isCurrentCategory ? 'rotate-180' : ''}`}
                   id={`chevron-${category.name}`}
                   fill="none" 
                   stroke="currentColor" 
@@ -114,16 +119,23 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
                 </svg>
               </button>
               
-              <div id={`category-${category.name}`} class="hidden mt-2 ml-4 space-y-1">
+              <div id={`category-${category.name}`} class={`${isCurrentCategory ? '' : 'hidden'} mt-2 ml-4 space-y-1`}>
                 {categoryArticles.length > 0 ? (
-                  categoryArticles.map(article => (
-                    <a 
-                      href={`/article/${article.slug}`}
-                      class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      {article.title}
-                    </a>
-                  ))
+                  categoryArticles.map(article => {
+                    const isCurrentArticle = article.slug === currentSlug;
+                    return (
+                      <a 
+                        href={`/article/${article.slug}`}
+                        class={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                          isCurrentArticle 
+                            ? 'bg-primary-100 text-primary-700 font-medium' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {article.title}
+                      </a>
+                    );
+                  })
                 ) : (
                   <p class="px-3 py-2 text-sm text-gray-500 italic">
                     {t('popup.sorry.message')}

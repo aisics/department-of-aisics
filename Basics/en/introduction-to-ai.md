@@ -1,3 +1,24 @@
+---
+title: Introduction to Artificial Intelligence
+description: A comprehensive guide to understanding the fundamentals of AI, including machine learning, deep learning, and practical applications
+author: Dr. Sarah Chen
+date: 2024-01-15
+readingTime: 12
+tags:
+  - artificial-intelligence
+  - machine-learning
+  - basics
+  - python
+  - deep-learning
+featured: true
+difficulty: beginner
+prerequisites: []
+relatedArticles:
+  - machine-learning-fundamentals
+  - deep-learning-basics
+  - python-for-ai
+---
+
 # Introduction to Artificial Intelligence
 
 Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines capable of performing tasks that typically require human intelligence. This includes learning, reasoning, problem-solving, perception, and language understanding.

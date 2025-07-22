@@ -1,4 +1,5 @@
 import matter from 'gray-matter';
+import siteMetadata from '../data/metadata.json';
 
 export interface ArticleMetadata {
   title: string;
@@ -30,33 +31,20 @@ export interface SiteMetadata {
   };
 }
 
-// Fetch the metadata from the JSON file
-export async function fetchSiteMetadata(): Promise<SiteMetadata> {
-  try {
-    const response = await fetch('/metadata.json');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch metadata: ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error loading site metadata:', error);
-    // Return empty structure as fallback
-    return {
-      categories: [],
-      articles: { en: [], uk: [] }
-    };
-  }
+// Get the metadata (now imported directly)
+export function getSiteMetadata(): SiteMetadata {
+  return siteMetadata as SiteMetadata;
 }
 
 // Get all articles for a specific language
-export async function fetchArticlesForLanguage(lang: string = 'en'): Promise<ArticleMetadata[]> {
-  const metadata = await fetchSiteMetadata();
+export function getArticlesForLanguage(lang: string = 'en'): ArticleMetadata[] {
+  const metadata = getSiteMetadata();
   return metadata.articles[lang as keyof typeof metadata.articles] || [];
 }
 
 // Get articles grouped by category for a specific language
-export async function fetchArticlesByCategory(lang: string = 'en'): Promise<Record<string, ArticleMetadata[]>> {
-  const articles = await fetchArticlesForLanguage(lang);
+export function getArticlesByCategory(lang: string = 'en'): Record<string, ArticleMetadata[]> {
+  const articles = getArticlesForLanguage(lang);
   
   return articles.reduce((acc, article) => {
     if (!acc[article.category]) {
@@ -68,8 +56,8 @@ export async function fetchArticlesByCategory(lang: string = 'en'): Promise<Reco
 }
 
 // Get a single article by slug
-export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Promise<{ metadata: ArticleMetadata, content: string } | null> {
-  const articles = await fetchArticlesForLanguage(lang);
+export async function getArticleBySlug(slug: string, lang: string = 'en'): Promise<{ metadata: ArticleMetadata, content: string } | null> {
+  const articles = getArticlesForLanguage(lang);
   const article = articles.find(a => a.slug === slug);
   
   if (!article) {
@@ -77,20 +65,35 @@ export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Pro
   }
   
   try {
-    // Fetch the actual markdown content from the file
-    const response = await fetch(`/${article.filePath}`);
-    if (!response.ok) {
-      console.warn(`Could not fetch content for ${article.filePath}, using placeholder`);
-      // Return placeholder content if file doesn't exist
-      const placeholderContent = `# ${article.title}\n\n${article.description}\n\nContent for this article is being prepared...`;
-      return { metadata: article, content: placeholderContent };
+    // In SSR context, we need to read the file directly
+    if (typeof window === 'undefined') {
+      // Server-side: try to read the file from filesystem
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const filePath = path.join(process.cwd(), article.filePath);
+        const fullContent = fs.readFileSync(filePath, 'utf-8');
+        
+        // Parse front matter if it exists, otherwise use the full content
+        const { content } = matter(fullContent);
+        return { metadata: article, content };
+      } catch (fsError) {
+        console.warn(`Could not read file ${article.filePath}:`, fsError);
+      }
+    } else {
+      // Client-side: fetch from public directory
+      const response = await fetch(`/${article.filePath}`);
+      if (response.ok) {
+        const fullContent = await response.text();
+        const { content } = matter(fullContent);
+        return { metadata: article, content };
+      }
     }
     
-    const fullContent = await response.text();
-    
-    // Parse front matter if it exists, otherwise use the full content
-    const { content } = matter(fullContent);
-    return { metadata: article, content };
+    // Fallback: return placeholder content
+    const placeholderContent = `# ${article.title}\n\n${article.description}\n\nContent for this article is being prepared...`;
+    return { metadata: article, content: placeholderContent };
   } catch (error) {
     console.error(`Error fetching article content for ${slug}:`, error);
     // Return placeholder content on error
@@ -100,26 +103,26 @@ export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Pro
 }
 
 // Get categories
-export async function fetchCategories(): Promise<CategoryMetadata[]> {
-  const metadata = await fetchSiteMetadata();
+export function getCategories(): CategoryMetadata[] {
+  const metadata = getSiteMetadata();
   return metadata.categories;
 }
 
 // Get featured articles for a language
-export async function fetchFeaturedArticles(lang: string = 'en'): Promise<ArticleMetadata[]> {
-  const articles = await fetchArticlesForLanguage(lang);
+export function getFeaturedArticles(lang: string = 'en'): ArticleMetadata[] {
+  const articles = getArticlesForLanguage(lang);
   return articles.filter(article => article.featured);
 }
 
 // Get articles by difficulty
-export async function fetchArticlesByDifficulty(difficulty: 'beginner' | 'intermediate' | 'advanced', lang: string = 'en'): Promise<ArticleMetadata[]> {
-  const articles = await fetchArticlesForLanguage(lang);
+export function getArticlesByDifficulty(difficulty: 'beginner' | 'intermediate' | 'advanced', lang: string = 'en'): ArticleMetadata[] {
+  const articles = getArticlesForLanguage(lang);
   return articles.filter(article => article.difficulty === difficulty);
 }
 
 // Search articles by title or description
-export async function searchArticles(query: string, lang: string = 'en'): Promise<ArticleMetadata[]> {
-  const articles = await fetchArticlesForLanguage(lang);
+export function searchArticles(query: string, lang: string = 'en'): ArticleMetadata[] {
+  const articles = getArticlesForLanguage(lang);
   const lowerQuery = query.toLowerCase();
   
   return articles.filter(article => 

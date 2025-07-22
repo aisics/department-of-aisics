@@ -1,0 +1,260 @@
+{
+  "categories": [
+    {
+      "name": "CATEGORY_BASICS",
+      "path": "Basics",
+      "icon": "📚"
+    },
+    {
+      "name": "CATEGORY_NEURAL_NETWORKS",
+      "path": "Neural Networks",
+      "icon": "🧠"
+    },
+    {
+      "name": "CATEGORY_MACHINE_LEARNING",
+      "path": "Machine Learning",
+      "icon": "🤖"
+    },
+    {
+      "name": "CATEGORY_DEEP_LEARNING",
+      "path": "Deep Learning",
+      "icon": "🌊"
+    },
+    {
+      "name": "CATEGORY_NLP",
+      "path": "NLP",
+      "icon": "🗣️"
+    },
+    {
+      "name": "CATEGORY_CV",
+      "path": "CV",
+      "icon": "👁️"
+    },
+    {
+      "name": "CATEGORY_TUTORIALS",
+      "path": "Tutorials",
+      "icon": "📝"
+    },
+    {
+      "name": "CATEGORY_ETHICS",
+      "path": "Ethics",
+      "icon": "⚖️"
+    }
+  ],
+  "articles": {
+    "en": [
+      {
+        "title": "Introduction to Artificial Intelligence",
+        "description": "A comprehensive guide to understanding the fundamentals of AI, including machine learning, deep learning, and practical applications",
+        "author": "Dr. Sarah Chen",
+        "date": "2024-01-15",
+        "readingTime": 12,
+        "tags": ["artificial-intelligence", "machine-learning", "basics", "python", "deep-learning"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Basics",
+        "slug": "basics-en-introduction-to-ai",
+        "filePath": "Basics/en/introduction-to-ai.md",
+        "prerequisites": [],
+        "relatedArticles": ["machine-learning-fundamentals", "deep-learning-basics", "python-for-ai"]
+      },
+      {
+        "title": "Machine Learning Fundamentals",
+        "description": "Learn the core concepts of machine learning, from supervised to unsupervised learning, with practical examples and real-world applications.",
+        "author": "Dr. Alex Johnson",
+        "date": "2024-01-20",
+        "readingTime": 15,
+        "tags": ["machine-learning", "supervised-learning", "unsupervised-learning", "algorithms"],
+        "featured": false,
+        "difficulty": "beginner",
+        "category": "Machine Learning",
+        "slug": "machine-learning-en-fundamentals",
+        "filePath": "Machine Learning/en/fundamentals.md",
+        "prerequisites": ["basics-en-introduction-to-ai"],
+        "relatedArticles": ["deep-learning-basics", "neural-networks-introduction"]
+      },
+      {
+        "title": "Deep Learning with Neural Networks",
+        "description": "Explore the world of deep learning and neural networks. Understanding how artificial neural networks work and their applications in various domains.",
+        "author": "Dr. Maria Garcia",
+        "date": "2024-01-25",
+        "readingTime": 18,
+        "tags": ["deep-learning", "neural-networks", "tensorflow", "pytorch"],
+        "featured": true,
+        "difficulty": "intermediate",
+        "category": "Deep Learning",
+        "slug": "deep-learning-en-neural-networks",
+        "filePath": "Deep Learning/en/neural-networks.md",
+        "prerequisites": ["machine-learning-en-fundamentals"],
+        "relatedArticles": ["neural-networks-introduction", "computer-vision-basics"]
+      },
+      {
+        "title": "Natural Language Processing Fundamentals",
+        "description": "Dive into the basics of NLP and learn how computers understand human language. From tokenization to sentiment analysis.",
+        "author": "Prof. David Kim",
+        "date": "2024-02-01",
+        "readingTime": 14,
+        "tags": ["nlp", "text-processing", "sentiment-analysis", "tokenization"],
+        "featured": false,
+        "difficulty": "intermediate",
+        "category": "NLP",
+        "slug": "nlp-en-fundamentals",
+        "filePath": "NLP/en/fundamentals.md",
+        "prerequisites": ["basics-en-introduction-to-ai"],
+        "relatedArticles": ["deep-learning-en-neural-networks"]
+      },
+      {
+        "title": "Computer Vision with Python",
+        "description": "Learn computer vision techniques using Python and OpenCV. From basic image processing to advanced object detection.",
+        "author": "Dr. Lisa Chen",
+        "date": "2024-02-05",
+        "readingTime": 20,
+        "tags": ["computer-vision", "python", "opencv", "object-detection"],
+        "featured": false,
+        "difficulty": "advanced",
+        "category": "CV",
+        "slug": "cv-en-python-basics",
+        "filePath": "CV/en/python-basics.md",
+        "prerequisites": ["deep-learning-en-neural-networks"],
+        "relatedArticles": ["machine-learning-en-fundamentals"]
+      },
+      {
+        "title": "Ethics in Artificial Intelligence",
+        "description": "Exploring the ethical implications of AI development and deployment. Discussing bias, fairness, transparency, and responsible AI practices.",
+        "author": "Dr. Sarah Williams",
+        "date": "2024-02-10",
+        "readingTime": 8,
+        "tags": ["ai-ethics", "bias", "fairness", "responsible-ai"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Ethics",
+        "slug": "ethics-en-ai-ethics",
+        "filePath": "Ethics/en/ai-ethics.md",
+        "prerequisites": [],
+        "relatedArticles": ["basics-en-introduction-to-ai"]
+      },
+      {
+        "title": "Building Your First Chatbot",
+        "description": "Step-by-step tutorial on creating an intelligent chatbot using modern NLP techniques. Learn about intent recognition and dialogue management.",
+        "author": "Michael Zhang",
+        "date": "2024-02-15",
+        "readingTime": 25,
+        "tags": ["chatbot", "tutorial", "nlp", "python", "hands-on"],
+        "featured": false,
+        "difficulty": "intermediate",
+        "category": "Tutorials",
+        "slug": "tutorials-en-first-chatbot",
+        "filePath": "Tutorials/en/first-chatbot.md",
+        "prerequisites": ["nlp-en-fundamentals"],
+        "relatedArticles": ["python-for-ai", "nlp-advanced-techniques"]
+      }
+    ],
+    "uk": [
+      {
+        "title": "Вступ до штучного інтелекту",
+        "description": "Комплексний посібник для розуміння основ ШІ, включаючи машинне навчання, глибоке навчання та практичні застосування",
+        "author": "Д-р Сара Чен",
+        "date": "2024-01-15",
+        "readingTime": 12,
+        "tags": ["штучний-інтелект", "машинне-навчання", "основи", "python", "глибоке-навчання"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Basics",
+        "slug": "basics-uk-introduction-to-ai",
+        "filePath": "Basics/uk/introduction-to-ai.md",
+        "prerequisites": [],
+        "relatedArticles": ["machine-learning-fundamentals", "deep-learning-basics", "python-for-ai"]
+      },
+      {
+        "title": "Основи машинного навчання",
+        "description": "Вивчіть основні концепції машинного навчання, від навчання з вчителем до навчання без вчителя, з практичними прикладами.",
+        "author": "Д-р Алекс Джонсон",
+        "date": "2024-01-20",
+        "readingTime": 15,
+        "tags": ["машинне-навчання", "навчання-з-вчителем", "навчання-без-вчителя", "алгоритми"],
+        "featured": false,
+        "difficulty": "beginner",
+        "category": "Machine Learning",
+        "slug": "machine-learning-uk-fundamentals",
+        "filePath": "Machine Learning/uk/fundamentals.md",
+        "prerequisites": ["basics-uk-introduction-to-ai"],
+        "relatedArticles": ["deep-learning-basics", "neural-networks-introduction"]
+      },
+      {
+        "title": "Глибоке навчання з нейронними мережами",
+        "description": "Дослідіть світ глибокого навчання та нейронних мереж. Розуміння того, як працюють штучні нейронні мережі та їх застосування.",
+        "author": "Д-р Марія Гарсія",
+        "date": "2024-01-25",
+        "readingTime": 18,
+        "tags": ["глибоке-навчання", "нейронні-мережі", "tensorflow", "pytorch"],
+        "featured": true,
+        "difficulty": "intermediate",
+        "category": "Deep Learning",
+        "slug": "deep-learning-uk-neural-networks",
+        "filePath": "Deep Learning/uk/neural-networks.md",
+        "prerequisites": ["machine-learning-uk-fundamentals"],
+        "relatedArticles": ["neural-networks-introduction", "computer-vision-basics"]
+      },
+      {
+        "title": "Основи обробки природної мови",
+        "description": "Зануртеся в основи НЛП та дізнайтеся, як комп'ютери розуміють людську мову. Від токенізації до аналізу настроїв.",
+        "author": "Проф. Девід Кім",
+        "date": "2024-02-01",
+        "readingTime": 14,
+        "tags": ["nlp", "обробка-тексту", "аналіз-настроїв", "токенізація"],
+        "featured": false,
+        "difficulty": "intermediate",
+        "category": "NLP",
+        "slug": "nlp-uk-fundamentals",
+        "filePath": "NLP/uk/fundamentals.md",
+        "prerequisites": ["basics-uk-introduction-to-ai"],
+        "relatedArticles": ["deep-learning-uk-neural-networks"]
+      },
+      {
+        "title": "Комп'ютерний зір з Python",
+        "description": "Вивчіть техніки комп'ютерного зору за допомогою Python та OpenCV. Від базової обробки зображень до розпізнавання об'єктів.",
+        "author": "Д-р Ліза Чен",
+        "date": "2024-02-05",
+        "readingTime": 20,
+        "tags": ["комп'ютерний-зір", "python", "opencv", "розпізнавання-об'єктів"],
+        "featured": false,
+        "difficulty": "advanced",
+        "category": "CV",
+        "slug": "cv-uk-python-basics",
+        "filePath": "CV/uk/python-basics.md",
+        "prerequisites": ["deep-learning-uk-neural-networks"],
+        "relatedArticles": ["machine-learning-uk-fundamentals"]
+      },
+      {
+        "title": "Етика штучного інтелекту",
+        "description": "Дослідження етичних наслідків розробки та впровадження ШІ. Обговорення упередженості, справедливості та відповідальних практик ШІ.",
+        "author": "Д-р Сара Вільямс",
+        "date": "2024-02-10",
+        "readingTime": 8,
+        "tags": ["етика-ші", "упередженість", "справедливість", "відповідальний-ші"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Ethics",
+        "slug": "ethics-uk-ai-ethics",
+        "filePath": "Ethics/uk/ai-ethics.md",
+        "prerequisites": [],
+        "relatedArticles": ["basics-uk-introduction-to-ai"]
+      },
+      {
+        "title": "Створення першого чат-бота",
+        "description": "Покрокове керівництво зі створення інтелектуального чат-бота за допомогою сучасних технік НЛП. Розпізнавання намірів та управління діалогом.",
+        "author": "Майкл Жанг",
+        "date": "2024-02-15",
+        "readingTime": 25,
+        "tags": ["чат-бот", "туторіал", "nlp", "python", "практичний"],
+        "featured": false,
+        "difficulty": "intermediate",
+        "category": "Tutorials",
+        "slug": "tutorials-uk-first-chatbot",
+        "filePath": "Tutorials/uk/first-chatbot.md",
+        "prerequisites": ["nlp-uk-fundamentals"],
+        "relatedArticles": ["python-for-ai", "nlp-advanced-techniques"]
+      }
+    ]
+  }
+}

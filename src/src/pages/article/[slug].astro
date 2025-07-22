@@ -2,14 +2,14 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { fetchArticlesForLanguage, fetchArticleBySlug, fetchCategories } from '../../utils/articles';
+import { getArticlesForLanguage, getArticleBySlug, getCategories } from '../../utils/articles';
 import { marked } from 'marked';
 import { getTranslation } from '../../utils/i18n';
 
 export async function getStaticPaths() {
-  // Fetch articles for both languages
-  const enArticles = await fetchArticlesForLanguage('en');
-  const ukArticles = await fetchArticlesForLanguage('uk');
+  // Get articles for both languages
+  const enArticles = getArticlesForLanguage('en');
+  const ukArticles = getArticlesForLanguage('uk');
   
   // Create paths for all articles
   const paths = [];
@@ -35,11 +35,11 @@ const { slug } = Astro.params;
 const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
-// Fetch categories for sidebar
-const categoriesFromRepo = await fetchCategories();
+// Get categories for sidebar
+const categoriesFromRepo = getCategories();
 
-// Fetch the article content
-const articleData = await fetchArticleBySlug(slug, lang);
+// Get the article content
+const articleData = await getArticleBySlug(slug, lang);
 
 // If no article found, return 404
 if (!articleData) {

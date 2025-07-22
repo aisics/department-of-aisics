@@ -84,106 +84,212 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
 }
 ---
 
-<aside class="w-64 h-screen sticky top-16 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-  <div class="p-6">
-    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">{t('nav.categories')}</h2>
+<aside class="w-80 h-screen sticky top-0 overflow-hidden">
+  <!-- Glassmorphism Background -->
+  <div class="absolute inset-0 bg-gradient-to-b from-white/95 via-white/90 to-white/95 backdrop-blur-xl border-r border-white/20 shadow-neural-lg"></div>
+  
+  <!-- Animated Background Pattern -->
+  <div class="absolute inset-0 bg-neural-pattern opacity-20"></div>
+  
+  <!-- Content -->
+  <div class="relative z-10 h-full flex flex-col">
+    <!-- Header -->
+    <div class="px-8 py-8 border-b border-neural-200/50">
+      <h2 class="text-sm font-bold text-neural-500 uppercase tracking-wider mb-2 flex items-center">
+        <div class="w-2 h-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full mr-3 animate-pulse"></div>
+        {t('nav.categories')}
+      </h2>
+      <p class="text-neural-400 text-xs font-medium">Оберіть тему для навчання</p>
+    </div>
     
-    <nav class="space-y-2">
-      {repoCategories.length > 0 ? (
-        repoCategories.map((category) => {
-          const categoryArticles = articlesByCategory[category.path] || [];
-          const isCurrentCategory = category.path === currentCategory;
-          
-          return (
-            <div class="mb-4" key={category.name}>
+    <!-- Navigation -->
+    <nav class="flex-1 px-6 py-6 overflow-y-auto custom-scrollbar">
+      <div class="space-y-3">
+        {repoCategories.length > 0 ? (
+          repoCategories.map((category, index) => {
+            const categoryArticles = articlesByCategory[category.path] || [];
+            const isCurrentCategory = category.path === currentCategory;
+            
+            return (
+              <div class="animate-slide-in-left" style={`animation-delay: ${index * 0.1}s;`}>
+                <!-- Category Button -->
+                <button 
+                  class={`group w-full flex items-center justify-between px-4 py-4 text-left rounded-2xl transition-all duration-300 transform hover:scale-[1.02] ${
+                    isCurrentCategory 
+                      ? 'bg-gradient-to-r from-primary-500/10 to-secondary-500/10 border border-primary-200/50 shadow-glow' 
+                      : 'hover:bg-gradient-to-r hover:from-neural-50 hover:to-primary-50/30 hover:shadow-neural'
+                  }`}
+                  onclick={`toggleCategory('${category.name}')`}
+                >
+                  <div class="flex items-center space-x-4">
+                    <!-- Icon -->
+                    <div class={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${
+                      isCurrentCategory 
+                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-glow' 
+                        : 'bg-gradient-to-r from-neural-100 to-neural-200 text-neural-600 group-hover:from-primary-100 group-hover:to-secondary-100 group-hover:text-primary-600'
+                    }`}>
+                      <span class="text-lg">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
+                    </div>
+                    
+                    <!-- Text -->
+                    <div>
+                      <span class={`block text-sm font-semibold transition-colors duration-300 ${
+                        isCurrentCategory 
+                          ? 'text-primary-700' 
+                          : 'text-neural-700 group-hover:text-primary-600'
+                      }`}>
+                        {getCategoryDisplayName(category, lang, t)}
+                      </span>
+                      {categoryArticles.length > 0 && (
+                        <span class={`text-xs transition-colors duration-300 ${
+                          isCurrentCategory 
+                            ? 'text-primary-500' 
+                            : 'text-neural-400 group-hover:text-primary-500'
+                        }`}>
+                          {categoryArticles.length} {categoryArticles.length === 1 ? 'стаття' : 'статті'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <!-- Chevron -->
+                  <svg 
+                    class={`w-5 h-5 transition-all duration-300 ${
+                      isCurrentCategory 
+                        ? 'rotate-180 text-primary-500' 
+                        : 'text-neural-400 group-hover:text-primary-500'
+                    }`}
+                    id={`chevron-${category.name}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                
+                <!-- Articles List -->
+                <div id={`category-${category.name}`} class={`overflow-hidden transition-all duration-500 ease-out ${isCurrentCategory ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div class="mt-3 ml-6 space-y-2">
+                    {categoryArticles.length > 0 ? (
+                      categoryArticles.map((article, articleIndex) => {
+                        const isCurrentArticle = article.slug === currentSlug;
+                        return (
+                          <a 
+                            href={`/article/${article.slug}`}
+                            class={`group block p-3 rounded-xl transition-all duration-300 hover:scale-[1.02] ${
+                              isCurrentArticle 
+                                ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-300/30 shadow-glow' 
+                                : 'hover:bg-gradient-to-r hover:from-neural-50 hover:to-primary-50/20 hover:shadow-neural'
+                            }`}
+                            style={`animation-delay: ${(articleIndex + 1) * 0.1}s;`}
+                          >
+                            <div class="flex items-start space-x-3">
+                              <!-- Article Icon -->
+                              <div class={`flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all duration-300 ${
+                                isCurrentArticle 
+                                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white' 
+                                  : 'bg-neural-100 text-neural-500 group-hover:bg-primary-100 group-hover:text-primary-600'
+                              }`}>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                              </div>
+                              
+                              <!-- Article Info -->
+                              <div class="flex-1 min-w-0">
+                                <h4 class={`text-sm font-medium leading-tight mb-1 transition-colors duration-300 ${
+                                  isCurrentArticle 
+                                    ? 'text-primary-700' 
+                                    : 'text-neural-700 group-hover:text-primary-600'
+                                }`}>
+                                  {article.title}
+                                </h4>
+                                
+                                <!-- Article Meta -->
+                                <div class="flex items-center space-x-3 text-xs">
+                                  <span class={`transition-colors duration-300 ${
+                                    isCurrentArticle 
+                                      ? 'text-primary-500' 
+                                      : 'text-neural-400 group-hover:text-primary-500'
+                                  }`}>
+                                    {article.readingTime} хв
+                                  </span>
+                                  {article.difficulty && (
+                                    <span class={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-300 ${
+                                      article.difficulty === 'beginner' ? 'bg-secondary-100 text-secondary-700' :
+                                      article.difficulty === 'intermediate' ? 'bg-accent-100 text-accent-700' :
+                                      'bg-red-100 text-red-700'
+                                    }`}>
+                                      {article.difficulty === 'beginner' ? (lang === 'uk' ? 'Початківець' : 'Beginner') :
+                                       article.difficulty === 'intermediate' ? (lang === 'uk' ? 'Середній' : 'Intermediate') :
+                                       (lang === 'uk' ? 'Просунутий' : 'Advanced')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </a>
+                        );
+                      })
+                    ) : (
+                      <div class="px-4 py-6 text-center">
+                        <div class="w-12 h-12 bg-neural-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <svg class="w-6 h-6 text-neural-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                        </div>
+                        <p class="text-sm text-neural-500 font-medium mb-1">Поки що порожньо</p>
+                        <p class="text-xs text-neural-400">{t('popup.sorry.message')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          Object.entries(categories).map(([categoryName, articles]) => (
+            <div class="mb-4" key={categoryName}>
               <button 
-                class={`w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium rounded-lg transition-colors ${
-                  isCurrentCategory 
-                    ? 'bg-gray-100 text-gray-900' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-                onclick={`toggleCategory('${category.name}')`}
+                class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-neural-700 hover:bg-neural-100 rounded-lg transition-colors"
+                onclick={`handleCategoryClick('${categoryName}')`}
               >
                 <span class="flex items-center">
-                  <span class="mr-2">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
-                  {getCategoryDisplayName(category, lang, t)}
+                  <span class="mr-2">{getCategoryIcon(categoryName, repoCategories)}</span>
+                  {getCategoryDisplayName(categoryName, lang, t)}
                 </span>
-                <svg 
-                  class={`w-4 h-4 transition-transform category-chevron ${isCurrentCategory ? 'rotate-180' : ''}`}
-                  id={`chevron-${category.name}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
               </button>
-              
-              <div id={`category-${category.name}`} class={`${isCurrentCategory ? '' : 'hidden'} mt-2 ml-4 space-y-1`}>
-                {categoryArticles.length > 0 ? (
-                  categoryArticles.map(article => {
-                    const isCurrentArticle = article.slug === currentSlug;
-                    return (
-                      <a 
-                        href={`/article/${article.slug}`}
-                        class={`block px-3 py-2 text-sm rounded-lg transition-colors ${
-                          isCurrentArticle 
-                            ? 'bg-primary-100 text-primary-700 font-medium' 
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {article.title}
-                      </a>
-                    );
-                  })
-                ) : (
-                  <p class="px-3 py-2 text-sm text-gray-500 italic">
-                    {t('popup.sorry.message')}
-                  </p>
-                )}
-              </div>
             </div>
-          );
-        })
-      ) : (
-        Object.entries(categories).map(([categoryName, articles]) => (
-          <div class="mb-4" key={categoryName}>
-            <button 
-              class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onclick={`handleCategoryClick('${categoryName}')`}
-            >
-              <span class="flex items-center">
-                <span class="mr-2">{getCategoryIcon(categoryName, repoCategories)}</span>
-                {getCategoryDisplayName(categoryName, lang, t)}
-              </span>
-            </button>
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </nav>
+    
+    <!-- Footer -->
+    <div class="px-8 py-6 border-t border-neural-200/50">
+      <div class="flex items-center justify-center space-x-2 text-xs text-neural-400">
+        <div class="w-2 h-2 bg-secondary-400 rounded-full animate-pulse"></div>
+        <span>AI Education Platform</span>
+      </div>
+    </div>
   </div>
 </aside>
 
-<style>
-  .category-chevron {
-    transition: transform 0.2s ease-in-out;
-  }
-  
-  .category-chevron.rotate-180 {
-    transform: rotate(180deg);
-  }
-</style>
-
 <!-- Sorry Popup Modal -->
-<div id="sorry-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl">
+<div id="sorry-popup" class="fixed inset-0 bg-neural-900/80 backdrop-blur-sm flex items-center justify-center z-50 hidden animate-fade-in">
+  <div class="bg-white/95 backdrop-blur-xl rounded-3xl p-8 max-w-sm mx-4 shadow-neural-lg border border-white/20 animate-scale-in">
     <div class="text-center">
-      <div class="text-4xl mb-4">😔</div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">{t('popup.sorry.title')}</h3>
-      <p class="text-gray-600 mb-4">{t('popup.sorry.message')}</p>
+      <div class="w-16 h-16 bg-gradient-to-r from-accent-500 to-primary-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-neural-900 mb-3">{t('popup.sorry.title')}</h3>
+      <p class="text-neural-600 mb-6 leading-relaxed">{t('popup.sorry.message')}</p>
       <button 
         onclick="closeSorryPopup()" 
-        class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+        class="px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl hover:shadow-glow transition-all duration-300 font-medium"
       >
         {t('popup.sorry.button')}
       </button>
@@ -191,19 +297,56 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
   </div>
 </div>
 
+<style>
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366f1, #14b8a6);
+    border-radius: 10px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5048e5, #0d9488);
+  }
+
+  /* Animation enhancements */
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out forwards;
+    opacity: 0;
+  }
+</style>
+
 <script>
   function toggleCategory(categoryName: string) {
     const content = document.getElementById(`category-${categoryName}`);
     const chevron = document.getElementById(`chevron-${categoryName}`);
+    const button = chevron?.closest('button');
     
-    if (content && chevron) {
-      content.classList.toggle('hidden');
-      chevron.classList.toggle('rotate-180');
+    if (content && chevron && button) {
+      const isOpen = !content.classList.contains('max-h-0');
+      
+      if (isOpen) {
+        content.classList.add('max-h-0', 'opacity-0');
+        content.classList.remove('max-h-96', 'opacity-100');
+        chevron.classList.remove('rotate-180');
+        button.classList.remove('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
+      } else {
+        content.classList.remove('max-h-0', 'opacity-0');
+        content.classList.add('max-h-96', 'opacity-100');
+        chevron.classList.add('rotate-180');
+        button.classList.add('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
+      }
     }
   }
   
   function handleCategoryClick(category: string) {
-    // For now, all categories show the sorry popup since there's no content
     showSorryPopup();
   }
   
@@ -236,7 +379,8 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
     }
   });
   
-  // Make function available globally
+  // Make functions available globally
   (window as any).toggleCategory = toggleCategory;
   (window as any).handleCategoryClick = handleCategoryClick;
   (window as any).closeSorryPopup = closeSorryPopup;
+</script>

@@ -2,42 +2,86 @@
 import SearchBox from './SearchBox.astro';
 import LanguageSelector from './LanguageSelector.astro';
 import { getTranslation } from '../utils/i18n';
+import robotLogo from '../assets/robot.png';
 
 const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
 ---
 
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center py-4">
-      <div class="flex items-center space-x-4">
-        <a href="/" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-          <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-400 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+<header class="sticky top-0 z-50 overflow-hidden">
+  <!-- Glassmorphism Background -->
+  <div class="absolute inset-0 bg-white/95 backdrop-blur-xl border-b border-white/20 shadow-neural"></div>
+  
+  <!-- Animated Background Pattern -->
+  <div class="absolute inset-0 bg-neural-pattern opacity-10"></div>
+  
+  <!-- Content -->
+  <div class="relative z-10 max-w-7xl mx-auto px-6">
+    <div class="flex justify-between items-center py-6">
+      <!-- Logo Section -->
+      <div class="flex items-center">
+        <a href="/" class="group flex items-center space-x-4 hover:scale-105 transition-all duration-300">
+          <!-- Logo Icon -->
+          <div class="relative">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-glow group-hover:shadow-glow-lg transition-all duration-300 group-hover:rotate-12 overflow-hidden">
+              <img src={robotLogo} alt="AI Robot Logo" class="w-10 h-10 object-contain" />
+            </div>
+            <!-- Floating dot -->
+            <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-accent-500 to-secondary-500 rounded-full animate-pulse-slow"></div>
           </div>
+          
+          <!-- Logo Text -->
           <div>
-            <h1 class="text-xl font-bold text-gray-950">{t('site.title')}</h1>
-            <p class="text-xs text-gray-500 -mt-1">{t('site.subtitle')}</p>
+            <h1 class="text-2xl font-black bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent group-hover:from-primary-600 group-hover:to-secondary-600 transition-all duration-300">
+              {t('site.title')}
+            </h1>
+            <p class="text-sm text-neural-500 font-medium -mt-1 group-hover:text-primary-600 transition-colors duration-300">
+              {t('site.subtitle')}
+            </p>
           </div>
         </a>
       </div>
       
-      <div class="flex items-center space-x-4">
-        <SearchBox />
-        <LanguageSelector />
+      <!-- Navigation Actions -->
+      <div class="flex items-center space-x-3">
+        <!-- Search Box -->
+        <div class="hidden sm:block">
+          <SearchBox />
+        </div>
+        
+        <!-- Language Selector -->
+        <div class="relative">
+          <LanguageSelector />
+        </div>
+        
+        <!-- GitHub Link -->
         <a 
-          href="https://github.com" 
+          href="https://github.com/aisics/department-of-aisics" 
           target="_blank"
-          class="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+          class="group relative p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 hover:border-primary-200/50 rounded-2xl transition-all duration-300 hover:shadow-neural hover:scale-105"
           aria-label="View on GitHub"
         >
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="w-5 h-5 text-neural-600 group-hover:text-primary-600 transition-colors duration-300" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd" />
           </svg>
+          
+          <!-- Tooltip -->
+          <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-neural-900 text-white px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+            GitHub Repository
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 w-2 h-2 bg-neural-900 rotate-45"></div>
+          </div>
         </a>
+        
+        <!-- Mobile Menu Button (for future mobile nav) -->
+        <button class="sm:hidden p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-2xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
+          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
+  
+  <!-- Gradient Border Bottom -->
+  <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent"></div>
 </header>

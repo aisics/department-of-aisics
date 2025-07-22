@@ -5,14 +5,14 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Sidebar from '../components/Sidebar.astro';
 import ArticleList from '../components/ArticleList.astro';
-import { fetchCategoriesFromMetadata, fetchArticlesWithContent } from '../utils/github';
+import { fetchCategories, fetchArticlesForLanguage } from '../utils/articles';
 import { getTranslation } from '../utils/i18n';
 
 const lang = Astro.cookies.get('language')?.value || 'uk';
 // Fetch categories from metadata.json
-const categoriesFromRepo = await fetchCategoriesFromMetadata();
+const categoriesFromRepo = await fetchCategories();
 // Fetch articles for current language
-const articles = await fetchArticlesWithContent(lang);
+const articles = await fetchArticlesForLanguage(lang);
 
 const t = (key: string) => getTranslation(lang, key);
 ---

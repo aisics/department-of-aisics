@@ -1,7 +1,7 @@
 ---
 import { getTranslation } from '../utils/i18n';
-import { fetchArticlesWithContent } from '../utils/github';
-import type { ArticleMetadata } from '../utils/github';
+import { fetchArticlesForLanguage } from '../utils/articles';
+import type { ArticleMetadata } from '../utils/articles';
 
 export interface Props {
   categories: { [key: string]: any[] };
@@ -17,7 +17,7 @@ const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
 // Fetch articles for the sidebar
-const articles = await fetchArticlesWithContent(lang);
+const articles = await fetchArticlesForLanguage(lang);
 
 // Group articles by category
 const articlesByCategory = articles.reduce((acc, article) => {

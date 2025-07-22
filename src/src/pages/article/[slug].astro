@@ -2,14 +2,14 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { fetchArticlesWithContent, fetchArticleBySlug, fetchCategoriesFromMetadata } from '../../utils/github';
+import { fetchArticlesForLanguage, fetchArticleBySlug, fetchCategories } from '../../utils/articles';
 import { marked } from 'marked';
 import { getTranslation } from '../../utils/i18n';
 
 export async function getStaticPaths() {
   // Fetch articles for both languages
-  const enArticles = await fetchArticlesWithContent('en');
-  const ukArticles = await fetchArticlesWithContent('uk');
+  const enArticles = await fetchArticlesForLanguage('en');
+  const ukArticles = await fetchArticlesForLanguage('uk');
   
   // Create paths for all articles
   const paths = [];
@@ -36,7 +36,7 @@ const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
 // Fetch categories for sidebar
-const categoriesFromRepo = await fetchCategoriesFromMetadata();
+const categoriesFromRepo = await fetchCategories();
 
 // Fetch the article content
 const articleData = await fetchArticleBySlug(slug, lang);

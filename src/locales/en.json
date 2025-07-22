@@ -1,4 +1,6 @@
 {
+  "site.title": "AI Education",
+  "site.subtitle": "Learn • Explore • Discover",
   "CATEGORY_DEEP_LEARNING": "Deep Learning",
   "CATEGORY_BASICS": "Basics",
   "CATEGORY_NEURAL_NETWORKS": "Neural Networks",
@@ -7,12 +9,14 @@
   "CATEGORY_CV": "Computer Vision",
   "CATEGORY_TUTORIALS": "Tutorials",
   "CATEGORY_ETHICS": "Ethics",
-  "site.title": "AI Education",
-  "site.subtitle": "Learn • Explore • Discover",
+  "nav.categories": "Categories",
   "hero.title": "Artificial Intelligence is simple!",
   "hero.description": "Choose the topic you are interested in and start learning!",
   "nav.chooseJourney": "Choose your journey",
   "cta.startLearning": "Start learning",
   "cta.gitHub": "GitHub",
-  "search.placeholder": "Search"
+  "search.placeholder": "Search",
+  "popup.sorry.title": "Sorry",
+  "popup.sorry.message": "This content is not yet available, stay tuned!",
+  "popup.sorry.button": "Close"
 } 

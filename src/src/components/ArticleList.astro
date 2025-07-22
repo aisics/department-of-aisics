@@ -1,0 +1,73 @@
+---
+import type { ArticleMetadata } from '../utils/github';
+import { getTranslation } from '../utils/i18n';
+
+export interface Props {
+  articles: ArticleMetadata[];
+  lang: string;
+}
+
+const { articles, lang } = Astro.props;
+const t = (key: string) => getTranslation(lang, key);
+
+// Group articles by category
+const articlesByCategory = articles.reduce((acc, article) => {
+  if (!acc[article.category]) {
+    acc[article.category] = [];
+  }
+  acc[article.category].push(article);
+  return acc;
+}, {} as Record<string, ArticleMetadata[]>);
+---
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  {Object.entries(articlesByCategory).map(([category, categoryArticles]) => (
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">{category}</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {categoryArticles.map(article => (
+          <article class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+            <a href={`/article/${article.slug}`} class="block p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                {article.title}
+              </h3>
+              <p class="text-gray-600 mb-4 line-clamp-3">
+                {article.description}
+              </p>
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <span class="flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  {article.readingTime} min
+                </span>
+                <span class="text-primary-600 font-medium">
+                  Read more →
+                </span>
+              </div>
+              {article.tags.length > 0 && (
+                <div class="mt-4 flex flex-wrap gap-2">
+                  {article.tags.slice(0, 3).map(tag => (
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  ))}
+  
+  {articles.length === 0 && (
+    <div class="text-center py-12">
+      <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <p class="text-gray-600 text-lg">No articles available yet.</p>
+      <p class="text-gray-500 mt-2">Check back soon for new content!</p>
+    </div>
+  )}
+</div>

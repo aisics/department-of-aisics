@@ -178,6 +178,76 @@ export function createSlug(text: string): string {
     .trim();
 }
 
+export async function fetchArticlesWithContent(lang: string = 'en'): Promise<ArticleMetadata[]> {
+  try {
+    const files = await fetchMarkdownFiles();
+    const articles: ArticleMetadata[] = [];
+    
+    // Filter files by language
+    const langFiles = files.filter((file: any) => {
+      const pathParts = file.path.split('/');
+      return pathParts.length >= 2 && pathParts[1] === lang;
+    });
+    
+    // Fetch content for each file and parse metadata
+    for (const file of langFiles) {
+      const content = await fetchFileContent(file.path);
+      if (content) {
+        const metadata = parseMarkdownMetadata(content, file.path);
+        articles.push(metadata);
+      }
+    }
+    
+    return articles;
+  } catch (error) {
+    console.error('Error fetching articles with content:', error);
+    return getSampleArticles(); // Fallback to sample data
+  }
+}
+
+export async function fetchArticleBySlug(slug: string, lang: string = 'en'): Promise<{ metadata: ArticleMetadata, content: string } | null> {
+  try {
+    const files = await fetchMarkdownFiles();
+    
+    // Find the file that matches the slug
+    const matchingFile = files.find((file: any) => {
+      const pathParts = file.path.split('/');
+      if (pathParts.length >= 3 && pathParts[1] === lang) {
+        const fileSlug = file.path.replace(/\.md$/, '').replace(/\//g, '-').toLowerCase();
+        return fileSlug === slug || fileSlug.endsWith(`-${slug}`);
+      }
+      return false;
+    });
+    
+    if (matchingFile) {
+      const content = await fetchFileContent(matchingFile.path);
+      if (content) {
+        const metadata = parseMarkdownMetadata(content, matchingFile.path);
+        return { metadata, content };
+      }
+    }
+    
+    // Fallback: try to find in any language
+    const anyLangFile = files.find((file: any) => {
+      const fileSlug = file.path.replace(/\.md$/, '').replace(/\//g, '-').toLowerCase();
+      return fileSlug === slug || fileSlug.endsWith(`-${slug}`);
+    });
+    
+    if (anyLangFile) {
+      const content = await fetchFileContent(anyLangFile.path);
+      if (content) {
+        const metadata = parseMarkdownMetadata(content, anyLangFile.path);
+        return { metadata, content };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching article by slug:', error);
+    return null;
+  }
+}
+
 // Sample data for demonstration (remove when connecting to real GitHub repo)
 export function getSampleArticles(): ArticleMetadata[] {
   return [

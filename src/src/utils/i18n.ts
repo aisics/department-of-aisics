@@ -1,3 +1,6 @@
+import en from '../../locales/en.json';
+import uk from '../../locales/uk.json';
+
 export interface Translations {
   [key: string]: {
     [key: string]: string;
@@ -6,41 +9,12 @@ export interface Translations {
 
 let translations: Translations = {};
 
-// Configure your GitHub repository here
-const GITHUB_OWNER = 'aisics';
-const GITHUB_REPO = 'department-of-aisics';
-const GITHUB_BRANCH = 'main';
-
 export async function loadTranslations(): Promise<void> {
-  try {
-    // Load Ukrainian translations
-    const ukResponse = await fetch(
-      `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/locales/uk.json`
-    );
-    
-    // Load English translations
-    const enResponse = await fetch(
-      `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/locales/en.json`
-    );
-    
-    if (ukResponse.ok && enResponse.ok) {
-      const ukTranslations = await ukResponse.json();
-      const enTranslations = await enResponse.json();
-      
-      translations = {
-        uk: ukTranslations,
-        en: enTranslations
-      };
-    } else {
-      console.error('Failed to load translations from GitHub');
-      // Fallback to default translations
-      translations = getDefaultTranslations();
-    }
-  } catch (error) {
-    console.error('Error loading translations:', error);
-    // Fallback to default translations
-    translations = getDefaultTranslations();
-  }
+  // Directly assign local imports
+  translations = {
+    uk,
+    en
+  };
 }
 
 function getDefaultTranslations(): Translations {
@@ -175,32 +149,10 @@ function getDefaultTranslations(): Translations {
 }
 
 export function getTranslation(lang: string, key: string): string {
-  // Handle nested keys like 'categories.basics'
-  const keys = key.split('.');
-  let value: any = translations[lang];
-  
-  for (const k of keys) {
-    if (value && typeof value === 'object') {
-      value = value[k];
-    } else {
-      value = undefined;
-      break;
-    }
-  }
-  
-  // If not found in current language, try English
+  let value: any = translations[lang]?.[key];
   if (value === undefined) {
-    value = translations['en'];
-    for (const k of keys) {
-      if (value && typeof value === 'object') {
-        value = value[k];
-      } else {
-        value = undefined;
-        break;
-      }
-    }
+    value = translations['en']?.[key];
   }
-  
   return value || key;
 }
 
@@ -214,6 +166,12 @@ export function getCurrentLanguage(): string {
 export function setLanguage(lang: string): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem('language', lang);
+    document.cookie = `language=${lang}; path=/;`;
     window.location.reload();
   }
+}
+
+export function getLanguageFromCookie(cookieString: string): string {
+  const match = cookieString.match(/(?:^|; )language=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : 'uk';
 }

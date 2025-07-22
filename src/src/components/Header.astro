@@ -1,10 +1,10 @@
 ---
 import SearchBox from './SearchBox.astro';
 import LanguageSelector from './LanguageSelector.astro';
-import { getTranslation, getCurrentLanguage } from '../utils/i18n';
+import { getTranslation } from '../utils/i18n';
 
-const currentLang = getCurrentLanguage();
-const t = (key: string) => getTranslation(currentLang, key);
+const lang = Astro.cookies.get('language')?.value || 'uk';
+const t = (key: string) => getTranslation(lang, key);
 ---
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">

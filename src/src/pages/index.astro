@@ -1,15 +1,20 @@
 ---
+import { loadTranslations, getLanguageFromCookie } from '../utils/i18n';
+await loadTranslations();
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Sidebar from '../components/Sidebar.astro';
-import { fetchCategoriesFromMetadata } from '../utils/github';
-import { getTranslation, getCurrentLanguage } from '../utils/i18n';
+import ArticleList from '../components/ArticleList.astro';
+import { fetchCategoriesFromMetadata, fetchArticlesWithContent } from '../utils/github';
+import { getTranslation } from '../utils/i18n';
 
+const lang = Astro.cookies.get('language')?.value || 'uk';
 // Fetch categories from metadata.json
 const categoriesFromRepo = await fetchCategoriesFromMetadata();
+// Fetch articles for current language
+const articles = await fetchArticlesWithContent(lang);
 
-const currentLang = getCurrentLanguage();
-const t = (key: string) => getTranslation(currentLang, key);
+const t = (key: string) => getTranslation(lang, key);
 ---
 
 <Layout title={`${t('site.title')} - ${t('hero.title')}`}>
@@ -53,6 +58,11 @@ const t = (key: string) => getTranslation(currentLang, key);
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- Articles Section -->
+      <section id="explore" class="bg-gray-50">
+        <ArticleList articles={articles} lang={lang} />
       </section>
 
       <!-- Removed Features, Path, and Motivation Sections -->

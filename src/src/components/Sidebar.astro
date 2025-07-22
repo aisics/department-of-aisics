@@ -1,5 +1,7 @@
 ---
-import { getTranslation, getCurrentLanguage } from '../utils/i18n';
+import { getTranslation } from '../utils/i18n';
+import { fetchArticlesWithContent } from '../utils/github';
+import type { ArticleMetadata } from '../utils/github';
 
 export interface Props {
   categories: { [key: string]: any[] };
@@ -9,8 +11,21 @@ export interface Props {
 
 const { categories, repoCategories = [], currentPath = '' } = Astro.props;
 
-const currentLang = getCurrentLanguage();
-const t = (key: string) => getTranslation(currentLang, key);
+const lang = Astro.cookies.get('language')?.value || 'uk';
+const t = (key: string) => getTranslation(lang, key);
+
+// Fetch articles for the sidebar
+const articles = await fetchArticlesWithContent(lang);
+
+// Group articles by category
+const articlesByCategory = articles.reduce((acc, article) => {
+  const categoryKey = article.category.toUpperCase().replace(/\s+/g, '_');
+  if (!acc[categoryKey]) {
+    acc[categoryKey] = [];
+  }
+  acc[categoryKey].push(article);
+  return acc;
+}, {} as Record<string, ArticleMetadata[]>);
 
 function getCategoryIcon(category: string, repoCategories: Array<{ name: string; icon?: string; [key: string]: any }>) {
   // Ensure repoCategories is always an array
@@ -74,19 +89,50 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
     
     <nav class="space-y-2">
       {repoCategories.length > 0 ? (
-        repoCategories.map((category) => (
-          <div class="mb-4" key={category.name}>
-            <button 
-              class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              onclick={`handleCategoryClick('${category.name}')`}
-            >
-              <span class="flex items-center">
-                <span class="mr-2">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
-                {getCategoryDisplayName(category, currentLang, t)}
-              </span>
-            </button>
-          </div>
-        ))
+        repoCategories.map((category) => {
+          const categoryKey = `CATEGORY_${category.path.toUpperCase().replace(/\s+/g, '_')}`;
+          const categoryArticles = articlesByCategory[categoryKey] || [];
+          
+          return (
+            <div class="mb-4" key={category.name}>
+              <button 
+                class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                onclick={`toggleCategory('${category.name}')`}
+              >
+                <span class="flex items-center">
+                  <span class="mr-2">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
+                  {getCategoryDisplayName(category, lang, t)}
+                </span>
+                <svg 
+                  class="w-4 h-4 transition-transform category-chevron"
+                  id={`chevron-${category.name}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              
+              <div id={`category-${category.name}`} class="hidden mt-2 ml-4 space-y-1">
+                {categoryArticles.length > 0 ? (
+                  categoryArticles.map(article => (
+                    <a 
+                      href={`/article/${article.slug}`}
+                      class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      {article.title}
+                    </a>
+                  ))
+                ) : (
+                  <p class="px-3 py-2 text-sm text-gray-500 italic">
+                    {t('popup.sorry.message')}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })
       ) : (
         Object.entries(categories).map(([categoryName, articles]) => (
           <div class="mb-4" key={categoryName}>
@@ -96,7 +142,7 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
             >
               <span class="flex items-center">
                 <span class="mr-2">{getCategoryIcon(categoryName, repoCategories)}</span>
-                {getCategoryDisplayName(categoryName, currentLang, t)}
+                {getCategoryDisplayName(categoryName, lang, t)}
               </span>
             </button>
           </div>
@@ -105,6 +151,16 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
     </nav>
   </div>
 </aside>
+
+<style>
+  .category-chevron {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .category-chevron.rotate-180 {
+    transform: rotate(180deg);
+  }
+</style>
 
 <!-- Sorry Popup Modal -->
 <div id="sorry-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -124,6 +180,16 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
 </div>
 
 <script>
+  function toggleCategory(categoryName: string) {
+    const content = document.getElementById(`category-${categoryName}`);
+    const chevron = document.getElementById(`chevron-${categoryName}`);
+    
+    if (content && chevron) {
+      content.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    }
+  }
+  
   function handleCategoryClick(category: string) {
     // For now, all categories show the sorry popup since there's no content
     showSorryPopup();
@@ -159,5 +225,6 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
   });
   
   // Make function available globally
+  (window as any).toggleCategory = toggleCategory;
   (window as any).handleCategoryClick = handleCategoryClick;
   (window as any).closeSorryPopup = closeSorryPopup;

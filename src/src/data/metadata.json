@@ -44,8 +44,8 @@
   "articles": {
     "en": [
       {
-        "title": "Vectors: The Fundamental Building Blocks of Artificial Intelligence",
-        "description": "A comprehensive guide to understanding vectors, their operations, and why they are essential for AI and machine learning",
+        "title": "Vectors - the fundamental building blocks of AI",
+        "description": "What are vectors, their operations, and why they are essential for AI and machine learning",
         "author": "Department of AIsics",
         "date": "2025-07-23",
         "readingTime": 15,
@@ -61,8 +61,8 @@
     ],
     "uk": [
       {
-        "title": "Вектори: Фундаментальна основа штучного інтелекту",
-        "description": "Вичерпний посібник для розуміння векторів, операцій над ними та їх критичної важливості для ШІ та машинного навчання",
+        "title": "Вектори - фундамет ШІ",
+        "description": "Що таке вектори, операцій над ними та їх критична важливість для ШІ та машинного навчання",
         "author": "Кафедра ШІзики",
         "date": "2025-07-23",
         "readingTime": 15,

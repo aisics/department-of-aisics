@@ -13,7 +13,8 @@ export interface Props {
 
 const { categories, repoCategories = [], currentPath = '', currentSlug = '', currentCategory = '' } = Astro.props;
 
-const lang = Astro.cookies.get('language')?.value || 'uk';
+// For static builds, default to Ukrainian and let client-side handle language switching
+const lang = 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
 // Get articles for the sidebar

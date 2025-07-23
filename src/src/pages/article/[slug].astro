@@ -32,7 +32,8 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const lang = Astro.cookies.get('language')?.value || 'uk';
+// For static builds, default to Ukrainian and let client-side handle language switching
+const lang = 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
 // Get categories for sidebar

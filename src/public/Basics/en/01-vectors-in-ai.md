@@ -86,10 +86,14 @@ These operations are only possible for vectors of the same dimensionality and ar
 
 * **Vector Addition:**
     * **Rule:** To add two vectors of the same dimensionality, you simply **add their corresponding components**.
-    * **Formula:** For vectors $a = [a_1, a_2, ..., a_n]$ and $b = [b_1, b_2, ..., b_n]$:
-        $$a + b = [a_1 + b_1, a_2 + b_2, ..., a_n + b_n]$$
-    * **Example (2D):** Let $a = [1, 3]$ (1 step right, 3 up) and $b = [4, -1]$ (4 steps right, 1 down). Then:
-        $$a + b = [1+4, 3+(-1)] = [5, 2]$$
+    * **Formula:** For vectors **a = [a_1, a_2, ..., a_n]** and **b = [b_1, b_2, ..., b_n]**:
+        ```
+        a + b = [a_1 + b_1, a_2 + b_2, ..., a_n + b_n]
+        ```
+    * **Example (2D):** Let **a = [1, 3]** (1 step right, 3 up) and **b = [4, -1]** (4 steps right, 1 down). Then:
+        ```
+        a + b = [1+4, 3+(-1)] = [5, 2]
+        ```
     * **Geometrically:** This is like performing two movements sequentially. If you place the beginning of vector `b` at the end of vector `a`, then the sum vector `a+b` connects the beginning of `a` with the end of `b`. Or you can use the "parallelogram rule".
     * **In AI:** Addition can mean combining features. For example, if a vector represents a set of skills, then the sum of vectors of two people can (conditionally) represent their combined skills.
 
@@ -98,9 +102,13 @@ These operations are only possible for vectors of the same dimensionality and ar
 * **Vector Subtraction:**
     * **Rule:** Similar to addition, **subtract corresponding components**.
     * **Formula:**
-        $$a - b = [a_1 - b_1, a_2 - b_2, ..., a_n - b_n]$$
-    * **Example (2D):** For the same $a = [1, 3]$ and $b = [4, -1]$:
-        $$a - b = [1-4, 3-(-1)] = [-3, 4]$$
+        ```
+        a - b = [a_1 - b_1, a_2 - b_2, ..., a_n - b_n]
+        ```
+    * **Example (2D):** For the same **a = [1, 3]** and **b = [4, -1]**:
+        ```
+        a - b = [1-4, 3-(-1)] = [-3, 4]
+        ```
     * **Geometrically:** Vector `a - b` is the vector that needs to be added to `b` to get `a`. It points from the end of vector `b` to the end of vector `a` (if they start from the same point).
     * **In AI:** Subtraction is often used to find **differences** or **direction of changes** between two states or objects.
 
@@ -114,24 +122,28 @@ This is a classic example from language processing that demonstrates how vector 
 
 * **Step 2: Approximate vectors.**
 
-  $$\text{Vector}("\text{King}")  ≈ [0.95, 0.85, 0.0]$$
-  $$(\text{high royal power, strong association with male gender})$$
+  ```
+  Vector("King")  ≈ [0.95, 0.85, 0.0]
+  (high royal power, strong association with male gender)
   
-  $$\text{Vector}("\text{Man}")   ≈ [0.10, 0.90, 0.0]$$
-  $$(\text{low royal power, very strong association with male gender})$$
+  Vector("Man")   ≈ [0.10, 0.90, 0.0]
+  (low royal power, very strong association with male gender)
   
-  $$\text{Vector}("\text{Woman}") ≈ [0.10, 0.00, 0.9]$$
-  $$(\text{low royal power, strong association with female gender})$$
+  Vector("Woman") ≈ [0.10, 0.00, 0.9]
+  (low royal power, strong association with female gender)
+  ```
 
 * **Step 3: Operation.**
 
-  $$\text{Result} = \text{Vector}("\text{King}") - \text{Vector}("\text{Man}") + \text{Vector}("\text{Woman}")$$
+  ```
+  Result = Vector("King") - Vector("Man") + Vector("Woman")
   
-  $$= [0.95, 0.85, 0.0] - [0.10, 0.90, 0.0] + [0.10, 0.00, 0.9]$$
+  = [0.95, 0.85, 0.0] - [0.10, 0.90, 0.0] + [0.10, 0.00, 0.9]
   
-  $$= [0.95, -0.05, 0.9]$$
+  = [0.95, -0.05, 0.9]
+  ```
 
-* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result: $[0.95, -0.05, 0.9]$. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
+* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result: **[0.95, -0.05, 0.9]**. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
 
 ## Vector Similarity: Dot Product and Cosine Similarity
 
@@ -149,51 +161,69 @@ Cosine similarity measures the cosine of the angle between two vectors and alway
 
 The formula looks like this:
 
-$$\text{Similarity}(A,B) = \cos(\theta) = \frac{A \cdot B}{||A|| \times ||B||}$$
+```
+Similarity(A,B) = cos(θ) = (A·B) / (||A|| × ||B||)
+```
 
 **Where:**
 
-* $A \cdot B$ is the **dot product** of vectors A and B (sum of pairwise products of their components).  
-* $||A||$ and $||B||$ are the **lengths (norms)** of vectors A and B. 
+* **A·B** is the **dot product** of vectors A and B (sum of pairwise products of their components).  
+* **||A||** and **||B||** are the **lengths (norms)** of vectors A and B. 
 
-**The length of vector** $[x, y, z]$ is calculated as:
-$$||V|| = \sqrt{x² + y² + z²}$$
+**The length of vector [x, y, z] is calculated as:**
+```
+||V|| = √(x² + y² + z²)
+```
 
 ### **Real example: Movie recommendation system 🎬**
 
 Imagine Netflix wants to recommend a movie to you. It represents your preferences and other users' preferences as vectors. For simplicity, let's take only 3 movies: "Dune", "Barbie", "Oppenheimer". Your ratings (from 1 to 5) are your vector.
 
-$$\text{Your Vector}  = [5, 1, 4]  \text{  # You love "Dune" and "Oppenheimer", but not "Barbie"}$$
-$$\text{Anna Vector}  = [4, 2, 5]  \text{  # Likes "Dune", loves "Oppenheimer", but not very excited about "Barbie"}$$
-$$\text{Peter Vector} = [2, 5, 1]  \text{  # Loves "Barbie", doesn't like "Dune" and "Oppenheimer"}$$
+```
+Your Vector  = [5, 1, 4]  # You love "Dune" and "Oppenheimer", but not "Barbie"
+Anna Vector  = [4, 2, 5]  # Likes "Dune", loves "Oppenheimer", but not very excited about "Barbie"
+Peter Vector = [2, 5, 1]  # Loves "Barbie", doesn't like "Dune" and "Oppenheimer"
+```
 
 **Let's find who is "closer" to you – Anna or Peter?**
 
 #### 1. Similarity between you and Anna:
 
 **Dot product:**
-$$A \cdot B = (5 \times 4) + (1 \times 2) + (4 \times 5) = 20 + 2 + 20 = 42$$
+```
+A·B = (5 × 4) + (1 × 2) + (4 × 5) = 20 + 2 + 20 = 42
+```
 
 **Vector lengths:**
-$$||\text{Your}|| = \sqrt{5² + 1² + 4²} = \sqrt{25 + 1 + 16} = \sqrt{42} ≈ 6.48$$
-$$||\text{Anna}|| = \sqrt{4² + 2² + 5²} = \sqrt{16 + 4 + 25} = \sqrt{45} ≈ 6.71$$
+```
+||Your|| = √(5² + 1² + 4²) = √(25 + 1 + 16) = √42 ≈ 6.48
+||Anna|| = √(4² + 2² + 5²) = √(16 + 4 + 25) = √45 ≈ 6.71
+```
 
 **Cosine similarity:**
-$$\cos(\theta) = \frac{42}{6.48 \times 6.71} ≈ \frac{42}{43.48} ≈ 0.97$$
+```
+cos(θ) = 42 / (6.48 × 6.71) ≈ 42 / 43.48 ≈ 0.97
+```
 
 > **✨ This number is very close to 1. Your tastes are very similar!**
 
 #### 2. Similarity between you and Peter:
 
 **Dot product:**
-$$A \cdot B = (5 \times 2) + (1 \times 5) + (4 \times 1) = 10 + 5 + 4 = 19$$
+```
+A·B = (5 × 2) + (1 × 5) + (4 × 1) = 10 + 5 + 4 = 19
+```
 
 **Vector lengths:**
-$$||\text{Your}||  ≈ 6.48  \text{  (already calculated)}$$
-$$||\text{Peter}|| = \sqrt{2² + 5² + 1²} = \sqrt{4 + 25 + 1} = \sqrt{30} ≈ 5.48$$
+```
+||Your||  ≈ 6.48  (already calculated)
+||Peter|| = √(2² + 5² + 1²) = √(4 + 25 + 1) = √30 ≈ 5.48
+```
 
 **Cosine similarity:**
-$$\cos(\theta) = \frac{19}{6.48 \times 5.48} ≈ \frac{19}{35.51} ≈ 0.53$$
+```
+cos(θ) = 19 / (6.48 × 5.48) ≈ 19 / 35.51 ≈ 0.53
+```
 
 > **⚠ This number is significantly smaller. Your tastes are not very similar.**
 
@@ -209,7 +239,9 @@ Normalization is the process of transforming a vector so that its length (norm) 
 
 **Formula:**
 
-$$\text{Normalized } V = \frac{V}{||V||}$$
+```
+Normalized V = V / ||V||
+```
 
 That is, we simply divide each component of the vector by its length.
 
@@ -222,32 +254,46 @@ Normalization allows comparing vectors while ignoring their magnitude (scale). T
 Imagine we want to determine how similar two documents are by topic, counting key words "AI" and "data" in them.
 
 * **Document A (short news):** contains "AI" 10 times, "data" 5 times.
-  $$\text{Vector A} = [10, 5]$$
+  ```
+  Vector A = [10, 5]
+  ```
 
 * **Document B (long scientific article):** contains "AI" 100 times, "data" 50 times.
-  $$\text{Vector B} = [100, 50]$$
+  ```
+  Vector B = [100, 50]
+  ```
 
 Without normalization, Vector_B has a much greater length, and direct comparison would be incorrect. But intuitively we understand that both documents have the same ratio of keywords (2:1) and probably tell about the same thing. Let's check this using normalization.
 
 #### 1. Normalize Vector_A:
 
 **Length:**
-$$||A|| = \sqrt{10² + 5²} = \sqrt{100 + 25} = \sqrt{125} ≈ 11.18$$
+```
+||A|| = √(10² + 5²) = √(100 + 25) = √125 ≈ 11.18
+```
 
 **Normalized vector:**
-$$\text{Norm A} = \left[\frac{10}{11.18}, \frac{5}{11.18}\right] ≈ [0.894, 0.447]$$
+```
+Norm A = [10/11.18, 5/11.18] ≈ [0.894, 0.447]
+```
 
 #### 2. Normalize Vector_B:
 
 **Length:**
-$$||B|| = \sqrt{100² + 50²} = \sqrt{10000 + 2500} = \sqrt{12500} ≈ 111.8$$
+```
+||B|| = √(100² + 50²) = √(10000 + 2500) = √12500 ≈ 111.8
+```
 
 **Normalized vector:**
-$$\text{Norm B} = \left[\frac{100}{111.8}, \frac{50}{111.8}\right] ≈ [0.894, 0.447]$$
+```
+Norm B = [100/111.8, 50/111.8] ≈ [0.894, 0.447]
+```
 
 > **📊 Conclusion:** After normalization we got **identical** vectors!
 > 
-> $$\text{Norm A} = \text{Norm B} = [0.894, 0.447]$$
+> ```
+> Norm A = Norm B = [0.894, 0.447]
+> ```
 > 
 > This proves that both documents have the same "direction" (topic), despite the huge difference in length. Cosine similarity = 1.0 ✨
 

@@ -1,8 +1,24 @@
 # Lecture 1: Vectors – The Language of Artificial Intelligence 🤖
 
-Hello! Today we're laying the foundation for understanding artificial intelligence, and this foundation is vectors. Forget complex algorithms for a moment. At the core of almost everything modern AI does lies a simple idea of a vector.
+Imagine we need to "explain" to a computer how concepts like "sunny day" and "warm weather" are similar, or how to distinguish tea from coffee. Vectors serve as the universal language of numbers that describes object characteristics for their further mathematical processing and machine understanding.
 
-## What is a vector?
+**Vector concept and its interpretations**
+
+* **What is a vector?**
+    * Simplest definition: **A vector is an ordered set of numbers.** These numbers are called its **components** or **coordinates**.
+    * Usually written in square brackets, for example:
+        * `v = [3, -1, 5]` (this is a three-dimensional vector with components 3, -1, and 5)
+        * `u = [u₁, u₂, ..., uₙ]` (this is an n-dimensional vector)
+* **Geometric interpretation (for 2D and 3D):**
+    * In the case of a plane or space (in other words, 2D and 3D), a vector can be imagined as a **directed segment** – that is, an arrow.
+    * This arrow has two key characteristics:
+        1. **Direction:** Where it points.
+        2. **Magnitude (Length):** How long it is.
+    * **Example:** Vector `a = [4, 2]` on a plane can be depicted as an arrow that starts at point (0,0) and ends at point (4,2). It shows movement of 4 units along the X-axis and 2 units along the Y-axis.
+        
+    * **Important:** A vector is defined precisely by direction and length, not by the starting point. An arrow from (1,1) to (5,3) represents the same vector `a = [4, 2]`, because the displacement along X is `5-1=4`, and along Y is `3-1=2`.
+* **Interpretation in AI (Why this is important for us):**
+    * In AI, vectors are used to represent **features** of objects in numerical form. The vector dimension (number of components) corresponds to the number of features we consider.
 
 Imagine a point on a map. To determine its position, you need two coordinates: latitude and longitude. For example, `[49.83, 24.02]` are the coordinates of Lviv. This is a two-dimensional vector.
 
@@ -19,9 +35,7 @@ By collecting these numbers into one ordered list, we get a vector that describe
 Cat_Vector = [4.5, 46, 0.9, 0.2]
 ```
 
-So, **a vector is an ordered list of numbers** that describes some object or point in space. Each number in it is a **component** or coordinate along a certain "dimension" (weight, length, fluffiness, etc.). The number of numbers in a vector is called its **dimensionality**.
-
-> **💡 Key idea:** Vectors translate any information – images, sound, text, statistical data – into a numerical format that a computer can process.
+In summary, **a vector is an ordered list of numbers** that describes some object or point in space. Each number in it is a **component** or coordinate along a certain "dimension" (weight, length, fluffiness, etc.). The number of numbers in a vector is called its **dimensionality**.
 
 ## Operations on Vectors
 
@@ -70,22 +84,52 @@ Now you have exact proportions for six servings.
 
 These operations are only possible for vectors of the same dimensionality and are performed component-wise.
 
+* **Vector Addition:**
+    * **Rule:** To add two vectors of the same dimensionality, you simply **add their corresponding components**.
+    * **Formula:** If `a = [a₁, a₂, ..., aₙ]` and `b = [b₁, b₂, ..., bₙ]`, then:
+        ```
+        a + b = [a₁ + b₁, a₂ + b₂, ..., aₙ + bₙ]
+        ```
+    * **Example (2D):** Let `a = [1, 3]` (1 step right, 3 up) and `b = [4, -1]` (4 steps right, 1 down). Then:
+        ```
+        a + b = [1+4, 3+(-1)] = [5, 2]
+        ```
+    * **Geometrically:** This is like performing two movements sequentially. If you place the beginning of vector `b` at the end of vector `a`, then the sum vector `a+b` connects the beginning of `a` with the end of `b`. Or you can use the "parallelogram rule".
+    * **In AI:** Addition can mean combining features. For example, if a vector represents a set of skills, then the sum of vectors of two people can (conditionally) represent their combined skills.
+
+![Vector Addition](https://github.com/aisics/department-of-aisics/blob/main/assets/Basics/vector-plus.png?raw=true)
+
+* **Vector Subtraction:**
+    * **Rule:** Similar to addition, **subtract corresponding components**.
+    * **Formula:**
+        ```
+        a - b = [a₁ - b₁, a₂ - b₂, ..., aₙ - bₙ]
+        ```
+    * **Example (2D):** For the same `a = [1, 3]` and `b = [4, -1]`:
+        ```
+        a - b = [1-4, 3-(-1)] = [-3, 4]
+        ```
+    * **Geometrically:** Vector `a - b` is the vector that needs to be added to `b` to get `a`. It points from the end of vector `b` to the end of vector `a` (if they start from the same point).
+    * **In AI:** Subtraction is often used to find **differences** or **direction of changes** between two states or objects.
+
+![Vector Subtraction](https://github.com/aisics/department-of-aisics/blob/main/assets/Basics/vector-minus.png?raw=true)
+
 #### **Example "King - Man + Woman = Queen" 👑**
 
 This is a classic example from language processing that demonstrates how vector operations capture semantic relationships.
 
-* **Step 1: Building vectors.** An AI model (e.g., Word2Vec) analyzes huge texts (like Wikipedia) and creates vectors for words based on their context. Words used in similar contexts get similar vectors. For illustration, let's imagine a simplified 4-dimensional "meaning space": `[Royal power, Male gender, Female gender, General authority]`.
+* **Step 1: Building vectors.** An AI model analyzes huge texts (say Wikipedia) and creates vectors for words based on their context. Words used in similar contexts get similar vectors. For illustration, let's imagine a simplified 3-dimensional "meaning space": `[Royal power, Male gender, Female gender]`.
 
 * **Step 2: Approximate vectors.**
 
   ```
-  Vector("King")  ≈ [0.95, 0.85, 0.0, 0.9]
+  Vector("King")  ≈ [0.95, 0.85, 0.0]
                     (high royal power, strong association with male gender)
   
-  Vector("Man")   ≈ [0.10, 0.90, 0.0, 0.4]
+  Vector("Man")   ≈ [0.10, 0.90, 0.0]
                     (low royal power, very strong association with male gender)
   
-  Vector("Woman") ≈ [0.10, 0.00, 0.9, 0.35]
+  Vector("Woman") ≈ [0.10, 0.00, 0.9]
                     (low royal power, strong association with female gender)
   ```
 
@@ -94,11 +138,14 @@ This is a classic example from language processing that demonstrates how vector 
   ```
   Result = Vector("King") - Vector("Man") + Vector("Woman")
   
-  = [0.95, 0.85, 0.0, 0.9] - [0.10, 0.90, 0.0, 0.4] + [0.10, 0.00, 0.9, 0.35]
-  = [0.95, -0.05, 0.9, 0.85]
+  = [0.95, 0.85, 0.0] 
+  - [0.10, 0.90, 0.0] 
+  + [0.10, 0.00, 0.9]
+  
+  = [0.95, -0.05, 0.9]
   ```
 
-* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result `[0.95, -0.05, 0.9, 0.85]`. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
+* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result `[0.95, -0.05, 0.9]`. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
 
 ## Vector Similarity: Dot Product and Cosine Similarity
 
@@ -106,7 +153,7 @@ This is probably the most important concept for AI. How do you determine how sim
 
 Here **dot product** comes to our aid, but not by itself, but as part of **cosine similarity**.
 
-> **🎯 Idea:** Vector similarity is not about their length (pixel brightness, number of ingredients), but about their **direction**. If two vectors point in the same direction, they are very similar. If they are perpendicular – they are not similar at all.
+> **🎯 Idea:** Vector similarity is not about their length, but about their **direction**. If two vectors point in the same direction, they are very similar. If they are perpendicular – they are not similar at all.
 
 Cosine similarity measures the cosine of the angle between two vectors and always gives a result from -1 to 1:
 
@@ -136,7 +183,7 @@ Imagine Netflix wants to recommend a movie to you. It represents your preference
 
 ```
 Your_Vector  = [5, 1, 4]  # You love "Dune" and "Oppenheimer", but not "Barbie"
-Anna_Vector  = [4, 2, 5]  # Similar to your preferences
+Anna_Vector  = [4, 2, 5]  # Likes "Dune", loves "Oppenheimer", but not very excited about "Barbie"
 Peter_Vector = [2, 5, 1]  # Loves "Barbie", doesn't like "Dune" and "Oppenheimer"
 ```
 

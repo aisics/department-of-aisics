@@ -57,31 +57,25 @@ const lang = Astro.cookies.get('language')?.value || 'uk';
   }
   
   function setLanguage(lang) {
-    console.log('setLanguage called with:', lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang);
       document.cookie = `language=${lang}; path=/;`;
       
       // Check if we're on an article page and need to redirect to corresponding article
       const currentPath = window.location.pathname;
-      console.log('Current path:', currentPath);
       const articleMatch = currentPath.match(/^\/article\/(.+)$/);
       
       if (articleMatch) {
         const currentSlug = articleMatch[1];
-        console.log('Current slug:', currentSlug);
         const correspondingSlug = getCorrespondingSlug(currentSlug, lang);
-        console.log('Corresponding slug:', correspondingSlug);
         
         if (correspondingSlug !== currentSlug) {
-          console.log('Redirecting to:', `/article/${correspondingSlug}`);
           // Redirect to corresponding article
           window.location.href = `/article/${correspondingSlug}`;
           return;
         }
       }
       
-      console.log('Reloading page');
       // Just reload if not on article page or no corresponding article
       window.location.reload();
     }
@@ -131,7 +125,6 @@ const lang = Astro.cookies.get('language')?.value || 'uk';
         
         // Get the lang from the button itself, not the clicked target
         const lang = option.getAttribute('data-lang');
-        console.log('Language clicked:', lang);
         
         if (lang) {
           setLanguage(lang);

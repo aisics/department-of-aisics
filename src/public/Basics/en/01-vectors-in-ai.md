@@ -7,31 +7,33 @@ Imagine we need to "explain" to a computer how concepts like "sunny day" and "wa
 * **What is a vector?**
     * Simplest definition: **A vector is an ordered set of numbers.** These numbers are called its **components** or **coordinates**.
     * Usually written in square brackets, for example:
-        * $v = [3, -1, 5]$ — this is a three-dimensional vector with components 3, -1, and 5
-        * $u = [u_1, u_2, ..., u_n]$ — this is an n-dimensional vector
+        * **v = [3, -1, 5]** — this is a three-dimensional vector with components 3, -1, and 5
+        * **u = [u₁, u₂, ..., uₙ]** — this is an n-dimensional vector
 * **Geometric interpretation (for 2D and 3D):**
     * In the case of a plane or space (in other words, 2D and 3D), a vector can be imagined as a **directed segment** – that is, an arrow.
     * This arrow has two key characteristics:
         1. **Direction:** Where it points.
         2. **Magnitude (Length):** How long it is.
-    * **Example:** Vector $a = [4, 2]$ on a plane can be depicted as an arrow that starts at point $(0,0)$ and ends at point $(4,2)$. It shows movement of 4 units along the X-axis and 2 units along the Y-axis.
+    * **Example:** Vector **a = [4, 2]** on a plane can be depicted as an arrow that starts at point **(0,0)** and ends at point **(4,2)**. It shows movement of 4 units along the X-axis and 2 units along the Y-axis.
         
-    * **Important:** A vector is defined precisely by direction and length, not by the starting point. An arrow from $(1,1)$ to $(5,3)$ represents the same vector $a = [4, 2]$, because the displacement along X is $5-1=4$, and along Y is $3-1=2$.
+    * **Important:** A vector is defined precisely by direction and length, not by the starting point. An arrow from **(1,1)** to **(5,3)** represents the same vector **a = [4, 2]**, because the displacement along X is **5-1=4**, and along Y is **3-1=2**.
 * **Interpretation in AI (Why this is important for us):**
     * In AI, vectors are used to represent **features** of objects in numerical form. The vector dimension (number of components) corresponds to the number of features we consider.
 
-Imagine a point on a map. To determine its position, you need two coordinates: latitude and longitude. For example, $[49.83, 24.02]$ are the coordinates of Lviv. This is a two-dimensional vector.
+Imagine a point on a map. To determine its position, you need two coordinates: latitude and longitude. For example, **[49.83, 24.02]** are the coordinates of Lviv. This is a two-dimensional vector.
 
 Now imagine we want to describe not a point on a map, but some object, for example, a cat. What are its characteristics?
 
-* **Weight (kg):** $4.5$  
-* **Length (cm):** $46$  
-* **Fluffiness level (from 0 to 1):** $0.9$  
-* **Danger level (from 0 to 1):** $0.2$
+* **Weight (kg):** 4.5  
+* **Length (cm):** 46  
+* **Fluffiness level (from 0 to 1):** 0.9  
+* **Danger level (from 0 to 1):** 0.2
 
 By collecting these numbers into one ordered list, we get a vector that describes this cat:
 
-$$\text{Cat Vector} = [4.5, 46, 0.9, 0.2]$$
+```
+Cat_Vector = [4.5, 46, 0.9, 0.2]
+```
 
 In summary, **a vector is an ordered list of numbers** that describes some object or point in space. Each number in it is a **component** or coordinate along a certain "dimension" (weight, length, fluffiness, etc.). The number of numbers in a vector is called its **dimensionality**.
 
@@ -45,13 +47,17 @@ A **scalar** is simply one number (not a vector). Multiplying a vector by a scal
 
 #### **Example 1: Adjusting image brightness 🎨**
 
-Each pixel on a color screen can be represented as a vector of three components: $[R, G, B]$ (red, green, blue), where values typically range from 0 to 255. Let's say we have a dark purple color with vector:
+Each pixel on a color screen can be represented as a vector of three components: **[R, G, B]** (red, green, blue), where values typically range from 0 to 255. Let's say we have a dark purple color with vector:
 
-$$V = [60, 0, 80]$$
+```
+V = [60, 0, 80]
+```
 
-To make the color twice as bright, we multiply the vector by scalar $c = 2$:
+To make the color twice as bright, we multiply the vector by scalar **c = 2**:
 
-$$\text{New } V = 2 \times [60, 0, 80] = [120, 0, 160]$$
+```
+New_V = 2 × [60, 0, 80] = [120, 0, 160]
+```
 
 We get a much brighter purple. Similarly, by multiplying by scalar 0.5, we would make the image darker. This is exactly how brightness sliders work in photo editors.
 
@@ -59,14 +65,18 @@ We get a much brighter purple. Similarly, by multiplying by scalar 0.5, we would
 
 Imagine a cake recipe for 4 servings represented as an ingredient vector:
 
-$$\text{Recipe 4 servings} = [500, 200, 4, 150]$$
-$$(\text{flour (g), sugar (g), eggs (pcs), milk (ml)})$$
+```
+Recipe_4_servings = [500, 200, 4, 150]
+                    (flour (g), sugar (g), eggs (pcs), milk (ml))
+```
 
 You want to bake a cake for 6 people. You need to scale the recipe:
 
-$$\text{Coefficient (scalar)} = \frac{6}{4} = 1.5$$
+```
+Coefficient (scalar) = 6/4 = 1.5
 
-$$\text{Recipe 6 servings} = 1.5 \times [500, 200, 4, 150] = [750, 300, 6, 225]$$
+Recipe_6_servings = 1.5 × [500, 200, 4, 150] = [750, 300, 6, 225]
+```
 
 Now you have exact proportions for six servings.
 

@@ -7,33 +7,31 @@ Imagine we need to "explain" to a computer how concepts like "sunny day" and "wa
 * **What is a vector?**
     * Simplest definition: **A vector is an ordered set of numbers.** These numbers are called its **components** or **coordinates**.
     * Usually written in square brackets, for example:
-        * `v = [3, -1, 5]` (this is a three-dimensional vector with components 3, -1, and 5)
-        * `u = [u₁, u₂, ..., uₙ]` (this is an n-dimensional vector)
+        * $v = [3, -1, 5]$ (this is a three-dimensional vector with components 3, -1, and 5)
+        * $u = [u₁, u₂, ..., uₙ]$ (this is an n-dimensional vector)
 * **Geometric interpretation (for 2D and 3D):**
     * In the case of a plane or space (in other words, 2D and 3D), a vector can be imagined as a **directed segment** – that is, an arrow.
     * This arrow has two key characteristics:
         1. **Direction:** Where it points.
         2. **Magnitude (Length):** How long it is.
-    * **Example:** Vector `a = [4, 2]` on a plane can be depicted as an arrow that starts at point (0,0) and ends at point (4,2). It shows movement of 4 units along the X-axis and 2 units along the Y-axis.
+    * **Example:** Vector $a = [4, 2]$ on a plane can be depicted as an arrow that starts at point $(0,0)$ and ends at point $(4,2)$. It shows movement of 4 units along the X-axis and 2 units along the Y-axis.
         
-    * **Important:** A vector is defined precisely by direction and length, not by the starting point. An arrow from (1,1) to (5,3) represents the same vector `a = [4, 2]`, because the displacement along X is `5-1=4`, and along Y is `3-1=2`.
+    * **Important:** A vector is defined precisely by direction and length, not by the starting point. An arrow from $(1,1)$ to $(5,3)$ represents the same vector $a = [4, 2]$, because the displacement along X is $5-1=4$, and along Y is $3-1=2$.
 * **Interpretation in AI (Why this is important for us):**
     * In AI, vectors are used to represent **features** of objects in numerical form. The vector dimension (number of components) corresponds to the number of features we consider.
 
-Imagine a point on a map. To determine its position, you need two coordinates: latitude and longitude. For example, `[49.83, 24.02]` are the coordinates of Lviv. This is a two-dimensional vector.
+Imagine a point on a map. To determine its position, you need two coordinates: latitude and longitude. For example, $[49.83, 24.02]$ are the coordinates of Lviv. This is a two-dimensional vector.
 
 Now imagine we want to describe not a point on a map, but some object, for example, a cat. What are its characteristics?
 
-* **Weight (kg):** `4.5`  
-* **Length (cm):** `46`  
-* **Fluffiness level (from 0 to 1):** `0.9`  
-* **Danger level (from 0 to 1):** `0.2`
+* **Weight (kg):** $4.5$  
+* **Length (cm):** $46$  
+* **Fluffiness level (from 0 to 1):** $0.9$  
+* **Danger level (from 0 to 1):** $0.2$
 
 By collecting these numbers into one ordered list, we get a vector that describes this cat:
 
-```
-Cat_Vector = [4.5, 46, 0.9, 0.2]
-```
+$$\text{Cat Vector} = [4.5, 46, 0.9, 0.2]$$
 
 In summary, **a vector is an ordered list of numbers** that describes some object or point in space. Each number in it is a **component** or coordinate along a certain "dimension" (weight, length, fluffiness, etc.). The number of numbers in a vector is called its **dimensionality**.
 
@@ -47,17 +45,13 @@ A **scalar** is simply one number (not a vector). Multiplying a vector by a scal
 
 #### **Example 1: Adjusting image brightness 🎨**
 
-Each pixel on a color screen can be represented as a vector of three components: `[R, G, B]` (red, green, blue), where values typically range from 0 to 255. Let's say we have a dark purple color with vector:
+Each pixel on a color screen can be represented as a vector of three components: $[R, G, B]$ (red, green, blue), where values typically range from 0 to 255. Let's say we have a dark purple color with vector:
 
-```
-V = [60, 0, 80]
-```
+$$V = [60, 0, 80]$$
 
-To make the color twice as bright, we multiply the vector by scalar `c = 2`:
+To make the color twice as bright, we multiply the vector by scalar $c = 2$:
 
-```
-New_V = 2 × [60, 0, 80] = [120, 0, 160]
-```
+$$\text{New } V = 2 \times [60, 0, 80] = [120, 0, 160]$$
 
 We get a much brighter purple. Similarly, by multiplying by scalar 0.5, we would make the image darker. This is exactly how brightness sliders work in photo editors.
 
@@ -65,18 +59,14 @@ We get a much brighter purple. Similarly, by multiplying by scalar 0.5, we would
 
 Imagine a cake recipe for 4 servings represented as an ingredient vector:
 
-```
-Recipe_4_servings = [500, 200, 4, 150]
-                    (flour (g), sugar (g), eggs (pcs), milk (ml))
-```
+$$\text{Recipe 4 servings} = [500, 200, 4, 150]$$
+$$(\text{flour (g), sugar (g), eggs (pcs), milk (ml)})$$
 
 You want to bake a cake for 6 people. You need to scale the recipe:
 
-```
-Coefficient (scalar) = 6 / 4 = 1.5
+$$\text{Coefficient (scalar)} = \frac{6}{4} = 1.5$$
 
-Recipe_6_servings = 1.5 × [500, 200, 4, 150] = [750, 300, 6, 225]
-```
+$$\text{Recipe 6 servings} = 1.5 \times [500, 200, 4, 150] = [750, 300, 6, 225]$$
 
 Now you have exact proportions for six servings.
 
@@ -86,14 +76,10 @@ These operations are only possible for vectors of the same dimensionality and ar
 
 * **Vector Addition:**
     * **Rule:** To add two vectors of the same dimensionality, you simply **add their corresponding components**.
-    * **Formula:** If `a = [a₁, a₂, ..., aₙ]` and `b = [b₁, b₂, ..., bₙ]`, then:
-        ```
-        a + b = [a₁ + b₁, a₂ + b₂, ..., aₙ + bₙ]
-        ```
-    * **Example (2D):** Let `a = [1, 3]` (1 step right, 3 up) and `b = [4, -1]` (4 steps right, 1 down). Then:
-        ```
-        a + b = [1+4, 3+(-1)] = [5, 2]
-        ```
+    * **Formula:** If $a = [a₁, a₂, ..., aₙ]$ and $b = [b₁, b₂, ..., bₙ]$, then:
+        $$a + b = [a₁ + b₁, a₂ + b₂, ..., aₙ + bₙ]$$
+    * **Example (2D):** Let $a = [1, 3]$ (1 step right, 3 up) and $b = [4, -1]$ (4 steps right, 1 down). Then:
+        $$a + b = [1+4, 3+(-1)] = [5, 2]$$
     * **Geometrically:** This is like performing two movements sequentially. If you place the beginning of vector `b` at the end of vector `a`, then the sum vector `a+b` connects the beginning of `a` with the end of `b`. Or you can use the "parallelogram rule".
     * **In AI:** Addition can mean combining features. For example, if a vector represents a set of skills, then the sum of vectors of two people can (conditionally) represent their combined skills.
 
@@ -102,13 +88,9 @@ These operations are only possible for vectors of the same dimensionality and ar
 * **Vector Subtraction:**
     * **Rule:** Similar to addition, **subtract corresponding components**.
     * **Formula:**
-        ```
-        a - b = [a₁ - b₁, a₂ - b₂, ..., aₙ - bₙ]
-        ```
-    * **Example (2D):** For the same `a = [1, 3]` and `b = [4, -1]`:
-        ```
-        a - b = [1-4, 3-(-1)] = [-3, 4]
-        ```
+        $$a - b = [a₁ - b₁, a₂ - b₂, ..., aₙ - bₙ]$$
+    * **Example (2D):** For the same $a = [1, 3]$ and $b = [4, -1]$:
+        $$a - b = [1-4, 3-(-1)] = [-3, 4]$$
     * **Geometrically:** Vector `a - b` is the vector that needs to be added to `b` to get `a`. It points from the end of vector `b` to the end of vector `a` (if they start from the same point).
     * **In AI:** Subtraction is often used to find **differences** or **direction of changes** between two states or objects.
 
@@ -122,30 +104,24 @@ This is a classic example from language processing that demonstrates how vector 
 
 * **Step 2: Approximate vectors.**
 
-  ```
-  Vector("King")  ≈ [0.95, 0.85, 0.0]
-                    (high royal power, strong association with male gender)
+  $$\text{Vector}("\text{King}")  ≈ [0.95, 0.85, 0.0]$$
+  $$(\text{high royal power, strong association with male gender})$$
   
-  Vector("Man")   ≈ [0.10, 0.90, 0.0]
-                    (low royal power, very strong association with male gender)
+  $$\text{Vector}("\text{Man}")   ≈ [0.10, 0.90, 0.0]$$
+  $$(\text{low royal power, very strong association with male gender})$$
   
-  Vector("Woman") ≈ [0.10, 0.00, 0.9]
-                    (low royal power, strong association with female gender)
-  ```
+  $$\text{Vector}("\text{Woman}") ≈ [0.10, 0.00, 0.9]$$
+  $$(\text{low royal power, strong association with female gender})$$
 
 * **Step 3: Operation.**
 
-  ```
-  Result = Vector("King") - Vector("Man") + Vector("Woman")
+  $$\text{Result} = \text{Vector}("\text{King}") - \text{Vector}("\text{Man}") + \text{Vector}("\text{Woman}")$$
   
-  = [0.95, 0.85, 0.0] 
-  - [0.10, 0.90, 0.0] 
-  + [0.10, 0.00, 0.9]
+  $$= [0.95, 0.85, 0.0] - [0.10, 0.90, 0.0] + [0.10, 0.00, 0.9]$$
   
-  = [0.95, -0.05, 0.9]
-  ```
+  $$= [0.95, -0.05, 0.9]$$
 
-* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result `[0.95, -0.05, 0.9]`. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
+* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result $[0.95, -0.05, 0.9]$. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
 
 ## Vector Similarity: Dot Product and Cosine Similarity
 
@@ -163,69 +139,51 @@ Cosine similarity measures the cosine of the angle between two vectors and alway
 
 The formula looks like this:
 
-```
-Similarity(A,B) = cos(θ) = (A·B) / (||A|| × ||B||)
-```
+$$\text{Similarity}(A,B) = \cos(\theta) = \frac{A \cdot B}{||A|| \times ||B||}$$
 
 **Where:**
 
-* `A·B` is the **dot product** of vectors A and B (sum of pairwise products of their components).  
-* `||A||` and `||B||` are the **lengths (norms)** of vectors A and B. 
+* $A \cdot B$ is the **dot product** of vectors A and B (sum of pairwise products of their components).  
+* $||A||$ and $||B||$ are the **lengths (norms)** of vectors A and B. 
 
-**The length of vector** `[x, y, z]` is calculated as:
-```
-||V|| = √(x² + y² + z²)
-```
+**The length of vector** $[x, y, z]$ is calculated as:
+$$||V|| = \sqrt{x² + y² + z²}$$
 
 ### **Real example: Movie recommendation system 🎬**
 
 Imagine Netflix wants to recommend a movie to you. It represents your preferences and other users' preferences as vectors. For simplicity, let's take only 3 movies: "Dune", "Barbie", "Oppenheimer". Your ratings (from 1 to 5) are your vector.
 
-```
-Your_Vector  = [5, 1, 4]  # You love "Dune" and "Oppenheimer", but not "Barbie"
-Anna_Vector  = [4, 2, 5]  # Likes "Dune", loves "Oppenheimer", but not very excited about "Barbie"
-Peter_Vector = [2, 5, 1]  # Loves "Barbie", doesn't like "Dune" and "Oppenheimer"
-```
+$$\text{Your Vector}  = [5, 1, 4]  \text{  # You love "Dune" and "Oppenheimer", but not "Barbie"}$$
+$$\text{Anna Vector}  = [4, 2, 5]  \text{  # Likes "Dune", loves "Oppenheimer", but not very excited about "Barbie"}$$
+$$\text{Peter Vector} = [2, 5, 1]  \text{  # Loves "Barbie", doesn't like "Dune" and "Oppenheimer"}$$
 
 **Let's find who is "closer" to you – Anna or Peter?**
 
 #### 1. Similarity between you and Anna:
 
 **Dot product:**
-```
-A·B = (5 × 4) + (1 × 2) + (4 × 5) = 20 + 2 + 20 = 42
-```
+$$A \cdot B = (5 \times 4) + (1 \times 2) + (4 \times 5) = 20 + 2 + 20 = 42$$
 
 **Vector lengths:**
-```
-||Your|| = √(5² + 1² + 4²) = √(25 + 1 + 16) = √42 ≈ 6.48
-||Anna|| = √(4² + 2² + 5²) = √(16 + 4 + 25) = √45 ≈ 6.71
-```
+$$||\text{Your}|| = \sqrt{5² + 1² + 4²} = \sqrt{25 + 1 + 16} = \sqrt{42} ≈ 6.48$$
+$$||\text{Anna}|| = \sqrt{4² + 2² + 5²} = \sqrt{16 + 4 + 25} = \sqrt{45} ≈ 6.71$$
 
 **Cosine similarity:**
-```
-cos(θ) = 42 / (6.48 × 6.71) ≈ 42 / 43.48 ≈ 0.97
-```
+$$\cos(\theta) = \frac{42}{6.48 \times 6.71} ≈ \frac{42}{43.48} ≈ 0.97$$
 
 > **✨ This number is very close to 1. Your tastes are very similar!**
 
 #### 2. Similarity between you and Peter:
 
 **Dot product:**
-```
-A·B = (5 × 2) + (1 × 5) + (4 × 1) = 10 + 5 + 4 = 19
-```
+$$A \cdot B = (5 \times 2) + (1 \times 5) + (4 \times 1) = 10 + 5 + 4 = 19$$
 
 **Vector lengths:**
-```
-||Your||  ≈ 6.48  (already calculated)
-||Peter|| = √(2² + 5² + 1²) = √(4 + 25 + 1) = √30 ≈ 5.48
-```
+$$||\text{Your}||  ≈ 6.48  \text{  (already calculated)}$$
+$$||\text{Peter}|| = \sqrt{2² + 5² + 1²} = \sqrt{4 + 25 + 1} = \sqrt{30} ≈ 5.48$$
 
 **Cosine similarity:**
-```
-cos(θ) = 19 / (6.48 × 5.48) ≈ 19 / 35.51 ≈ 0.53
-```
+$$\cos(\theta) = \frac{19}{6.48 \times 5.48} ≈ \frac{19}{35.51} ≈ 0.53$$
 
 > **⚠ This number is significantly smaller. Your tastes are not very similar.**
 
@@ -241,9 +199,7 @@ Normalization is the process of transforming a vector so that its length (norm) 
 
 **Formula:**
 
-```
-Normalized_V = V / ||V||
-```
+$$\text{Normalized } V = \frac{V}{||V||}$$
 
 That is, we simply divide each component of the vector by its length.
 
@@ -256,46 +212,32 @@ Normalization allows comparing vectors while ignoring their magnitude (scale). T
 Imagine we want to determine how similar two documents are by topic, counting key words "AI" and "data" in them.
 
 * **Document A (short news):** contains "AI" 10 times, "data" 5 times.
-  ```
-  Vector_A = [10, 5]
-  ```
+  $$\text{Vector A} = [10, 5]$$
 
 * **Document B (long scientific article):** contains "AI" 100 times, "data" 50 times.
-  ```
-  Vector_B = [100, 50]
-  ```
+  $$\text{Vector B} = [100, 50]$$
 
 Without normalization, Vector_B has a much greater length, and direct comparison would be incorrect. But intuitively we understand that both documents have the same ratio of keywords (2:1) and probably tell about the same thing. Let's check this using normalization.
 
 #### 1. Normalize Vector_A:
 
 **Length:**
-```
-||A|| = √(10² + 5²) = √(100 + 25) = √125 ≈ 11.18
-```
+$$||A|| = \sqrt{10² + 5²} = \sqrt{100 + 25} = \sqrt{125} ≈ 11.18$$
 
 **Normalized vector:**
-```
-Norm_A = [10/11.18, 5/11.18] ≈ [0.894, 0.447]
-```
+$$\text{Norm A} = \left[\frac{10}{11.18}, \frac{5}{11.18}\right] ≈ [0.894, 0.447]$$
 
 #### 2. Normalize Vector_B:
 
 **Length:**
-```
-||B|| = √(100² + 50²) = √(10000 + 2500) = √12500 ≈ 111.8
-```
+$$||B|| = \sqrt{100² + 50²} = \sqrt{10000 + 2500} = \sqrt{12500} ≈ 111.8$$
 
 **Normalized vector:**
-```
-Norm_B = [100/111.8, 50/111.8] ≈ [0.894, 0.447]
-```
+$$\text{Norm B} = \left[\frac{100}{111.8}, \frac{50}{111.8}\right] ≈ [0.894, 0.447]$$
 
 > **📊 Conclusion:** After normalization we got **identical** vectors!
 > 
-> ```
-> Norm_A = Norm_B = [0.894, 0.447]
-> ```
+> $$\text{Norm A} = \text{Norm B} = [0.894, 0.447]$$
 > 
 > This proves that both documents have the same "direction" (topic), despite the huge difference in length. Cosine similarity = 1.0 ✨
 

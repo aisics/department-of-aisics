@@ -72,7 +72,7 @@ export async function getArticleBySlug(slug: string, lang: string = 'en'): Promi
         const fs = await import('fs');
         const path = await import('path');
         
-        const filePath = path.join(process.cwd(), article.filePath);
+        const filePath = path.join(process.cwd(), 'public', article.filePath);
         const fullContent = fs.readFileSync(filePath, 'utf-8');
         
         // Parse front matter if it exists, otherwise use the full content

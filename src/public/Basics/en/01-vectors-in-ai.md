@@ -121,7 +121,7 @@ This is a classic example from language processing that demonstrates how vector 
   
   $$= [0.95, -0.05, 0.9]$$
 
-* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result $[0.95, -0.05, 0.9]$. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
+* **Step 4: Finding the closest word.** AI searches in its "library" for a word whose vector is closest to the obtained result: $[0.95, -0.05, 0.9]$. This vector has high "royal power", almost zero "male gender" and high "female gender". The best candidate turns out to be **"Queen"**.
 
 ## Vector Similarity: Dot Product and Cosine Similarity
 

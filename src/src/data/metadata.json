@@ -42,7 +42,39 @@
     }
   ],
   "articles": {
-    "en": [],
-    "uk": []
+    "en": [
+      {
+        "title": "Vectors: The Fundamental Building Blocks of Artificial Intelligence",
+        "description": "A comprehensive guide to understanding vectors, their operations, and why they are essential for AI and machine learning",
+        "author": "AI Department",
+        "date": "2024-01-22",
+        "readingTime": 20,
+        "tags": ["vectors", "linear-algebra", "machine-learning", "neural-networks", "mathematics"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Basics",
+        "slug": "basics-en-vectors-in-ai",
+        "filePath": "Basics/en/01-vectors-in-ai.md",
+        "prerequisites": [],
+        "relatedArticles": []
+      }
+    ],
+    "uk": [
+      {
+        "title": "Вектори: Фундаментальна основа штучного інтелекту",
+        "description": "Вичерпний посібник для розуміння векторів, операцій над ними та їх критичної важливості для ШІ та машинного навчання",
+        "author": "Кафедра ШІ",
+        "date": "2024-01-22",
+        "readingTime": 20,
+        "tags": ["вектори", "лінійна-алгебра", "машинне-навчання", "нейронні-мережі", "математика"],
+        "featured": true,
+        "difficulty": "beginner",
+        "category": "Basics",
+        "slug": "basics-uk-vectors-in-ai",
+        "filePath": "Basics/uk/01-vectors-in-ai.md",
+        "prerequisites": [],
+        "relatedArticles": []
+      }
+    ]
   }
 }

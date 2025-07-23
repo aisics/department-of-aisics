@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { getArticlesForLanguage, getArticleBySlug, getCategories } from '../../utils/articles';
+import { getArticlesForLanguage, getArticleBySlug, getCategories, getCorrespondingSlug } from '../../utils/articles';
 import { marked } from 'marked';
 import { getTranslation } from '../../utils/i18n';
 
@@ -38,11 +38,17 @@ const t = (key: string) => getTranslation(lang, key);
 // Get categories for sidebar
 const categoriesFromRepo = getCategories();
 
-// Get the article content
-const articleData = await getArticleBySlug(slug, lang);
+// Try to get the article content in the requested language
+let articleData = await getArticleBySlug(slug, lang);
 
-// If no article found, return 404
+// If no article found in the requested language, try to find corresponding article in other language
 if (!articleData) {
+  const correspondingSlug = getCorrespondingSlug(slug, lang);
+  if (correspondingSlug && correspondingSlug !== slug) {
+    // Redirect to the corresponding article in the correct language
+    return Astro.redirect(`/article/${correspondingSlug}`);
+  }
+  // If no corresponding article found, return 404
   return Astro.redirect('/404');
 }
 

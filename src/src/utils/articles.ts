@@ -131,3 +131,46 @@ export function searchArticles(query: string, lang: string = 'en'): ArticleMetad
     article.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
   );
 }
+
+// Get corresponding article slug in different language
+export function getCorrespondingSlug(currentSlug: string, targetLang: string): string | null {
+  const metadata = getSiteMetadata();
+  
+  // Find the article in all languages
+  let baseSlug = '';
+  let currentLang = '';
+  
+  // Check if the current slug is in Ukrainian
+  const ukArticle = metadata.articles.uk.find(a => a.slug === currentSlug);
+  if (ukArticle) {
+    currentLang = 'uk';
+    // Extract base slug (remove language prefix)
+    baseSlug = currentSlug.replace(/^[^-]+-uk-/, '');
+  }
+  
+  // Check if the current slug is in English
+  const enArticle = metadata.articles.en.find(a => a.slug === currentSlug);
+  if (enArticle) {
+    currentLang = 'en';
+    // Extract base slug (remove language prefix)  
+    baseSlug = currentSlug.replace(/^[^-]+-en-/, '');
+  }
+  
+  if (!baseSlug || !currentLang) {
+    return null;
+  }
+  
+  // If target language is the same as current, return current slug
+  if (currentLang === targetLang) {
+    return currentSlug;
+  }
+  
+  // Find corresponding article in target language
+  const targetArticles = metadata.articles[targetLang as keyof typeof metadata.articles];
+  const targetArticle = targetArticles?.find(article => {
+    const articleBaseSlug = article.slug.replace(/^[^-]+-[^-]+-/, '');
+    return articleBaseSlug === baseSlug;
+  });
+  
+  return targetArticle?.slug || null;
+}

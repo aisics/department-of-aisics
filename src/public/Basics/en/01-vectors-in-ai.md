@@ -8,7 +8,7 @@ Imagine we need to "explain" to a computer how concepts like "sunny day" and "wa
     * Simplest definition: **A vector is an ordered set of numbers.** These numbers are called its **components** or **coordinates**.
     * Usually written in square brackets, for example:
         * $v = [3, -1, 5]$ (this is a three-dimensional vector with components 3, -1, and 5)
-        * $u = [u₁, u₂, ..., uₙ]$ (this is an n-dimensional vector)
+        * $u = [u_1, u_2, ..., u_n]$ (this is an n-dimensional vector)
 * **Geometric interpretation (for 2D and 3D):**
     * In the case of a plane or space (in other words, 2D and 3D), a vector can be imagined as a **directed segment** – that is, an arrow.
     * This arrow has two key characteristics:
@@ -76,8 +76,8 @@ These operations are only possible for vectors of the same dimensionality and ar
 
 * **Vector Addition:**
     * **Rule:** To add two vectors of the same dimensionality, you simply **add their corresponding components**.
-    * **Formula:** If $a = [a₁, a₂, ..., aₙ]$ and $b = [b₁, b₂, ..., bₙ]$, then:
-        $$a + b = [a₁ + b₁, a₂ + b₂, ..., aₙ + bₙ]$$
+    * **Formula:** If $a = [a_1, a_2, ..., a_n]$ and $b = [b_1, b_2, ..., b_n]$, then:
+        $$a + b = [a_1 + b_1, a_2 + b_2, ..., a_n + b_n]$$
     * **Example (2D):** Let $a = [1, 3]$ (1 step right, 3 up) and $b = [4, -1]$ (4 steps right, 1 down). Then:
         $$a + b = [1+4, 3+(-1)] = [5, 2]$$
     * **Geometrically:** This is like performing two movements sequentially. If you place the beginning of vector `b` at the end of vector `a`, then the sum vector `a+b` connects the beginning of `a` with the end of `b`. Or you can use the "parallelogram rule".
@@ -88,7 +88,7 @@ These operations are only possible for vectors of the same dimensionality and ar
 * **Vector Subtraction:**
     * **Rule:** Similar to addition, **subtract corresponding components**.
     * **Formula:**
-        $$a - b = [a₁ - b₁, a₂ - b₂, ..., aₙ - bₙ]$$
+        $$a - b = [a_1 - b_1, a_2 - b_2, ..., a_n - b_n]$$
     * **Example (2D):** For the same $a = [1, 3]$ and $b = [4, -1]$:
         $$a - b = [1-4, 3-(-1)] = [-3, 4]$$
     * **Geometrically:** Vector `a - b` is the vector that needs to be added to `b` to get `a`. It points from the end of vector `b` to the end of vector `a` (if they start from the same point).

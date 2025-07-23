@@ -46,6 +46,17 @@ const { title, description = "AI Education Portal - Learn artificial intelligenc
   </head>
   <body class="bg-white text-gray-800 font-sans">
     <slot />
+    
+    <!-- Ensure MathJax processes content after page load -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.MathJax) {
+          MathJax.typesetPromise().then(() => {
+            console.log('MathJax typesetting complete');
+          }).catch((err) => console.log('MathJax typesetting failed: ' + err.message));
+        }
+      });
+    </script>
   </body>
 </html>
 

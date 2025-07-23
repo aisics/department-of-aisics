@@ -20,13 +20,13 @@ const t = (key: string) => getTranslation(lang, key);
 <Layout title={`${t('site.title')} - ${t('hero.title')}`}>
   <Header />
   
-  <div class="flex min-h-screen">
+  <div class="lg:flex min-h-screen">
     <Sidebar 
       categories={{}} 
       repoCategories={categoriesFromRepo} 
     />
     
-    <main class="flex-1 relative overflow-hidden">
+    <main class="lg:flex-1 relative overflow-hidden">
       <!-- Modern Hero Section -->
       <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-neural-950 via-primary-900 to-secondary-900">
         <!-- Animated Background -->
@@ -41,16 +41,16 @@ const t = (key: string) => getTranslation(lang, key);
         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-neural-900/5 to-neural-900/20"></div>
         
         <!-- Content -->
-        <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+        <div class="relative z-10 text-center px-4 sm:px-6 max-w-6xl mx-auto">
           <!-- Main Title -->
-          <h1 class="text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-tight animate-fade-in-up">
+          <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-8xl xl:text-9xl font-black mb-8 leading-tight animate-fade-in-up">
             <span class="block bg-gradient-to-r from-white via-primary-100 to-secondary-100 bg-clip-text text-transparent">
               {t('hero.title')}
             </span>
           </h1>
           
           <!-- Subtitle -->
-          <p class="text-xl md:text-2xl lg:text-3xl text-neural-300 max-w-4xl mx-auto leading-relaxed mb-12 animate-fade-in-up font-light" style="animation-delay: 0.2s;">
+          <p class="text-lg sm:text-xl md:text-2xl lg:text-3xl text-neural-300 max-w-4xl mx-auto leading-relaxed mb-12 animate-fade-in-up font-light" style="animation-delay: 0.2s;">
             {t('hero.description')}
           </p>
           
@@ -74,11 +74,11 @@ const t = (key: string) => getTranslation(lang, key);
       <!-- Articles Section -->
       <section id="explore" class="relative py-20 bg-gradient-to-b from-neural-50 to-white">
         <!-- Section Header -->
-        <div class="max-w-7xl mx-auto px-6 mb-16 text-center">
-          <h2 class="text-4xl md:text-5xl font-bold text-neural-900 mb-6 animate-fade-in-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 mb-16 text-center">
+          <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-neural-900 mb-6 animate-fade-in-up">
             Досліджуйте знання
           </h2>
-          <p class="text-xl text-neural-600 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay: 0.1s;">
+          <p class="text-lg sm:text-xl text-neural-600 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay: 0.1s;">
             Оберіть тему, яка вас цікавить, та почніть свій шлях у світ штучного інтелекту
           </p>
         </div>

@@ -16,8 +16,54 @@ const t = (key: string) => getTranslation(lang, key);
   <div class="absolute inset-0 bg-neural-pattern opacity-10"></div>
   
   <!-- Content -->
-  <div class="relative z-10 max-w-7xl mx-auto px-6">
-    <div class="flex justify-between items-center py-6">
+  <div class="relative z-10">
+    <!-- Mobile Header -->
+    <div class="lg:hidden flex items-center justify-between px-4 py-4">
+      <!-- Mobile Logo -->
+      <a href="/" class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
+          <img src="/robot-logo.png" alt="AI Robot Logo" class="w-8 h-8 object-contain" />
+        </div>
+        <div>
+          <h1 class="text-lg font-black bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            {t('site.title')}
+          </h1>
+        </div>
+      </a>
+      
+      <!-- Mobile Actions -->
+      <div class="flex items-center space-x-2">
+        <!-- Mobile Language Selector -->
+        <div class="relative">
+          <button 
+            onclick="toggleMobileLanguageDropdown()" 
+            class="flex items-center space-x-2 px-3 py-2 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 rounded-xl transition-all duration-300"
+          >
+            <span class="text-sm font-semibold text-neural-700">{lang.toUpperCase()}</span>
+            <svg class="w-4 h-4 text-neural-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          <!-- Mobile Language Dropdown -->
+          <div id="mobile-language-dropdown" class="absolute right-0 top-full mt-2 bg-white/95 backdrop-blur-xl rounded-xl shadow-neural border border-white/20 hidden z-50 min-w-max">
+            <a href="#" onclick="setLanguage('uk')" class="block px-4 py-3 text-sm text-neural-700 hover:bg-neural-50 first:rounded-t-xl transition-colors">🇺🇦 Українська</a>
+            <a href="#" onclick="setLanguage('en')" class="block px-4 py-3 text-sm text-neural-700 hover:bg-neural-50 last:rounded-b-xl transition-colors">🇺🇸 English</a>
+          </div>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button onclick="openMobileSidebar()" class="p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
+          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Desktop Header -->
+    <div class="hidden lg:block max-w-7xl mx-auto px-6">
+      <div class="flex justify-between items-center py-6">
       <!-- Logo Section -->
       <div class="flex items-center">
         <a href="/" class="group flex items-center space-x-4 hover:scale-105 transition-all duration-300">
@@ -43,7 +89,7 @@ const t = (key: string) => getTranslation(lang, key);
       </div>
       
       <!-- Navigation Actions -->
-      <div class="flex items-center space-x-3">
+      <div class="hidden lg:flex items-center space-x-3">
         <!-- Language Selector -->
         <div class="relative" style="z-index: 99999;">
           <LanguageSelector />
@@ -61,12 +107,13 @@ const t = (key: string) => getTranslation(lang, key);
           </svg>
         </a>
         
-        <!-- Mobile Menu Button (for future mobile nav) -->
-        <button class="sm:hidden p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-2xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
+        <!-- Mobile Menu Button -->
+        <button onclick="openMobileSidebar()" class="lg:hidden p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-2xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
           <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
+      </div>
       </div>
     </div>
   </div>
@@ -74,3 +121,38 @@ const t = (key: string) => getTranslation(lang, key);
   <!-- Gradient Border Bottom -->
   <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent"></div>
 </header>
+
+<script>
+  function toggleMobileLanguageDropdown() {
+    const dropdown = document.getElementById('mobile-language-dropdown');
+    if (dropdown) {
+      dropdown.classList.toggle('hidden');
+    }
+  }
+  
+  function setLanguage(newLang: string) {
+    // Close the dropdown
+    const dropdown = document.getElementById('mobile-language-dropdown');
+    if (dropdown) {
+      dropdown.classList.add('hidden');
+    }
+    
+    // Set language cookie and reload
+    document.cookie = `language=${newLang}; path=/; max-age=31536000`;
+    window.location.reload();
+  }
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('mobile-language-dropdown');
+    const button = e.target?.closest('button');
+    
+    if (dropdown && !dropdown.contains(e.target as Node) && button?.getAttribute('onclick') !== 'toggleMobileLanguageDropdown()') {
+      dropdown.classList.add('hidden');
+    }
+  });
+  
+  // Make functions available globally
+  (window as any).toggleMobileLanguageDropdown = toggleMobileLanguageDropdown;
+  (window as any).setLanguage = setLanguage;
+</script>

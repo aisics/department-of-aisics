@@ -70,7 +70,7 @@ const renderedContent = marked(content);
 <Layout title={`${metadata.title} - ${t('site.title')}`}>
   <Header />
   
-  <div class="flex min-h-screen">
+  <div class="lg:flex min-h-screen">
     <Sidebar 
       categories={{}} 
       repoCategories={categoriesFromRepo} 
@@ -79,14 +79,14 @@ const renderedContent = marked(content);
       currentCategory={metadata.category}
     />
     
-    <main class="flex-1 relative overflow-hidden">
+    <main class="lg:flex-1 relative overflow-hidden">
       <!-- Background Elements -->
       <div class="absolute inset-0 bg-gradient-to-br from-neural-50 via-white to-primary-50/30"></div>
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-secondary-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-br from-secondary-200/20 to-accent-200/20 rounded-full blur-2xl"></div>
       
       <div class="relative z-10">
-        <article class="max-w-5xl mx-auto px-6 py-12">
+        <article class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <!-- Breadcrumb -->
           <nav class="mb-12 animate-fade-in-up">
             <ol class="flex items-center space-x-3 text-sm">
@@ -117,14 +117,14 @@ const renderedContent = marked(content);
           <!-- Article Header -->
           <header class="mb-16 animate-fade-in-up" style="animation-delay: 0.1s;">
             <!-- Title -->
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 leading-tight">
               <span class="bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
                 {metadata.title}
               </span>
             </h1>
             
             <!-- Meta Info -->
-            <div class="flex flex-wrap items-center gap-6 mb-8 text-neural-600">
+            <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 text-neural-600">
               <div class="flex items-center space-x-2">
                 <div class="w-10 h-10 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center">
                   <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,8 +201,8 @@ const renderedContent = marked(content);
           <!-- Article Content -->
           <div class="animate-fade-in-up" style="animation-delay: 0.2s;">
             <!-- Content Card -->
-            <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/20 shadow-neural-lg mb-12">
-              <div class="prose prose-lg max-w-none
+            <div class="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 border border-white/20 shadow-neural-lg mb-12">
+              <div class="prose prose-sm sm:prose-base lg:prose-lg max-w-none
                 prose-headings:font-bold prose-headings:text-neural-900
                 prose-h1:text-4xl prose-h1:mb-8 prose-h1:bg-gradient-to-r prose-h1:from-primary-600 prose-h1:to-secondary-600 prose-h1:bg-clip-text prose-h1:text-transparent
                 prose-h2:text-3xl prose-h2:mb-6 prose-h2:text-neural-800 prose-h2:border-b prose-h2:border-neural-200 prose-h2:pb-2
@@ -222,8 +222,8 @@ const renderedContent = marked(content);
 
           <!-- Article Footer -->
           <footer class="animate-fade-in-up" style="animation-delay: 0.3s;">
-            <div class="bg-white/60 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-neural">
-              <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="bg-white/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20 shadow-neural">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
                 <div class="text-center sm:text-left">
                   <h3 class="text-xl font-bold text-neural-900 mb-2">Дякуємо за читання!</h3>
                   <p class="text-neural-600">{lang === 'uk' ? 'Сподіваємось, стаття була корисною' : 'Hope this article was helpful'}</p>

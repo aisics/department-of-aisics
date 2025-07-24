@@ -10,6 +10,7 @@ difficulty: "beginner"
 category: "Tutorials"
 prerequisites: []
 relatedArticles: []
+draft: true
 ---
 
 # How to Use AI to Build the Perfect CV and Land Your Dream Job 💼
@@ -225,6 +226,87 @@ INDUSTRY AND CONTEXT:
 - Company Size: [Startup/Mid-size/Enterprise]
 - Development Stage: [Early stage/Growth/Mature]
 ```
+
+### **Understanding AI Prompts: Your Key to Success** 🗝️
+
+Before we dive into creating your CV, let's understand what a **prompt** is and how to use it effectively.
+
+**What is a Prompt?**
+A prompt is simply the instructions you give to an AI system. Think of it as a detailed briefing to a very smart assistant who can help you write your CV, but needs clear guidance on what you want.
+
+**Basic Structure of a Good Prompt:**
+```
+[Context] → [Task] → [Information] → [Requirements] → [Output Format]
+```
+
+**Example of a Simple Prompt:**
+```
+"I'm a software engineer applying for a senior developer role at Google. 
+Create a professional CV highlighting my Python and cloud experience. 
+Here's my background: [your info]
+Make it ATS-friendly and under 2 pages."
+```
+
+**How to Send Your Prompt to AI:**
+1. **Copy the complete prompt** from our templates below
+2. **Replace bracketed placeholders** [like this] with your actual information
+3. **Paste into your chosen AI tool** (see next section)
+4. **Press Send/Enter** and wait for results
+5. **Review and iterate** if needed
+
+**Pro Tip:** The more specific and detailed your prompt, the better results you'll get!
+
+---
+
+### **Best Free AI Tools for CV Creation** 🤖
+
+Here are the top free AI tools you can use with our prompts:
+
+#### **🥇 Tier 1 - Best Overall Results:**
+
+**Claude 3.5 Sonnet** (Anthropic) - *Recommended*
+- ✅ **Free tier:** Generous daily usage
+- ✅ **Best for:** Complex career changes, detailed optimization
+- ✅ **Strengths:** Excellent context understanding, professional tone
+- 🌐 **Access:** claude.ai
+
+**ChatGPT-4o** (OpenAI)
+- ✅ **Free tier:** Good daily limits  
+- ✅ **Best for:** ATS optimization, keyword matching
+- ✅ **Strengths:** Professional writing, corporate language
+- 🌐 **Access:** chat.openai.com
+
+#### **🥈 Tier 2 - Solid Alternatives:**
+
+**Gemini 1.5 Pro** (Google) - *Completely Free*
+- ✅ **Free tier:** Unlimited usage
+- ✅ **Best for:** Company research, industry analysis
+- ✅ **Strengths:** Great at understanding job requirements
+- 🌐 **Access:** gemini.google.com
+
+**Llama 3.1 70B** (Meta) - *Open Source*
+- ✅ **Free access:** Via multiple platforms
+- ✅ **Best for:** Technical roles, IT positions
+- ✅ **Access via:** Hugging Face, Groq, or local installation
+
+#### **🚀 Pro Tips for Using AI Tools:**
+
+1. **Start with Claude or ChatGPT** for your main CV creation
+2. **Use Gemini** for researching company culture and job market trends
+3. **Try multiple AIs** - each has different strengths
+4. **Always fact-check results** and ensure accuracy
+5. **Keep your prompts saved** for easy reuse
+
+**Quick Start Workflow:**
+```
+1. Choose your AI tool (Claude recommended for beginners)
+2. Copy our prompt template from Step 3 below
+3. Fill in your personal information
+4. Paste into AI and get results
+5. Refine with follow-up prompts if needed
+```
+
+---
 
 ### **Step 3: Creating a Powerful AI Prompt**
 

@@ -19,7 +19,7 @@ const t = (key: string) => getTranslation(lang, key);
 // Get articles for the sidebar from Content Collections
 const allArticles = await getCollection('articles');
 const articles = allArticles
-  .filter(article => article.id.includes(`/${lang}/`))
+  .filter(article => article.id.includes(`/${lang}/`) && !article.data.draft)
   .map(article => ({
     ...article.data,
     slug: `${article.data.category.toLowerCase()}-${lang}-${article.slug.split('/').pop().replace('.md', '')}`,

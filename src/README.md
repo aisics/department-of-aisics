@@ -70,6 +70,25 @@ All articles must include these frontmatter fields:
 - `category`: Article category (string)
 - `prerequisites`: Required prior knowledge (string[], optional)
 - `relatedArticles`: Related article slugs (string[], optional)
+- `draft`: Mark as draft (boolean, defaults to false)
+
+### Draft Articles
+
+To mark an article as draft (pushed to GitHub but not visible on website):
+
+```yaml
+---
+title: "Your Article Title"
+# ... other fields
+draft: true
+---
+```
+
+Draft articles:
+- Are excluded from website navigation and listings
+- Don't generate public URLs
+- Are still version controlled in Git
+- Can be previewed in development mode
 
 ## 🧞 Commands
 

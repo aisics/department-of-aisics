@@ -15,7 +15,7 @@ const categoriesFromRepo = getCategories();
 // Get articles for current language from content collections
 const allArticles = await getCollection('articles');
 const articles = allArticles
-  .filter(article => article.id.includes(`/${lang}/`))
+  .filter(article => article.id.includes(`/${lang}/`) && !article.data.draft)
   .map(article => ({
     ...article.data,
     slug: `${article.data.category.toLowerCase()}-${lang}-${article.slug.split('/').pop().replace('.md', '')}`,

@@ -13,7 +13,8 @@ const articlesCollection = defineCollection({
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
     category: z.string(),
     prerequisites: z.array(z.string()).default([]),
-    relatedArticles: z.array(z.string()).default([])
+    relatedArticles: z.array(z.string()).default([]),
+    draft: z.boolean().default(false)
   })
 });
 

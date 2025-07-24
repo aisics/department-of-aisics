@@ -18,5 +18,6 @@
   "search.placeholder": "Search",
   "popup.sorry.title": "Sorry",
   "popup.sorry.message": "This content is not yet available, stay tuned!",
-  "popup.sorry.button": "Close"
+  "popup.sorry.button": "Close",
+  "article.home": "Back"
 } 

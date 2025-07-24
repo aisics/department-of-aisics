@@ -344,7 +344,6 @@ const categoriesFromRepo = getCategories();
 
 
   .markdown-content :global(.katex) {
-    @apply text-neural-800;
     font-size: 1.1em;
   }
 
@@ -360,24 +359,43 @@ const categoriesFromRepo = getCategories();
   /* Inline math */
   .markdown-content :global(.katex-inline) {
     @apply mx-1;
-    background: rgba(99, 102, 241, 0.05);
-    padding: 2px 4px;
-    border-radius: 4px;
-    border: 1px solid rgba(99, 102, 241, 0.1);
   }
-
-  /* Matrix and fraction styling enhancements */
-  .markdown-content :global(.katex .delimsizing) {
-    color: #6366f1;
+  
+  /* Reset all KaTeX styling to defaults */
+  .markdown-content :global(.katex),
+  .markdown-content :global(.katex *) {
+    color: inherit !important;
+    background: transparent !important;
+    text-shadow: none !important;
+    filter: none !important;
+    opacity: 1 !important;
   }
-
-  .markdown-content :global(.katex .mord) {
-    color: #1f2937;
+  
+  /* Ensure proper rendering of math symbols */
+  .markdown-content :global(.katex) {
+    font-family: KaTeX_Main, KaTeX_Math, "Times New Roman", serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-
-  .markdown-content :global(.katex .mbin), 
+  
+  /* Specific fix for relation symbols like ≠ */
   .markdown-content :global(.katex .mrel) {
-    color: #059669;
+    color: currentColor !important;
+    position: relative !important;
+    display: inline-block !important;
+  }
+  
+  /* Matrix visualizations - remove line spacing */
+  .markdown-content :global(.matrix-viz) {
+    line-height: 1 !important;
+    font-size: 1.2rem !important;
+    letter-spacing: 0.05em !important;
+    font-family: monospace !important;
+  }
+  
+  .markdown-content :global(.matrix-viz code) {
+    line-height: 1 !important;
+    padding: 0.5rem !important;
   }
   
 </style>

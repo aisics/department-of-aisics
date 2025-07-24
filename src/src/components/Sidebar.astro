@@ -35,6 +35,18 @@ const articlesByCategory = articles.reduce((acc, article) => {
   return acc;
 }, {} as Record<string, any[]>);
 
+// Sort articles within each category by filename (which includes the number prefix)
+Object.keys(articlesByCategory).forEach(category => {
+  articlesByCategory[category].sort((a, b) => {
+    // Extract the number from the filename (e.g., "01-vectors-in-ai" -> "01")
+    const getNumber = (article: any) => {
+      const match = article.filePath.match(/(\d+)-/);
+      return match ? parseInt(match[1]) : 999;
+    };
+    return getNumber(a) - getNumber(b);
+  });
+});
+
 function getCategoryIcon(category: string, repoCategories: Array<{ name: string; icon?: string; [key: string]: any }>) {
   // Ensure repoCategories is always an array
   const safeRepoCategories = Array.isArray(repoCategories) ? repoCategories : [];

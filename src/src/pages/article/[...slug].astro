@@ -2,81 +2,42 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Sidebar from '../../components/Sidebar.astro';
-import { getArticlesForLanguage, getArticleBySlug, getCategories, getCorrespondingSlug } from '../../utils/articles';
-import { marked } from 'marked';
+import { getCollection } from 'astro:content';
+import { getCategories } from '../../utils/articles';
 import { getTranslation } from '../../utils/i18n';
 
 export async function getStaticPaths() {
-  // Get articles for both languages
-  const enArticles = getArticlesForLanguage('en');
-  const ukArticles = getArticlesForLanguage('uk');
+  const articles = await getCollection('articles');
   
-  // Create paths for all articles
-  const paths = [];
-  
-  enArticles.forEach(article => {
-    paths.push({
-      params: { slug: article.slug },
-      props: { slug: article.slug, lang: 'en' }
-    });
-  });
-  
-  ukArticles.forEach(article => {
-    paths.push({
-      params: { slug: article.slug },
-      props: { slug: article.slug, lang: 'uk' }
-    });
-  });
-  
-  return paths;
+  return articles.map(article => ({
+    params: { 
+      slug: `${article.data.category.toLowerCase()}-${article.id.includes('/en/') ? 'en' : 'uk'}-${article.slug.split('/').pop().replace('.md', '')}`
+    },
+    props: { article }
+  }));
 }
 
-const { slug } = Astro.params;
+const { article } = Astro.props;
+const { Content } = await article.render();
+
 // For static builds, default to Ukrainian and let client-side handle language switching
-const lang = 'uk';
+const lang = article.id.includes('/en/') ? 'en' : 'uk';
 const t = (key: string) => getTranslation(lang, key);
 
 // Get categories for sidebar
 const categoriesFromRepo = getCategories();
-
-// Try to get the article content in the requested language
-let articleData = await getArticleBySlug(slug, lang);
-
-// If no article found in the requested language, try to find corresponding article in other language
-if (!articleData) {
-  const correspondingSlug = getCorrespondingSlug(slug, lang);
-  if (correspondingSlug && correspondingSlug !== slug) {
-    // Redirect to the corresponding article in the correct language
-    return Astro.redirect(`/article/${correspondingSlug}`);
-  }
-  // If no corresponding article found, return 404
-  return Astro.redirect('/404');
-}
-
-const { metadata, content } = articleData;
-
-// Configure marked for better rendering
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-  headerIds: true,
-  mangle: false
-});
-
-// Render markdown content
-const renderedContent = marked(content);
 ---
 
-<Layout title={`${metadata.title} - ${t('site.title')}`}>
+<Layout title={`${article.data.title} - ${t('site.title')}`}>
   <Header />
   
   <div class="lg:flex min-h-screen">
     <Sidebar 
       categories={{}} 
       repoCategories={categoriesFromRepo} 
-      currentPath={`/article/${slug}`}
-      currentSlug={slug}
-      currentCategory={metadata.category}
+      currentPath={`/article/${Astro.params.slug}`}
+      currentSlug={Astro.params.slug}
+      currentCategory={article.data.category}
     />
     
     <main class="lg:flex-1 relative overflow-hidden">
@@ -103,13 +64,13 @@ const renderedContent = marked(content);
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <span class="text-neural-600 font-medium">{metadata.category}</span>
+                <span class="text-neural-600 font-medium">{article.data.category}</span>
               </li>
               <li class="flex items-center text-neural-400">
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <span class="text-primary-700 font-semibold">{metadata.title}</span>
+                <span class="text-primary-700 font-semibold">{article.data.title}</span>
               </li>
             </ol>
           </nav>
@@ -119,7 +80,7 @@ const renderedContent = marked(content);
             <!-- Title -->
             <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 leading-tight">
               <span class="bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
-                {metadata.title}
+                {article.data.title}
               </span>
             </h1>
             
@@ -132,7 +93,7 @@ const renderedContent = marked(content);
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{metadata.author}</p>
+                  <p class="font-semibold text-neural-800">{article.data.author}</p>
                   <p class="text-sm text-neural-500">Автор</p>
                 </div>
               </div>
@@ -144,7 +105,7 @@ const renderedContent = marked(content);
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{metadata.readingTime} хвилин</p>
+                  <p class="font-semibold text-neural-800">{article.data.readingTime} хвилин</p>
                   <p class="text-sm text-neural-500">Час читання</p>
                 </div>
               </div>
@@ -156,7 +117,7 @@ const renderedContent = marked(content);
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{new Date(metadata.date || metadata.lastModified).toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-US')}</p>
+                  <p class="font-semibold text-neural-800">{article.data.date.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-US')}</p>
                   <p class="text-sm text-neural-500">Дата публікації</p>
                 </div>
               </div>
@@ -164,31 +125,31 @@ const renderedContent = marked(content);
             
             <!-- Difficulty & Tags Row -->
             <div class="flex flex-wrap items-center gap-4">
-              {metadata.difficulty && (
+              {article.data.difficulty && (
                 <div class="flex items-center space-x-2">
                   <span class="text-sm text-neural-600 font-medium">Рівень:</span>
                   <span class={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 shadow-lg ${
-                    metadata.difficulty === 'beginner' ? 'bg-secondary-100 text-secondary-700' :
-                    metadata.difficulty === 'intermediate' ? 'bg-accent-100 text-accent-700' :
+                    article.data.difficulty === 'beginner' ? 'bg-secondary-100 text-secondary-700' :
+                    article.data.difficulty === 'intermediate' ? 'bg-accent-100 text-accent-700' :
                     'bg-red-100 text-red-700'
                   }`}>
                     <div class={`w-2 h-2 rounded-full mr-2 ${
-                      metadata.difficulty === 'beginner' ? 'bg-secondary-500' :
-                      metadata.difficulty === 'intermediate' ? 'bg-accent-500' :
+                      article.data.difficulty === 'beginner' ? 'bg-secondary-500' :
+                      article.data.difficulty === 'intermediate' ? 'bg-accent-500' :
                       'bg-red-500'
                     }`}></div>
-                    {metadata.difficulty === 'beginner' ? (lang === 'uk' ? 'Початківець' : 'Beginner') :
-                     metadata.difficulty === 'intermediate' ? (lang === 'uk' ? 'Середній' : 'Intermediate') :
+                    {article.data.difficulty === 'beginner' ? (lang === 'uk' ? 'Початківець' : 'Beginner') :
+                     article.data.difficulty === 'intermediate' ? (lang === 'uk' ? 'Середній' : 'Intermediate') :
                      (lang === 'uk' ? 'Просунутий' : 'Advanced')}
                   </span>
                 </div>
               )}
               
               <!-- Tags -->
-              {metadata.tags.length > 0 && (
+              {article.data.tags.length > 0 && (
                 <div class="flex flex-wrap gap-2">
                   <span class="text-sm text-neural-600 font-medium mr-2">Теги:</span>
-                  {metadata.tags.map(tag => (
+                  {article.data.tags.map(tag => (
                     <span class="px-3 py-1.5 bg-gradient-to-r from-neural-100 to-primary-50 text-neural-700 text-sm rounded-full border border-neural-200/50 font-medium hover:shadow-neural hover:scale-105 transition-all duration-300">
                       #{tag}
                     </span>
@@ -202,21 +163,8 @@ const renderedContent = marked(content);
           <div class="animate-fade-in-up" style="animation-delay: 0.2s;">
             <!-- Content Card -->
             <div class="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 border border-white/20 shadow-neural-lg mb-12">
-              <div class="prose prose-sm sm:prose-base lg:prose-lg max-w-none
-                prose-headings:font-bold prose-headings:text-neural-900
-                prose-h1:text-4xl prose-h1:mb-8 prose-h1:bg-gradient-to-r prose-h1:from-primary-600 prose-h1:to-secondary-600 prose-h1:bg-clip-text prose-h1:text-transparent
-                prose-h2:text-3xl prose-h2:mb-6 prose-h2:text-neural-800 prose-h2:border-b prose-h2:border-neural-200 prose-h2:pb-2
-                prose-h3:text-2xl prose-h3:mb-4 prose-h3:text-neural-700
-                prose-p:text-neural-600 prose-p:leading-relaxed prose-p:mb-6
-                prose-a:text-primary-600 prose-a:no-underline hover:prose-a:text-primary-700 prose-a:font-medium prose-a:transition-colors
-                prose-strong:text-neural-800 prose-strong:font-semibold
-                prose-code:bg-gray-100 prose-code:text-gray-800 prose-code:px-2 prose-code:py-1 prose-code:rounded-lg prose-code:font-mono prose-code:text-sm prose-code:break-words prose-code:whitespace-pre-wrap
-                prose-pre:bg-gray-100 prose-pre:text-gray-800 prose-pre:rounded-2xl prose-pre:p-4 prose-pre:sm:p-6 prose-pre:shadow-lg prose-pre:border prose-pre:border-gray-200 prose-pre:overflow-x-auto prose-pre:text-sm prose-pre:sm:text-base
-                prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:bg-primary-50/50 prose-blockquote:rounded-r-xl prose-blockquote:p-6 prose-blockquote:my-8
-                prose-ul:text-neural-600 prose-li:mb-2
-                prose-img:rounded-2xl prose-img:shadow-neural
-                mobile-code-wrap overflow-hidden">
-                <Fragment set:html={renderedContent} />
+              <div class="markdown-content">
+                <Content />
               </div>
             </div>
           </div>
@@ -248,149 +196,202 @@ const renderedContent = marked(content);
 </Layout>
 
 <style>
-  /* Mobile responsive code blocks and math formulas */
-  .mobile-code-wrap {
-    width: 100%;
-    overflow-x: hidden;
+  /* Astro-optimized markdown styles */
+  .markdown-content {
+    @apply max-w-none text-neural-700 leading-relaxed;
   }
   
-  .mobile-code-wrap pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    overflow-x: auto;
-    max-width: 100%;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    padding: 1rem;
-    margin: 1rem 0;
-  }
-  
-  .mobile-code-wrap code {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    font-size: 0.875rem;
-    display: inline-block;
-    max-width: 100%;
-  }
-  
-  .mobile-code-wrap pre code {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    display: block;
-    width: 100%;
-  }
-  
-  /* Mobile specific styles */
-  @media (max-width: 640px) {
-    .mobile-code-wrap pre {
-      font-size: 0.8rem;
-      padding: 0.75rem;
-      border-radius: 0.75rem;
-      margin: 0.75rem 0;
-    }
-    
-    .mobile-code-wrap code {
-      font-size: 0.8rem;
-    }
-    
-    /* Break long mathematical expressions intelligently */
-    .mobile-code-wrap pre code {
-      /* Allow breaking at mathematical operators */
-      word-break: break-word;
-      overflow-wrap: anywhere;
-      /* Prevent horizontal scroll */
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-  }
-  
-  /* Tablet styles */
-  @media (min-width: 641px) and (max-width: 768px) {
-    .mobile-code-wrap pre {
-      font-size: 0.875rem;
-      padding: 1rem;
-    }
-  }
-  
-  /* Enhanced scrollbar for when needed */
-  .mobile-code-wrap pre {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-  }
-  
-  .mobile-code-wrap pre::-webkit-scrollbar {
-    height: 6px;
-    width: 6px;
-  }
-  
-  .mobile-code-wrap pre::-webkit-scrollbar-track {
-    background: rgba(203, 213, 225, 0.2);
-    border-radius: 3px;
-  }
-  
-  .mobile-code-wrap pre::-webkit-scrollbar-thumb {
+  .markdown-content :global(h1) {
+    @apply text-4xl font-bold mb-8 text-neural-900 border-b border-neural-200 pb-4;
     background: linear-gradient(135deg, #6366f1, #14b8a6);
-    border-radius: 3px;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
-  .mobile-code-wrap pre::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #5048e5, #0d9488);
+  .markdown-content :global(h2) {
+    @apply text-3xl font-bold mb-6 mt-12 text-neural-800 border-b border-neural-200 pb-2;
   }
   
-  /* Inline code should also be responsive */
-  .mobile-code-wrap p code,
-  .mobile-code-wrap li code {
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-wrap: break-word;
+  .markdown-content :global(h3) {
+    @apply text-2xl font-semibold mb-4 mt-8 text-neural-700;
   }
   
-  /* Handle specific mathematical symbols and prevent them from causing overflow */
-  .mobile-code-wrap pre {
-    /* Ensure container never exceeds viewport width */
-    max-width: calc(100vw - 2rem);
-    box-sizing: border-box;
+  .markdown-content :global(h4) {
+    @apply text-xl font-semibold mb-3 mt-6 text-neural-700;
   }
   
-  @media (max-width: 640px) {
-    .mobile-code-wrap pre {
-      max-width: calc(100vw - 2rem);
-      margin-left: 0;
-      margin-right: 0;
-    }
-    
-    /* Make sure parent container doesn't overflow */
-    .mobile-code-wrap {
-      max-width: 100%;
-      overflow-x: hidden;
-    }
+  .markdown-content :global(p) {
+    @apply mb-6 leading-relaxed text-neural-600;
   }
   
-  /* Add subtle visual indicator for scrollable content */
-  .mobile-code-wrap pre {
-    position: relative;
+  .markdown-content :global(a) {
+    @apply text-primary-600 hover:text-primary-700 font-medium no-underline transition-colors;
   }
   
-  @media (max-width: 640px) {
-    .mobile-code-wrap pre::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 20px;
-      height: 100%;
-      background: linear-gradient(to left, rgba(243, 244, 246, 0.8), transparent);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .mobile-code-wrap pre:hover::after {
-      opacity: 1;
-    }
+  .markdown-content :global(strong) {
+    @apply font-semibold text-neural-800;
   }
+  
+  .markdown-content :global(em) {
+    @apply italic text-neural-600;
+  }
+  
+  .markdown-content :global(ul) {
+    @apply mb-6 space-y-2 pl-6;
+  }
+  
+  .markdown-content :global(ol) {
+    @apply mb-6 space-y-2 pl-6;
+  }
+  
+  .markdown-content :global(li) {
+    @apply text-neural-600 leading-relaxed;
+  }
+  
+  .markdown-content :global(ul li) {
+    @apply relative;
+  }
+  
+  .markdown-content :global(ul li::before) {
+    content: '•';
+    @apply absolute -left-4 text-primary-500 font-bold;
+  }
+  
+  .markdown-content :global(ol li) {
+    @apply list-decimal;
+  }
+  
+  .markdown-content :global(blockquote) {
+    @apply border-l-4 border-primary-500 bg-primary-50/50 rounded-r-xl p-6 my-8 italic;
+  }
+  
+  .markdown-content :global(blockquote p) {
+    @apply mb-0 text-primary-800;
+  }
+  
+  /* Code blocks with Shiki highlighting and copy functionality */
+  .markdown-content :global(.code-block-wrapper) {
+    @apply relative rounded-2xl my-6 shadow-lg border border-gray-200;
+    background: #f8f9fa;
+  }
+  
+  .markdown-content :global(.code-block) {
+    @apply p-6 overflow-x-auto rounded-2xl;
+    background: #f8f9fa !important;
+    margin: 0;
+  }
+  
+  .markdown-content :global(.code-block code) {
+    @apply font-mono text-sm leading-relaxed;
+    background: transparent !important;
+    color: inherit !important;
+  }
+  
+  /* Copy button styling */
+  .markdown-content :global(.copy-btn) {
+    @apply transition-all duration-200;
+  }
+  
+  .markdown-content :global(.copy-btn:hover) {
+    @apply transform scale-105 shadow-md;
+  }
+  
+  .markdown-content :global(.copy-btn.copied) {
+    @apply bg-green-50 border-green-200;
+  }
+  
+  /* Inline code */
+  .markdown-content :global(code:not(pre code)) {
+    @apply bg-gray-100 text-gray-800 px-2 py-1 rounded-lg font-mono text-sm;
+  }
+  
+  /* Tables */
+  .markdown-content :global(table) {
+    @apply w-full border-collapse border border-gray-200 rounded-lg overflow-hidden my-6;
+  }
+  
+  .markdown-content :global(th) {
+    @apply bg-gray-50 border border-gray-200 px-4 py-3 text-left font-semibold text-neural-800;
+  }
+  
+  .markdown-content :global(td) {
+    @apply border border-gray-200 px-4 py-3 text-neural-600;
+  }
+  
+  /* Images */
+  .markdown-content :global(img) {
+    @apply rounded-2xl shadow-neural max-w-full h-auto my-6;
+  }
+  
+  /* Horizontal rule */
+  .markdown-content :global(hr) {
+    @apply border-0 border-t border-neural-200 my-12;
+  }
+  
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const copyButtons = document.querySelectorAll('.copy-btn');
+    
+    copyButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const copyText = button.getAttribute('data-copy-text');
+        const copyIcon = button.querySelector('.copy-icon');
+        const checkIcon = button.querySelector('.check-icon');
+        
+        if (!copyText) return;
+        
+        try {
+          await navigator.clipboard.writeText(copyText);
+          
+          // Show success state
+          button.classList.add('copied');
+          copyIcon?.classList.add('hidden');
+          checkIcon?.classList.remove('hidden');
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            button.classList.remove('copied');
+            copyIcon?.classList.remove('hidden');
+            checkIcon?.classList.add('hidden');
+          }, 2000);
+          
+        } catch (err) {
+          console.error('Failed to copy text: ', err);
+          
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = copyText;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+            document.execCommand('copy');
+            
+            // Show success state
+            button.classList.add('copied');
+            copyIcon?.classList.add('hidden');
+            checkIcon?.classList.remove('hidden');
+            
+            setTimeout(() => {
+              button.classList.remove('copied');
+              copyIcon?.classList.remove('hidden');
+              checkIcon?.classList.add('hidden');
+            }, 2000);
+          } catch (fallbackErr) {
+            console.error('Fallback copy failed: ', fallbackErr);
+          }
+          
+          document.body.removeChild(textArea);
+        }
+      });
+    });
+  });
+</script>
+

@@ -1,0 +1,6 @@
+# Legacy article redirects (301 permanent redirects)
+/article/basics-en-vectors-in-ai           /article/basics-en-01-vectors-in-ai        301
+/article/basics-uk-vectors-in-ai           /article/basics-uk-01-vectors-in-ai        301
+
+# Add more legacy redirects here as needed
+# Format: /old-path   /new-path   301

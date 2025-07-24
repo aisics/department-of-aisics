@@ -5,14 +5,22 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Sidebar from '../components/Sidebar.astro';
 import ArticleList from '../components/ArticleList.astro';
-import { getCategories, getArticlesForLanguage } from '../utils/articles';
+import { getCategories } from '../utils/articles';
+import { getCollection } from 'astro:content';
 import { getTranslation } from '../utils/i18n';
 
 const lang = Astro.cookies.get('language')?.value || 'uk';
 // Get categories from metadata.json
 const categoriesFromRepo = getCategories();
-// Get articles for current language
-const articles = getArticlesForLanguage(lang);
+// Get articles for current language from content collections
+const allArticles = await getCollection('articles');
+const articles = allArticles
+  .filter(article => article.id.includes(`/${lang}/`))
+  .map(article => ({
+    ...article.data,
+    slug: `${article.data.category.toLowerCase()}-${lang}-${article.slug.split('/').pop().replace('.md', '')}`,
+    filePath: article.id
+  }));
 
 const t = (key: string) => getTranslation(lang, key);
 ---

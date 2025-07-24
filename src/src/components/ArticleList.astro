@@ -1,9 +1,8 @@
 ---
-import type { ArticleMetadata } from '../utils/articles';
 import { getTranslation } from '../utils/i18n';
 
 export interface Props {
-  articles: ArticleMetadata[];
+  articles: any[];
   lang: string;
 }
 
@@ -17,7 +16,7 @@ const articlesByCategory = articles.reduce((acc, article) => {
   }
   acc[article.category].push(article);
   return acc;
-}, {} as Record<string, ArticleMetadata[]>);
+}, {} as Record<string, any[]>);
 ---
 
 <div class="max-w-7xl mx-auto px-6 py-16 relative">

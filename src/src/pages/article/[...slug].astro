@@ -331,6 +331,55 @@ const categoriesFromRepo = getCategories();
     @apply border-0 border-t border-neural-200 my-12;
   }
   
+  /* KaTeX Math Styling */
+  .markdown-content :global(.katex-display) {
+    @apply my-8 overflow-x-auto;
+    text-align: center;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+
+  .markdown-content :global(.katex) {
+    @apply text-neural-800;
+    font-size: 1.1em;
+  }
+
+  .markdown-content :global(.katex-display .katex) {
+    @apply text-lg;
+  }
+
+  /* Math block wrapper with enhanced styling */
+  .markdown-content :global(.math-display) {
+    @apply bg-gradient-to-r from-primary-50/30 to-secondary-50/30 rounded-xl p-6 my-8 border border-primary-200/30;
+  }
+
+  /* Inline math */
+  .markdown-content :global(.katex-inline) {
+    @apply mx-1;
+    background: rgba(99, 102, 241, 0.05);
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+  }
+
+  /* Matrix and fraction styling enhancements */
+  .markdown-content :global(.katex .delimsizing) {
+    color: #6366f1;
+  }
+
+  .markdown-content :global(.katex .mord) {
+    color: #1f2937;
+  }
+
+  .markdown-content :global(.katex .mbin), 
+  .markdown-content :global(.katex .mrel) {
+    color: #059669;
+  }
+  
 </style>
 
 <script>

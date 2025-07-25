@@ -1,0 +1,215 @@
+---
+export interface Props {
+  type?: '2d' | '3d';
+  title?: string;
+  xLabel?: string;
+  yLabel?: string;
+  zLabel?: string;
+  xRange?: [number, number];
+  yRange?: [number, number];
+  zRange?: [number, number];
+  height?: number;
+  showGrid?: boolean;
+  darkMode?: boolean;
+  functions: string; // JSON string of function definitions
+}
+
+const { 
+  type = '2d',
+  title = '',
+  xLabel = 'x',
+  yLabel = 'y', 
+  zLabel = 'z',
+  xRange = [-10, 10],
+  yRange = [-10, 10],
+  zRange,
+  height = 400,
+  showGrid = true,
+  darkMode = false,
+  functions
+} = Astro.props;
+
+// Generate a unique ID for this plot
+const plotId = `plot-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={plotId} class="plotly-function-wrapper">
+  <div class="plot-container"></div>
+</div>
+
+<script define:vars={{ plotId, type, title, xLabel, yLabel, zLabel, xRange, yRange, zRange, height, showGrid, darkMode, functions }}>
+  // Wait for DOM to be ready
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      // Load Plotly from CDN instead of module import
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+      const container = document.querySelector(`#${plotId} .plot-container`);
+      if (!container) return;
+
+      // Parse function definitions
+      let funcDefs;
+      try {
+        funcDefs = JSON.parse(functions);
+      } catch (e) {
+        console.error('Failed to parse function definitions:', e);
+        return;
+      }
+
+      const plotData = [];
+      const layout = {
+        title: {
+          text: title,
+          font: { size: 18 }
+        },
+        height: height,
+        paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+        plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+        font: {
+          color: darkMode ? '#ffffff' : '#000000'
+        },
+        showlegend: true,
+        legend: {
+          x: 0.02,
+          y: 0.98,
+          bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+        }
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToAdd: ['drawline', 'drawopenpath', 'eraseshape'],
+        displaylogo: false
+      };
+
+      if (type === '2d') {
+        // Generate data for 2D plots
+        funcDefs.forEach((funcDef, index) => {
+          const x = [];
+          const y = [];
+          const step = (xRange[1] - xRange[0]) / 200;
+          
+          // Create function from string
+          let fn;
+          try {
+            fn = new Function('x', `return ${funcDef.expression}`);
+          } catch (e) {
+            console.error(`Failed to create function: ${funcDef.expression}`, e);
+            return;
+          }
+          
+          for (let xi = xRange[0]; xi <= xRange[1]; xi += step) {
+            x.push(xi);
+            try {
+              y.push(fn(xi));
+            } catch (e) {
+              y.push(null);
+            }
+          }
+
+          plotData.push({
+            x: x,
+            y: y,
+            type: 'scatter',
+            mode: 'lines',
+            name: funcDef.name || `f(x)`,
+            line: {
+              color: funcDef.color || ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F'][index % 4],
+              width: 2
+            }
+          });
+        });
+
+        layout.xaxis = {
+          title: xLabel,
+          showgrid: showGrid,
+          gridcolor: darkMode ? '#444' : '#ddd',
+          zeroline: true,
+          zerolinecolor: darkMode ? '#666' : '#999',
+          range: xRange
+        };
+        layout.yaxis = {
+          title: yLabel,
+          showgrid: showGrid,
+          gridcolor: darkMode ? '#444' : '#ddd',
+          zeroline: true,
+          zerolinecolor: darkMode ? '#666' : '#999',
+          range: yRange
+        };
+
+      } else if (type === '3d') {
+        // Generate data for 3D surface plots
+        funcDefs.forEach((funcDef, index) => {
+          const size = 50;
+          const xVals = [];
+          const yVals = [];
+          const z = [];
+          
+          const xStep = (xRange[1] - xRange[0]) / size;
+          const yStep = (yRange[1] - yRange[0]) / size;
+          
+          // Create function from string
+          let fn;
+          try {
+            fn = new Function('x', 'y', `return ${funcDef.expression}`);
+          } catch (e) {
+            console.error(`Failed to create function: ${funcDef.expression}`, e);
+            return;
+          }
+          
+          for (let i = 0; i <= size; i++) {
+            xVals.push(xRange[0] + i * xStep);
+            yVals.push(yRange[0] + i * yStep);
+          }
+          
+          for (let i = 0; i <= size; i++) {
+            z[i] = [];
+            for (let j = 0; j <= size; j++) {
+              try {
+                z[i][j] = fn(xVals[j], yVals[i]);
+              } catch (e) {
+                z[i][j] = null;
+              }
+            }
+          }
+
+          plotData.push({
+            x: xVals,
+            y: yVals,
+            z: z,
+            type: 'surface',
+            name: funcDef.name || `f(x,y)`,
+            colorscale: funcDef.colorscale || 'Viridis',
+            showscale: true
+          });
+        });
+
+        layout.scene = {
+          xaxis: { title: xLabel, range: xRange },
+          yaxis: { title: yLabel, range: yRange },
+          zaxis: { title: zLabel, range: zRange },
+          camera: {
+            eye: { x: 1.5, y: 1.5, z: 1.5 }
+          }
+        };
+      }
+
+      window.Plotly.newPlot(container, plotData, layout, config);
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .plotly-function-wrapper {
+    margin: 1rem 0;
+  }
+  
+  .plot-container {
+    width: 100%;
+    min-height: 400px;
+  }
+</style>

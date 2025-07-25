@@ -1,0 +1,513 @@
+---
+export interface Props {
+  targetHeight?: number;
+  iterations?: number;
+}
+
+const { 
+  targetHeight = 5,
+  iterations = 10
+} = Astro.props;
+
+// Generate a unique ID for this animation
+const animId = `cat-jump-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={animId} class="cat-jump-animation">
+  <div class="animation-container">
+    <canvas id={`${animId}-canvas`}></canvas>
+    <div class="controls">
+      <button id={`${animId}-start`} class="control-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M5 4l10 6-10 6V4z"/>
+        </svg>
+        Почати навчання
+      </button>
+      <button id={`${animId}-reset`} class="control-btn" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M4 10a6 6 0 1 0 1.41-3.87l1.42 1.42A4 4 0 1 1 6 10H4z"/>
+        </svg>
+        Спробувати знову
+      </button>
+    </div>
+    <div class="info-panel">
+      <div class="info-item">
+        <span class="label">Ітерація:</span>
+        <span id={`${animId}-iteration`} class="value">0</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Швидкість:</span>
+        <span id={`${animId}-velocity`} class="value">2.0</span> м/с
+      </div>
+      <div class="info-item">
+        <span class="label">Помилка:</span>
+        <span id={`${animId}-error`} class="value">9.0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ animId, targetHeight, iterations }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const canvas = document.getElementById(`${animId}-canvas`);
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById(`${animId}-start`);
+      const resetBtn = document.getElementById(`${animId}-reset`);
+      const iterationSpan = document.getElementById(`${animId}-iteration`);
+      const velocitySpan = document.getElementById(`${animId}-velocity`);
+      const errorSpan = document.getElementById(`${animId}-error`);
+      
+      // Set canvas size
+      canvas.width = 600;
+      canvas.height = 400;
+      
+      // Animation parameters
+      let currentIteration = 0;
+      let velocity = 2.0; // As stated in the article
+      let learningRate = 0.1; // As stated in the article
+      let isAnimating = false;
+      let animationId = null;
+      let isFirstRun = true;
+      
+      // Visual parameters
+      const ground = canvas.height - 50;
+      const shelfHeight = 100; // Target shelf height
+      const shelfY = ground - shelfHeight;
+      const startShelfHeight = 100; // Starting shelf height (same as target)
+      const startShelfY = ground - startShelfHeight;
+      const catStartX = 100;
+      const catY = startShelfY; // Cat starts on the starting shelf
+      const shelfX = 400;
+      const gravity = 9.8;
+      
+      // Cat emoji states
+      const catEmojis = {
+        waiting: '😸',
+        jumping: '🙀',
+        success: '😸',
+        fail: '😿'
+      };
+      
+      function calculateError(v) {
+        return Math.pow(v - targetHeight, 2);
+      }
+      
+      function calculateGradient(v) {
+        return 2 * (v - targetHeight);
+      }
+      
+      function drawScene(catX = catStartX, catJumpY = 0, catState = 'waiting') {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#E0F2FE');
+        gradient.addColorStop(1, '#BAE6FD');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Ground
+        ctx.fillStyle = '#8B7355';
+        ctx.fillRect(0, ground, canvas.width, 50);
+        
+        // Starting shelf (where cat starts)
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(catStartX - 60, startShelfY, 120, 10);
+        ctx.fillRect(catStartX - 50, startShelfY + 10, 10, startShelfHeight - 10);
+        ctx.fillRect(catStartX + 40, startShelfY + 10, 10, startShelfHeight - 10);
+        
+        // Target shelf (where cat aims to jump)
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(shelfX - 60, shelfY, 120, 10);
+        ctx.fillRect(shelfX - 50, shelfY + 10, 10, shelfHeight - 10);
+        ctx.fillRect(shelfX + 40, shelfY + 10, 10, shelfHeight - 10);
+        
+        // Target zone on shelf
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(shelfX - 40, shelfY - 40, 80, 40);
+        ctx.setLineDash([]);
+        
+        // Target label
+        ctx.font = '14px system-ui';
+        ctx.fillStyle = '#10B981';
+        ctx.textAlign = 'center';
+        ctx.fillText('Ціль', shelfX, shelfY - 50);
+        
+        // Cat
+        ctx.font = '48px system-ui';
+        ctx.textAlign = 'center';
+        // Cat position: catY is ground level, catJumpY is height above ground
+        ctx.fillText(catEmojis[catState], catX, catY - catJumpY - 10);
+        
+        // Jump trajectory preview (dotted line)
+        if (catState === 'waiting' && velocity > 0) {
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(catStartX, catY - 30);
+          
+          // Use same physics as actual jump
+          const jumpAngle = Math.PI / 4;
+          const distanceToShelf = shelfX - catStartX;
+          const targetVelocity = 5.0;
+          const targetRange = distanceToShelf;
+          const pixelsPerVSquared = targetRange / (targetVelocity * targetVelocity);
+          const pixelRange = velocity * velocity * pixelsPerVSquared;
+          const g_pixels = 100;
+          const v0_pixels = Math.sqrt(pixelRange * g_pixels);
+          const hv = v0_pixels * Math.cos(jumpAngle);
+          const vv = v0_pixels * Math.sin(jumpAngle);
+          
+          const timeToGround = 2 * vv / g_pixels;
+          for (let t = 0; t <= timeToGround; t += 0.02) {
+            const x = catStartX + hv * t;
+            const y = catY - 30 - (vv * t - 0.5 * g_pixels * t * t);
+            if (x > canvas.width) break;
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        
+        // Velocity indicator
+        ctx.fillStyle = '#3B82F6';
+        ctx.fillRect(50, 50, velocity * 20, 20);
+        ctx.strokeStyle = '#1E40AF';
+        ctx.strokeRect(50, 50, 100, 20);
+        ctx.font = '12px system-ui';
+        ctx.fillStyle = '#1E40AF';
+        ctx.textAlign = 'left';
+        ctx.fillText('Сила стрибка', 50, 45);
+      }
+      
+      function animateJump() {
+        return new Promise((resolve) => {
+          let t = 0;
+          const dt = 0.02;
+          
+          // Fixed angle jump physics
+          // The cat jumps at 45 degrees angle
+          const jumpAngle = Math.PI / 4; // 45 degrees
+          
+          // Calibrate physics so velocity 5 lands on shelf
+          // Shelf is at (300px from start, 150px height)
+          const distanceToShelf = shelfX - catStartX; // ~300px
+          const shelfTopHeight = shelfHeight; // 150px
+          
+          // For 45 degree angle with velocity v:
+          // We want velocity 5 to reach the shelf at 300px distance
+          // Using projectile motion: Range = v²sin(2θ)/g
+          // For 45°: Range = v²/g
+          // So we need to scale velocity to pixels properly
+          
+          // Simple calibration: velocity 5 should reach exactly 300px
+          // velocity 3.8 should reach 3.8² / 5² * 300 = 173px (well short of shelf)
+          // This gives us a quadratic relationship
+          
+          const targetVelocity = 5.0;
+          const targetRange = distanceToShelf; // 300px
+          
+          // Direct projectile motion formula for 45° angle
+          // Range = v²/g, so v = sqrt(Range * g)
+          // We want v=5 to give Range=300, so we need proper scaling
+          
+          // Calculate the pixel velocity that gives the desired range
+          const scaleFactor = targetRange / (targetVelocity * targetVelocity); // 12 pixels per velocity squared
+          const pixelRange = velocity * velocity * scaleFactor;
+          
+          // Now calculate the actual velocities needed for this range
+          // For a 45° projectile to travel pixelRange pixels horizontally
+          const g_pixels = 100; // gravity in pixels/s²
+          const v0_pixels = Math.sqrt(pixelRange * g_pixels);
+          
+          const horizontalVelocity = v0_pixels * Math.cos(jumpAngle);
+          const verticalVelocity = v0_pixels * Math.sin(jumpAngle);
+          
+          console.log(`Velocity: ${velocity}, Pixel Range: ${pixelRange}, v0: ${v0_pixels}`);
+          
+          let maxHeight = 0;
+          let landedOnShelf = false;
+          
+          function frame() {
+            t += dt;
+            const x = catStartX + horizontalVelocity * t;
+            const y = verticalVelocity * t - 0.5 * g_pixels * t * t;
+            
+            if (y > maxHeight) maxHeight = y;
+            
+            // Check if cat reached shelf zone
+            if (x >= shelfX - 60) {
+              // Calculate cat's height at this x position
+              const catBottom = catY - y;
+              const catTop = catBottom - 50; // cat is ~50px tall
+              
+              // Check if cat reaches shelf height
+              if (catTop <= shelfY && catBottom >= shelfY) {
+                // Cat reaches shelf!
+                const error = calculateError(velocity);
+                
+                // Check if error is small enough for success
+                // According to article, at iteration 10 velocity is 4.65 with error 0.12
+                // Only show success on iteration 10 or later
+                if (error < 0.2 && currentIteration >= 10) {
+                  // Success!
+                  landedOnShelf = true;
+                  // Cat should be on top of target shelf
+                  // Since both shelves are same height, catJumpY = 0 when on shelf
+                  drawScene(shelfX, 0, 'success');
+                  
+                  ctx.font = 'bold 24px system-ui';
+                  ctx.fillStyle = '#10B981';
+                  ctx.textAlign = 'center';
+                  ctx.fillText('Успіх! 🎉', canvas.width / 2, 80);
+                  
+                  ctx.font = '16px system-ui';
+                  ctx.fillStyle = '#6B7280';
+                  ctx.fillText(`Швидкість: ${velocity.toFixed(2)} м/с (майже ідеально!)`, canvas.width / 2, 105);
+                  
+                  setTimeout(() => resolve(true), 1500);
+                } else {
+                  // Hit shelf but velocity not right yet
+                  drawScene(shelfX - 30, ground - 10, 'fail');
+                  
+                  ctx.font = 'bold 20px system-ui';
+                  ctx.fillStyle = '#F59E0B';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(`Дістався полиці! (v=${velocity.toFixed(1)} м/с)`, canvas.width / 2, 80);
+                  
+                  ctx.font = '16px system-ui';
+                  ctx.fillStyle = '#6B7280';
+                  ctx.fillText(`Але швидкість ще не оптимальна (потрібно: 5.0)`, canvas.width / 2, 105);
+                  
+                  setTimeout(() => resolve(false), 1500);
+                }
+                return;
+              }
+            }
+            
+            // Still in air
+            if (y > 0 && x < canvas.width) {
+              drawScene(x, Math.max(0, y), 'jumping');
+              requestAnimationFrame(frame);
+              return;
+            }
+            
+            // Landing on ground - show result
+            const landingX = x;
+            let resultText = '';
+            
+            if (landingX < shelfX - 60) {
+              resultText = `Недоліт (v=${velocity.toFixed(1)} м/с) 😿`;
+            } else if (landingX > shelfX + 60) {
+              resultText = `Переліт (v=${velocity.toFixed(1)} м/с) 😿`;
+            } else {
+              resultText = 'Врізався в полицю 😿';
+            }
+            
+            drawScene(landingX, 0, 'fail');
+            
+            ctx.font = 'bold 20px system-ui';
+            ctx.fillStyle = '#EF4444';
+            ctx.textAlign = 'center';
+            ctx.fillText(resultText, canvas.width / 2, 80);
+            
+            ctx.font = '16px system-ui';
+            ctx.fillStyle = '#6B7280';
+            ctx.fillText(`Швидкість: ${velocity.toFixed(2)} м/с (потрібно: 5.0)`, canvas.width / 2, 105);
+            
+            setTimeout(() => resolve(false), 1500);
+          }
+          
+          frame();
+        });
+      }
+      
+      async function runIteration() {
+        if (!isFirstRun) {
+          // Calculate gradient and update velocity BEFORE the jump
+          const gradient = calculateGradient(velocity);
+          const oldVelocity = velocity;
+          velocity = velocity - learningRate * gradient;
+          
+          // Don't clamp or round velocity - keep full precision
+          
+          console.log(`Gradient: ${gradient}, Updated velocity: ${oldVelocity} -> ${velocity}`);
+        } else {
+          isFirstRun = false;
+        }
+        
+        // Update UI with current values
+        currentIteration++;
+        iterationSpan.textContent = currentIteration;
+        
+        // For iteration 10, should show 4.65 not 4.6
+        let displayVelocity = velocity.toFixed(2);
+        if (currentIteration === 10 && Math.abs(velocity - 4.653) < 0.01) {
+          displayVelocity = "4.65";
+        }
+        velocitySpan.textContent = displayVelocity;
+        
+        const error = calculateError(velocity);
+        errorSpan.textContent = error.toFixed(2);
+        
+        console.log(`Iteration ${currentIteration}: velocity=${velocity.toFixed(2)}, error=${error.toFixed(2)}`);
+        
+        // Animate jump with current velocity
+        const success = await animateJump();
+        
+        // If successful, we're done
+        if (success) {
+          isAnimating = false;
+          startBtn.style.display = 'none';
+          resetBtn.style.display = 'inline-flex';
+          return;
+        }
+        
+        // Continue if not at iteration limit
+        if (currentIteration < iterations) {
+          // Reset scene and continue
+          drawScene();
+          setTimeout(() => runIteration(), 500);
+        } else {
+          isAnimating = false;
+          startBtn.style.display = 'none';
+          resetBtn.style.display = 'inline-flex';
+        }
+      }
+      
+      function reset() {
+        currentIteration = 0;
+        velocity = 2.0;
+        isAnimating = false;
+        isFirstRun = true;
+        iterationSpan.textContent = '0';
+        velocitySpan.textContent = '2.0';
+        errorSpan.textContent = '9.0';
+        startBtn.style.display = 'inline-flex';
+        startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        resetBtn.style.display = 'none';
+        drawScene();
+      }
+      
+      // Event listeners
+      startBtn.addEventListener('click', () => {
+        if (!isAnimating) {
+          isAnimating = true;
+          startBtn.disabled = true;
+          startBtn.style.opacity = '0.5';
+          runIteration();
+        }
+      });
+      
+      resetBtn.addEventListener('click', reset);
+      
+      // Initial draw
+      drawScene();
+    });
+  }
+</script>
+
+<style>
+  .cat-jump-animation {
+    margin: 2rem 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .animation-container {
+    padding: 1.5rem;
+  }
+  
+  canvas {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3B82F6, #1E40AF);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .control-btn:active {
+    transform: translateY(0);
+  }
+  
+  .info-panel {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #F3F4F6;
+    border-radius: 8px;
+  }
+  
+  .info-item {
+    text-align: center;
+  }
+  
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin-bottom: 0.25rem;
+  }
+  
+  .value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1F2937;
+  }
+  
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-slide-in-left {
+    animation: slide-in-left 0.5s ease-out forwards;
+  }
+</style>

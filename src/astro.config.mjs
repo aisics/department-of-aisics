@@ -11,7 +11,8 @@ import { rehypeCopyCode } from './src/utils/rehype-copy-code.js';
 export default defineConfig({
   output: 'static',
   integrations: [
-    tailwind()
+    tailwind(),
+    mdx()
   ],
   markdown: {
     remarkPlugins: [remarkGfm, remarkMath],

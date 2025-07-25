@@ -104,7 +104,7 @@
 
 ### Доступні категорії
 
-- **Basics** (`CATEGORY_BASICS`) - Базові поняття 📚
+- **Basics** (`CATEGORY_BASICS`) - Основи 📚
 - **Neural Networks** (`CATEGORY_NEURAL_NETWORKS`) - Нейронні мережі 🧠
 - **Machine Learning** (`CATEGORY_MACHINE_LEARNING`) - Машинне навчання 🤖
 - **Deep Learning** (`CATEGORY_DEEP_LEARNING`) - Глибоке навчання 🌊

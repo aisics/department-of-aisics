@@ -1,0 +1,121 @@
+---
+export interface Props {
+  expression: string;
+  name?: string;
+  title?: string;
+  xRange?: [number, number];
+  yRange?: [number, number];
+  color?: string;
+  height?: number;
+  xLabel?: string;
+  yLabel?: string;
+}
+
+const { 
+  expression,
+  name = expression,
+  title = '',
+  xRange = [-10, 10],
+  yRange = [-10, 10],
+  color = '#FF6B6B',
+  height = 400,
+  xLabel = 'x',
+  yLabel = 'f(x)'
+} = Astro.props;
+
+// Generate a unique ID for this plot
+const plotId = `plot-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={plotId} class="math-plot-simple">
+  <div class="plot-container"></div>
+</div>
+
+<script define:vars={{ plotId, expression, name, title, xRange, yRange, color, height, xLabel, yLabel }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      // Load Plotly from CDN instead of module import
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+      const container = document.querySelector(`#${plotId} .plot-container`);
+      if (!container) return;
+
+      // Generate plot data
+      const x = [];
+      const y = [];
+      const step = (xRange[1] - xRange[0]) / 200;
+      
+      // Create function from expression
+      let fn;
+      try {
+        fn = new Function('x', `return ${expression}`);
+      } catch (e) {
+        console.error(`Failed to create function: ${expression}`, e);
+        container.innerHTML = `<p style="color: red;">Error: Invalid function expression</p>`;
+        return;
+      }
+      
+      for (let xi = xRange[0]; xi <= xRange[1]; xi += step) {
+        x.push(xi);
+        try {
+          const yi = fn(xi);
+          y.push(isFinite(yi) ? yi : null);
+        } catch (e) {
+          y.push(null);
+        }
+      }
+
+      const plotData = [{
+        x: x,
+        y: y,
+        type: 'scatter',
+        mode: 'lines',
+        name: name,
+        line: {
+          color: color,
+          width: 2
+        }
+      }];
+
+      const layout = {
+        title: title,
+        height: height,
+        xaxis: {
+          title: xLabel,
+          showgrid: true,
+          zeroline: true,
+          range: xRange
+        },
+        yaxis: {
+          title: yLabel,
+          showgrid: true,
+          zeroline: true,
+          range: yRange
+        },
+        showlegend: true
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false
+      };
+
+      window.Plotly.newPlot(container, plotData, layout, config);
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .math-plot-simple {
+    margin: 1rem 0;
+  }
+  
+  .plot-container {
+    width: 100%;
+    min-height: 400px;
+  }
+</style>

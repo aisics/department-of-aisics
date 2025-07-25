@@ -1,5 +1,6 @@
 ---
 import { getTranslation } from '../utils/i18n';
+import { getCategories } from '../utils/articles';
 
 export interface Props {
   articles: any[];
@@ -8,6 +9,15 @@ export interface Props {
 
 const { articles, lang } = Astro.props;
 const t = (key: string) => getTranslation(lang, key);
+
+// Get category metadata for translation mapping
+const categoriesMetadata = getCategories();
+
+// Create a map from category path to translation key
+const categoryPathToTranslationKey = categoriesMetadata.reduce((acc, cat) => {
+  acc[cat.path] = cat.name;
+  return acc;
+}, {} as Record<string, string>);
 
 // Group articles by category
 const articlesByCategory = articles.reduce((acc, article) => {
@@ -32,7 +42,7 @@ const articlesByCategory = articles.reduce((acc, article) => {
           <div class="flex-1">
             <h2 class="text-4xl md:text-5xl font-black text-neural-900 mb-2">
               <span class="bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
-                {category}
+                {categoryPathToTranslationKey[category] ? t(categoryPathToTranslationKey[category]) : category}
               </span>
             </h2>
             <div class="w-24 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>

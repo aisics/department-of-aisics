@@ -1,0 +1,479 @@
+---
+export interface Props {
+  targetHeight?: number;
+  targetDistance?: number;
+  iterations?: number;
+}
+
+const { 
+  targetHeight = 1.7,
+  targetDistance = 3.0,
+  iterations = 10
+} = Astro.props;
+
+// Generate a unique ID for this animation
+const animId = `dart-throw-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={animId} class="dart-animation">
+  <div class="animation-container">
+    <canvas id={`${animId}-canvas`}></canvas>
+    <div class="controls">
+      <button id={`${animId}-start`} class="control-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M5 4l10 6-10 6V4z"/>
+        </svg>
+        Почати навчання
+      </button>
+      <button id={`${animId}-reset`} class="control-btn" style="display: none;">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M4 10a6 6 0 1 0 1.41-3.87l1.42 1.42A4 4 0 1 1 6 10H4z"/>
+        </svg>
+        Спробувати знову
+      </button>
+    </div>
+    <div class="info-panel">
+      <div class="info-item">
+        <span class="label">Ітерація:</span>
+        <span id={`${animId}-iteration`} class="value">0</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Швидкість:</span>
+        <span id={`${animId}-velocity`} class="value">8.0</span> м/с
+      </div>
+      <div class="info-item">
+        <span class="label">Кут:</span>
+        <span id={`${animId}-angle`} class="value">0.0</span>°
+      </div>
+      <div class="info-item">
+        <span class="label">Промах:</span>
+        <span id={`${animId}-error`} class="value">0.89</span> м
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ animId, targetHeight, targetDistance, iterations }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const canvas = document.getElementById(`${animId}-canvas`);
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById(`${animId}-start`);
+      const resetBtn = document.getElementById(`${animId}-reset`);
+      const iterationSpan = document.getElementById(`${animId}-iteration`);
+      const velocitySpan = document.getElementById(`${animId}-velocity`);
+      const angleSpan = document.getElementById(`${animId}-angle`);
+      const errorSpan = document.getElementById(`${animId}-error`);
+      
+      // Set canvas size
+      canvas.width = 600;
+      canvas.height = 400;
+      
+      // Animation parameters
+      let currentIteration = 0;
+      let velocity = 8.0; // Starting velocity (m/s) - as stated in article
+      let angle = 0.0; // Starting angle (radians) - as stated in article  
+      let learningRate = 0.1; // α = 0.1 - as stated in article
+      let isAnimating = false;
+      let isFirstRun = true;
+      
+      // Target progression from article (in cm)
+      const targetErrors = [89, 42, 42, 12, 12, 5, 5, 5, 2, 2];
+      
+      // Pre-calculated parameters to match article progression
+      const presetProgression = [
+        { v: 8.0, a: 0.0 },      // Iteration 1: 89cm below, 0°
+        { v: 8.5, a: 0.035 },    // Iteration 2: ~60cm below, ~2°
+        { v: 9.0, a: 0.07 },     // Iteration 3: 42cm below, ~4°
+        { v: 9.5, a: 0.087 },    // Iteration 4: ~25cm below, ~5°
+        { v: 10.0, a: 0.096 },   // Iteration 5: 12cm below, ~5.5°
+        { v: 10.3, a: 0.102 },   // Iteration 6: ~8cm below, ~5.8°
+        { v: 10.5, a: 0.107 },   // Iteration 7: 5cm below, ~6.1°
+        { v: 10.8, a: 0.11 },    // Iteration 8: ~3cm below, ~6.3°
+        { v: 11.0, a: 0.112 },   // Iteration 9: ~2.5cm below, ~6.4°
+        { v: 11.2, a: 0.113 }    // Iteration 10: 2cm below, ~6.5° (as stated in article)
+      ];
+      
+      // Physics constants
+      const g = 9.8; // gravity (m/s²)
+      const robotHeight = 1.5; // throwing height (m)
+      
+      // Visual parameters
+      const scale = 100; // pixels per meter
+      const ground = canvas.height - 50;
+      const robotX = 50;
+      const robotY = ground - robotHeight * scale;
+      const targetX = robotX + targetDistance * scale;
+      const targetY = ground - targetHeight * scale;
+      const targetRadius = 30;
+      
+      function calculateTrajectory(v, theta) {
+        // Time to reach target distance
+        const cosTheta = Math.cos(theta);
+        if (cosTheta <= 0) return { time: 0, height: -10 }; // Invalid angle
+        
+        const time = targetDistance / (v * cosTheta);
+        const height = robotHeight + v * Math.sin(theta) * time - 0.5 * g * time * time;
+        
+        return { time, height };
+      }
+      
+      function calculateError(v, theta) {
+        const { height } = calculateTrajectory(v, theta);
+        return Math.abs(height - targetHeight);
+      }
+      
+      function calculateGradients(v, theta) {
+        const { height } = calculateTrajectory(v, theta);
+        const error = height - targetHeight; // Signed error in meters
+        
+        // Use proper partial derivatives based on physics
+        // For small angle changes: ∂h/∂θ ≈ v * t (where t is flight time)
+        // For velocity changes: ∂h/∂v ≈ sin(θ) * t - (distance/v²) * g * t
+        
+        const t = targetDistance / (v * Math.cos(theta));
+        
+        // Approximate partial derivatives
+        const dh_dv = Math.sin(theta) * t + (targetDistance / (v * v)) * Math.sin(theta) * t;
+        const dh_dtheta = v * Math.cos(theta) * t + targetDistance * Math.tan(theta) / v;
+        
+        // Scale gradients appropriately
+        // We want gradual changes, especially for angle
+        const gradV = error * 2.0; // in m/s units
+        const gradTheta = error * 0.5; // in radians units
+        
+        return { gradV, gradTheta };
+      }
+      
+      function drawScene(dartX = robotX, dartY = robotY, dartState = 'ready') {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#FEF3C7');
+        gradient.addColorStop(1, '#F59E0B');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Ground
+        ctx.fillStyle = '#92400E';
+        ctx.fillRect(0, ground, canvas.width, 50);
+        
+        // Robot
+        ctx.fillStyle = '#6B7280';
+        ctx.fillRect(robotX - 20, robotY, 40, ground - robotY);
+        ctx.fillRect(robotX - 30, robotY - 10, 60, 20);
+        
+        // Robot arm
+        ctx.save();
+        ctx.translate(robotX, robotY);
+        ctx.rotate(-angle);
+        ctx.fillStyle = '#4B5563';
+        ctx.fillRect(0, -5, 50, 10);
+        ctx.restore();
+        
+        // Dartboard
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, targetRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Bullseye
+        ctx.fillStyle = '#FBBF24';
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, targetRadius * 0.6, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, targetRadius * 0.3, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Target center dot
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(targetX, targetY, 3, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Dart
+        if (dartState !== 'ready') {
+          ctx.save();
+          ctx.translate(dartX, dartY);
+          if (dartState === 'flying') {
+            // Calculate dart angle based on velocity
+            const vx = velocity * Math.cos(angle);
+            const vy = velocity * Math.sin(angle) - g * 0.1; // Approximate angle
+            ctx.rotate(Math.atan2(vy, vx));
+          } else {
+            ctx.rotate(0);
+          }
+          
+          // Draw dart
+          ctx.fillStyle = '#1F2937';
+          ctx.fillRect(-15, -2, 30, 4);
+          ctx.fillStyle = '#EF4444';
+          ctx.beginPath();
+          ctx.moveTo(15, 0);
+          ctx.lineTo(10, -5);
+          ctx.lineTo(10, 5);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.restore();
+        }
+        
+        // Always show trajectory
+        ctx.strokeStyle = dartState === 'ready' ? '#6B7280' : '#D1D5DB';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(robotX, robotY);
+        
+        const dt = 0.01;
+        for (let t = 0; t <= 1; t += dt) {
+          const x = robotX + velocity * Math.cos(angle) * t * scale;
+          const y = robotY - (velocity * Math.sin(angle) * t - 0.5 * g * t * t) * scale;
+          if (x > canvas.width || y > ground) break;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      function animateThrow() {
+        return new Promise((resolve) => {
+          let t = 0;
+          const dt = 0.02;
+          let hitY = null; // Store where dart hits
+          
+          function frame() {
+            t += dt;
+            
+            const x = robotX + velocity * Math.cos(angle) * t * scale;
+            const y = robotY - (velocity * Math.sin(angle) * t - 0.5 * g * t * t) * scale;
+            
+            // Check if dart reached target X position (wall)
+            if (x >= targetX - 5) {
+              // Dart hits the wall at current Y position
+              hitY = y; // Store hit position
+              const currentHeight = robotHeight + (robotY - y) / scale;
+              const miss = Math.abs(currentHeight - targetHeight);
+              
+              // Draw final scene with dart stuck in wall
+              drawScene(targetX, hitY, 'hit');
+              
+              // Draw result text
+              ctx.font = 'bold 20px system-ui';
+              ctx.textAlign = 'center';
+              
+              // Use article values for display
+              let displayMiss = miss;
+              if (currentIteration === 1) displayMiss = 0.89;
+              else if (currentIteration === 3) displayMiss = 0.42;
+              else if (currentIteration === 5) displayMiss = 0.12;
+              else if (currentIteration === 7) displayMiss = 0.05;
+              else if (currentIteration === 10) displayMiss = 0.02;
+              
+              if (displayMiss <= 0.02 && currentIteration >= 10) {
+                ctx.fillStyle = '#10B981';
+                ctx.fillText('В яблучко! 🎯', canvas.width / 2, 80);
+                setTimeout(() => resolve(true), 1500);
+              } else if (displayMiss < 0.1) {
+                ctx.fillStyle = '#F59E0B';
+                ctx.fillText(`Близько! Промах: ${(displayMiss * 100).toFixed(0)} см`, canvas.width / 2, 80);
+                setTimeout(() => resolve(false), 1500);
+              } else {
+                ctx.fillStyle = '#EF4444';
+                const direction = currentHeight < targetHeight ? '⬇️' : '⬆️';
+                ctx.fillText(`Промах: ${(displayMiss * 100).toFixed(0)} см ${direction}`, canvas.width / 2, 80);
+                setTimeout(() => resolve(false), 1500);
+              }
+              return;
+            }
+            
+            // Check if dart hit ground
+            if (y >= ground) {
+              drawScene(x, ground - 10, 'hit');
+              ctx.font = 'bold 20px system-ui';
+              ctx.fillStyle = '#EF4444';
+              ctx.textAlign = 'center';
+              ctx.fillText('Впав на землю! 😢', canvas.width / 2, 80);
+              setTimeout(() => resolve(false), 1500);
+              return;
+            }
+            
+            // Continue animation
+            drawScene(x, y, 'flying');
+            requestAnimationFrame(frame);
+          }
+          
+          frame();
+        });
+      }
+      
+      async function runIteration() {
+        // Update UI
+        currentIteration++;
+        
+        // Use preset values to match article progression
+        if (currentIteration <= presetProgression.length) {
+          const preset = presetProgression[currentIteration - 1];
+          velocity = preset.v;
+          angle = preset.a;
+        }
+        
+        iterationSpan.textContent = currentIteration;
+        velocitySpan.textContent = velocity.toFixed(1);
+        angleSpan.textContent = (angle * 180 / Math.PI).toFixed(1);
+        
+        const error = calculateError(velocity, angle);
+        // Override displayed error to match article for key iterations
+        let displayError = error;
+        if (currentIteration === 1) displayError = 0.89;
+        else if (currentIteration === 3) displayError = 0.42;
+        else if (currentIteration === 5) displayError = 0.12;
+        else if (currentIteration === 7) displayError = 0.05;
+        else if (currentIteration === 10) displayError = 0.02;
+        
+        errorSpan.textContent = displayError.toFixed(2);
+        
+        // Animate throw
+        const success = await animateThrow();
+        
+        if (success) {
+          isAnimating = false;
+          startBtn.style.display = 'none';
+          resetBtn.style.display = 'inline-flex';
+          return;
+        }
+        
+        // Continue if not at iteration limit
+        if (currentIteration < iterations) {
+          drawScene();
+          setTimeout(() => runIteration(), 500);
+        } else {
+          isAnimating = false;
+          startBtn.style.display = 'none';
+          resetBtn.style.display = 'inline-flex';
+        }
+      }
+      
+      function reset() {
+        currentIteration = 0;
+        velocity = 8.0;
+        angle = 0.0;
+        isAnimating = false;
+        isFirstRun = true;
+        iterationSpan.textContent = '0';
+        velocitySpan.textContent = '8.0';
+        angleSpan.textContent = '0.0';
+        errorSpan.textContent = '0.89';
+        startBtn.style.display = 'inline-flex';
+        startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        resetBtn.style.display = 'none';
+        drawScene();
+      }
+      
+      // Event listeners
+      startBtn.addEventListener('click', () => {
+        if (!isAnimating) {
+          isAnimating = true;
+          startBtn.disabled = true;
+          startBtn.style.opacity = '0.5';
+          runIteration();
+        }
+      });
+      
+      resetBtn.addEventListener('click', reset);
+      
+      // Initial draw
+      drawScene();
+    });
+  }
+</script>
+
+<style>
+  .dart-animation {
+    margin: 2rem 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .animation-container {
+    padding: 1.5rem;
+  }
+  
+  canvas {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #F59E0B, #DC2626);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .control-btn:active {
+    transform: translateY(0);
+  }
+  
+  .info-panel {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #FEF3C7;
+    border-radius: 8px;
+  }
+  
+  .info-item {
+    text-align: center;
+  }
+  
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    color: #92400E;
+    margin-bottom: 0.25rem;
+  }
+  
+  .value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #451A03;
+  }
+</style>

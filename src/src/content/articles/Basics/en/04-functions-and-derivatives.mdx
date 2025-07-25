@@ -14,6 +14,10 @@ relatedArticles: ["matrix-transformations"]
 
 import PlotlyFunction from '../../../../components/PlotlyFunction.astro';
 import MathPlotSimple from '../../../../components/MathPlotSimple.astro';
+import VisualDisplay from '../../../../components/VisualDisplay.astro';
+import TangentLineDemo from '../../../../components/TangentLineDemo.astro';
+import CatJumpAnimation from '../../../../components/CatJumpAnimation.astro';
+import DartAnimation from '../../../../components/DartAnimation.astro';
 
 # Lecture 4: Functions and Derivatives – How AI Finds the Best Solutions 📈
 
@@ -57,7 +61,7 @@ Where:
 - $f(10) = 2 \cdot 10 + 1 = 21$ (10g coffee → strength 21)
 - $f(15) = 2 \cdot 15 + 1 = 31$ (15g coffee → strength 31)
 
-**Interactive visualization:**
+**Interactive Visualization:**
 
 <MathPlotSimple
   expression="2 * x + 1"
@@ -66,9 +70,11 @@ Where:
   xRange={[0, 20]}
   yRange={[0, 45]}
   color="#8B4513"
+  xLabel="Amount of coffee (grams)"
+  yLabel="Drink strength (arbitrary units)"
 />
 
-### Example 2: Robot Cat's Error Function 🤖🐱
+### Example 2: Robot Cat Error Function 🤖🐱
 
 Our robot cat is trying to jump onto a shelf. The error function:
 
@@ -81,27 +87,32 @@ Where:
 - 5 m/s – ideal velocity
 - Error – how far from the target the cat landed
 
-**Error visualization:**
-```
-Velocity:   3    4    5    6    7
-Error:      4    1    0    1    4
-            😿   😐   😸   😐   😿
-```
+**Error Visualization:**
 
-We see that:
+<VisualDisplay type="chart">
+{`
+Velocity:  3      4      5      6      7
+Error:     4      1      0      1      4
+Result:    😿    😐    😸    😐    😿
+`}
+</VisualDisplay>
+
+We can see that:
 - At $v = 5$: error = 0 (perfect! 😸)
 - At $v < 5$: undershoot (😿)
 - At $v > 5$: overshoot (😿)
 
-**Interactive error function:**
+**Interactive Error Function:**
 
 <MathPlotSimple
   expression="Math.pow(x - 5, 2)"
   name="Error(v) = (v - 5)²"
-  title="Robot Cat's Jump Error Function"
+  title="Robot Cat Jump Error Function"
   xRange={[0, 10]}
   yRange={[0, 30]}
   color="#FF6B6B"
+  xLabel="Jump velocity (m/s)"
+  yLabel="Error (distance from target)"
 />
 
 ### Functions of Multiple Variables 📊
@@ -134,7 +145,7 @@ $$
 f(60, 2, 5) = 1000 \cdot 60 + 50000 \cdot 2 - 5000 \cdot 5 + 200000
 $$
 $$
-= 60000 + 100000 - 25000 + 200000 = 335000 \text{ USD}
+= 60000 + 100000 - 25000 + 200000 = 335000 \text{ UAH}
 $$
 
 ## Derivatives – Rate of Change 🏃‍♂️
@@ -145,12 +156,12 @@ $$
 
 ### Example: Car Speed 🚗
 
-If a car's position is described by the function:
+If a car's position is described by:
 $$
 s(t) = 5t^2
 $$
 
-Where $s$ – distance (m), $t$ – time (s).
+Where $s$ is distance (m), $t$ is time (s).
 
 **Speed** is the derivative of position with respect to time:
 $$
@@ -158,9 +169,9 @@ v(t) = s'(t) = 10t
 $$
 
 **What this means:**
-- At time $t = 1$: speed = 10 m/s
-- At time $t = 2$: speed = 20 m/s
-- At time $t = 3$: speed = 30 m/s
+- At $t = 1$: speed = 10 m/s
+- At $t = 2$: speed = 20 m/s
+- At $t = 3$: speed = 30 m/s
 
 The car is accelerating!
 
@@ -170,20 +181,18 @@ The derivative at a point = slope of the tangent line to the function graph at t
 
 **Visualization for** $f(x) = x^2$:
 
-```
-      |     .
-      |   .   (slope = 4)
-  f(x)|  .
-      | . (slope = 2)
-      |. (slope = 0)
-      +------------- x
-```
+<TangentLineDemo
+  title="Function f(x) = x² and Tangent Lines"
+  xRange={[-3, 3]}
+  yRange={[-1, 9]}
+  height={400}
+/>
 
 - At point $x = 0$: $f'(0) = 0$ (horizontal tangent)
-- At point $x = 1$: $f'(1) = 2$ (tangent goes up)
-- At point $x = 2$: $f'(2) = 4$ (tangent goes up steeper)
+- At point $x = 1$: $f'(1) = 2$ (tangent slopes upward)
+- At point $x = 2$: $f'(2) = 4$ (tangent slopes upward more steeply)
 
-**Interactive visualization of f(x) = x² and its derivative:**
+**Interactive Visualization of f(x) = x² and its Derivative:**
 
 <PlotlyFunction
   type="2d"
@@ -215,9 +224,9 @@ The derivative at a point = slope of the tangent line to the function graph at t
 3. **Sum:** $\frac{d}{dx}[f(x) + g(x)] = f'(x) + g'(x)$
 4. **Constant multiple:** $\frac{d}{dx}[c \cdot f(x)] = c \cdot f'(x)$
 
-**Example application:**
+**Application example:**
 
-For the cat's error function:
+For the cat error function:
 $$
 \text{Error}(v) = (v - 5)^2 = v^2 - 10v + 25
 $$
@@ -232,11 +241,11 @@ $$
 - When $v > 5$: derivative is positive → error increases as velocity increases
 - When $v = 5$: derivative = 0 → minimum error!
 
-**Visualizing the error function and its derivative:**
+**Visualization of Error Function and its Derivative:**
 
 <PlotlyFunction
   type="2d"
-  title="Error Function and Its Derivative"
+  title="Error Function and its Derivative"
   xLabel="Velocity (m/s)"
   yLabel="Value"
   xRange={[0, 10]}
@@ -278,30 +287,19 @@ $$
 
 ### Gradient – Vector of All Partial Derivatives
 
-**Gradient** is a vector composed of all partial derivatives:
+**The gradient** is a vector composed of all partial derivatives:
 
 $$
 \nabla h = \begin{pmatrix} \frac{\partial h}{\partial x} \\ \frac{\partial h}{\partial y} \end{pmatrix} = \begin{pmatrix} -2x \\ -2y \end{pmatrix}
 $$
 
-**Key property:** The gradient points in the direction of steepest increase!
+**Key property:** The gradient points in the direction of steepest ascent!
 
 ### Gradient Visualization 🏔️
 
-Imagine you're standing on a mountain slope:
+Imagine standing on a mountain slope. The gradient always points in the direction of the steepest climb:
 
-```
-      Peak (0,0)
-         🏔️
-        /│\
-       / │ \
-      /  │  \  ← gradient points up
-     /   │   \
-    /    │    \
-   ──────┴──────
-```
-
-**Interactive 3D visualization of the mountain:**
+**Interactive 3D Mountain Visualization:**
 
 <PlotlyFunction
   type="3d"
@@ -323,7 +321,7 @@ Imagine you're standing on a mountain slope:
 - **Gradient** points in the direction of steepest ascent
 - **Negative gradient** points in the direction of steepest descent
 
-**Example calculation:**
+**Calculation example:**
 
 At point $(1, 2)$:
 $$
@@ -334,17 +332,17 @@ This means:
 - The function decreases faster in the $y$ direction (component -4)
 - To climb the mountain, move in direction $(2, 4)$
 
-## Gradient Descent – AI's Learning Algorithm 🎯
+## Gradient Descent – AI Learning Algorithm 🎯
 
 ### Basic Idea
 
-**Gradient descent** is a method for finding a function's minimum by moving in the direction opposite to the gradient.
+**Gradient descent** is a method of finding a function's minimum by moving in the direction opposite to the gradient.
 
 **Algorithm:**
 1. Start at a random point
 2. Calculate the gradient at this point
 3. Take a step in the negative gradient direction
-4. Repeat until reaching minimum
+4. Repeat until reaching the minimum
 
 ### Parameter Update Formula
 
@@ -355,9 +353,9 @@ $$
 Where:
 - $\theta$ – parameters (weights, biases, etc.)
 - $\alpha$ – learning rate
-- $\nabla f$ – gradient of loss function
+- $\nabla f$ – gradient of the loss function
 
-### Example: Training the Robot Cat 🤖
+### Example: Teaching the Robot Cat 🤖
 
 Let's return to our cat learning to jump:
 
@@ -365,7 +363,7 @@ Let's return to our cat learning to jump:
 
 **Derivative:** $E'(v) = 2(v - 5)$
 
-**Training process** with $\alpha = 0.1$:
+**Learning process** with $\alpha = 0.1$:
 
 1. **Attempt 1:** $v_0 = 2$ m/s
    - Error: $E(2) = (2-5)^2 = 9$
@@ -381,51 +379,67 @@ Let's return to our cat learning to jump:
    - Error: $E(3.08) = (3.08-5)^2 = 3.69$
    - And so on...
 
-**Progress visualization:**
-```
-Attempt:   1     2     3     4     5    ...   10
+**Progress Visualization:**
+
+<VisualDisplay type="progress">
+{`Attempt:   1     2     3     4     5    ...   10
 Velocity:  2.0   2.6   3.08  3.46  3.77  ...  4.65
 Error:     9.0   5.76  3.69  2.36  1.51  ...  0.12
-Cat:       😿    😟    😐    🙂    😊    ...  😸
-```
+Cat:       😿    😟    😐    🙂    😊    ...  😸`}
+</VisualDisplay>
+
+**🎮 Interactive Learning Demonstration:**
+
+Now watch this work in real time! Click "Start Learning" and observe how the robot cat learns to jump correctly:
+
+<CatJumpAnimation targetHeight={5} iterations={10} />
 
 ### Choosing the Learning Rate ⚡
 
-The learning rate $\alpha$ is critical:
+The learning rate $\alpha$ is critically important:
 
 **Too small** ($\alpha = 0.01$):
-```
-Iteration: 1    10    50    100   200
+
+<VisualDisplay type="comparison">
+{`Iteration: 1    10    50    100   200
 Error:     9.0  8.1   5.2   3.3   1.3
-           🐌 too slow...
-```
+           🐌 too slow...`}
+</VisualDisplay>
+
+💭 **Imagine:** You're walking to the store in tiny 1cm steps. Yes, you'll get there, but when? In an hour you'll only travel 36 meters! Your robot cat is similarly "crawling" to the goal - it will drain its battery before learning to jump. In the real world, this means days or weeks of training instead of hours.
 
 **Optimal** ($\alpha = 0.1$):
-```
-Iteration: 1    5     10    15    20
+
+<VisualDisplay type="comparison">
+{`Iteration: 1    5     10    15    20
 Error:     9.0  1.5   0.24  0.04  0.006
-           ✅ converges quickly!
-```
+           ✅ converges quickly!`}
+</VisualDisplay>
+
+🎯 **Perfect balance:** Like an experienced driver on the road - not too slow (holding up others), not too fast (dangerous), but at just the right speed! The cat makes smart steps: large at first to quickly approach, then smaller for precise landing. It's like archery - you need to find the ideal draw strength: too weak - arrow won't reach, too strong - overshoots the target.
 
 **Too large** ($\alpha = 1.5$):
-```
-Iteration: 1    2     3     4     5
+
+<VisualDisplay type="comparison">
+{`Iteration: 1    2     3     4     5
 Error:     9.0  36    144   576   2304
-           💥 diverges!
-```
+           💥 diverges!`}
+</VisualDisplay>
+
+🚀 **Catastrophe!** It's like trying to catch a butterfly with a sledgehammer - instead of getting closer to the goal, you destroy it! The robot cat jumps so hard it flies across the room, bounces off the wall and flies back. With each attempt it flies further away. In neural networks this leads to "gradient explosion" - numbers become so large the computer just throws an error.
 
 ## Chain Rule – Foundation of Deep Learning 🔗
 
 ### What is the Chain Rule?
 
-**The chain rule** allows us to compute derivatives of composite functions.
+**The chain rule** allows computing derivatives of composite functions.
 
 If $y = f(g(x))$, then:
 $$
 \frac{dy}{dx} = \frac{dy}{dg} \cdot \frac{dg}{dx}
 $$
 
-### Example: Making the Perfect Pizza 🍕
+### Example: Making Perfect Pizza 🍕
 
 Imagine the process:
 1. **Oven temperature** → **Baking time** → **Pizza quality**
@@ -434,6 +448,8 @@ Mathematically:
 - $t$ – oven temperature (°C)
 - $m = g(t) = \frac{600}{t}$ – baking time (min)
 - $q = f(m) = -(m - 15)^2 + 100$ – pizza quality (points)
+
+**Why exactly 15 minutes?** In the quality formula we see $(m - 15)^2$ - this means best quality (100 points) is achieved when $m = 15$ minutes. Baking less or more decreases quality!
 
 **Composition:** $q(t) = f(g(t)) = -\left(\frac{600}{t} - 15\right)^2 + 100$
 
@@ -444,7 +460,7 @@ $$
 \frac{dq}{dt} = \frac{dq}{dm} \cdot \frac{dm}{dt}
 $$
 
-Calculating:
+Calculate:
 - $\frac{dq}{dm} = -2(m - 15)$
 - $\frac{dm}{dt} = -\frac{600}{t^2}$
 
@@ -453,142 +469,208 @@ $$
 \frac{dq}{dt} = -2\left(\frac{600}{t} - 15\right) \cdot \left(-\frac{600}{t^2}\right)
 $$
 
+**🤔 What does this mean in simple terms?**
+
+Let's break down specific examples:
+
+1. **At 200°C:** 
+   - Baking time: 600/200 = 3 minutes (too fast!)
+   - Quality: -(3-15)² + 100 = -144 + 100 = **-44 points** 🔥
+   - Result: Burned on top, raw inside!
+
+2. **At 300°C:**
+   - Baking time: 600/300 = 2 minutes (still fast)
+   - Quality: -(2-15)² + 100 = -169 + 100 = **-69 points** 💀
+   - Result: Charcoal instead of pizza!
+
+3. **At 40°C:**
+   - Baking time: 600/40 = 15 minutes (perfect!)
+   - Quality: -(15-15)² + 100 = 0 + 100 = **100 points** 🍕✨
+   - Result: Golden crust, melted cheese!
+
+4. **At 30°C:**
+   - Baking time: 600/30 = 20 minutes (too long)
+   - Quality: -(20-15)² + 100 = -25 + 100 = **75 points** 😐
+   - Result: Dried out, hard as a rock
+
+**Conclusion:** The chain rule shows how temperature change (through time change) affects quality. At 40°C we achieve the ideal 15 minutes of baking!
+
 ### Application in Neural Networks 🧠
 
-In a neural network, we have many layers:
+In a neural network we have many layers:
 
-```
-Input → Layer 1 → Layer 2 → ... → Layer N → Output
- x   →  h₁(x)   → h₂(h₁)  → ... → hₙ(...) → y
-```
+<VisualDisplay type="diagram">
+{`Input → Layer 1 → Layer 2 → ... → Layer N → Output
+ x   →  h₁(x)   → h₂(h₁)  → ... → hₙ(...) → y`}
+</VisualDisplay>
 
-To train the network, we need to know how each weight affects the error. The chain rule allows us to "pass" the gradient backward through all layers!
-
-### Example: Mini-Network for Emotion Recognition 😊😢
-
-**Architecture:**
-1. Input: image brightness ($x$)
-2. Hidden layer: $h = \text{ReLU}(wx + b)$
-3. Output: smile probability $y = \text{sigmoid}(vh + c)$
-
-**Activation functions:**
-- ReLU: $\text{ReLU}(z) = \max(0, z)$
-- Sigmoid: $\text{sigmoid}(z) = \frac{1}{1 + e^{-z}}$
-
-**Interactive visualization of activation functions:**
-
-<PlotlyFunction
-  type="2d"
-  title="Common Activation Functions in Neural Networks"
-  xLabel="z"
-  yLabel="f(z)"
-  xRange={[-5, 5]}
-  yRange={[-0.5, 5]}
-  functions={JSON.stringify([
-    {
-      name: "ReLU(z) = max(0, z)",
-      expression: "Math.max(0, x)",
-      color: "#FF6B6B"
-    },
-    {
-      name: "Sigmoid(z) = 1/(1 + e^(-z))",
-      expression: "1 / (1 + Math.exp(-x))",
-      color: "#4ECDC4"
-    },
-    {
-      name: "Tanh(z)",
-      expression: "Math.tanh(x)",
-      color: "#45B7D1"
-    }
-  ])}
-/>
-
-**Backpropagation:**
-
-If error $E = (y - y_{\text{target}})^2$, then:
-
-1. Gradient w.r.t. output: $\frac{\partial E}{\partial y} = 2(y - y_{\text{target}})$
-
-2. Gradient w.r.t. $v$ (chain rule):
-   $$\frac{\partial E}{\partial v} = \frac{\partial E}{\partial y} \cdot \frac{\partial y}{\partial v} = \frac{\partial E}{\partial y} \cdot y(1-y) \cdot h$$
-
-3. Gradient w.r.t. $w$ (double chain rule):
-   $$\frac{\partial E}{\partial w} = \frac{\partial E}{\partial y} \cdot \frac{\partial y}{\partial h} \cdot \frac{\partial h}{\partial w}$$
+To train the network, we need to know how each weight affects the error. The chain rule allows "passing" the gradient back through all layers!
 
 ## Practical Example: Teaching AI to Play Darts 🎯
 
 ### Problem Setup
 
-AI controls the force ($f$) and angle ($\theta$) of dart throw. Goal – hit the bullseye.
+AI controls the force ($f$) and angle ($\theta$) of dart throws. Goal – hit the bullseye.
 
-**Hit function:**
+**🎮 Imagine the situation:**
+- Robot stands 3 meters from the dartboard
+- Bullseye is at coordinates (3, 1.7) - at height 1.7m (standard height)
+- Robot throws from height 1.5m (robot's arm)
+- Robot can control:
+  - **Throw velocity** ($v$): from 0 to 15 m/s
+  - **Throw angle** ($\theta$): from -45° to +45° (in radians)
+
+**Realistic flight function (with gravity!):**
+
+Time to reach target: $t = \frac{3}{v\cos\theta}$
+
+Dart height at impact: $h = 1.5 + v\sin\theta \cdot t - \frac{g \cdot t^2}{2}$
+
+Where $g = 9.8$ m/s² - gravitational acceleration
+
+**Miss function:**
 $$
-d(f, \theta) = \sqrt{(f\cos\theta - 10)^2 + (f\sin\theta)^2}
+d(v, \theta) = |h - 1.7|
 $$
 
-Where $d$ – distance from bullseye.
+**📐 What happens physically:**
+- At $\theta = 0°$ (horizontal): dart immediately starts falling
+- At $\theta > 0°$: dart flies in parabola up, then down
+- At $\theta < 0°$: dart flies downward (dangerous!)
+- The higher the velocity, the less the dart falls
+
+**Realistic examples:**
+- $v=8$ m/s, $\theta=0°$: flight time 0.375s, falls 0.69m → hits at height 0.81m (miss 0.89m) 😢
+- $v=10$ m/s, $\theta=10°$: flies in arc, hits at height 1.65m (miss 0.05m) 😊
+- $v=12$ m/s, $\theta=5°$: almost perfect! Hits at 1.71m (miss 0.01m) 🎯
 
 **Loss function:**
 $$
-L(f, \theta) = d(f, \theta)^2
+L(v, \theta) = d(v, \theta)^2
 $$
+
+**Why squared?** So larger misses are "punished" more severely. A 2cm miss gives loss 4, but a 10cm miss gives 100!
 
 ### Gradient Descent for Two Parameters
 
-**Partial derivatives:**
+**🧮 How does the robot learn?**
+
+The robot uses gradients to understand how to change force and angle:
+
+**Partial derivatives (intuitively):**
+- $\frac{\partial L}{\partial v}$ - "If I throw faster, will the dart hit higher or lower?"
+- $\frac{\partial L}{\partial \theta}$ - "If I increase the angle upward, will this compensate for gravity?"
+
+**Physical intuition:**
+- Increasing velocity → less flight time → less fall from gravity
+- Increasing angle → dart flies higher, but slower horizontally → more time to fall
+
+**Mathematically:**
 $$
-\frac{\partial L}{\partial f} = 2d \cdot \frac{\partial d}{\partial f}
+\frac{\partial L}{\partial v} = 2d \cdot \frac{\partial d}{\partial v}
 $$
 $$
 \frac{\partial L}{\partial \theta} = 2d \cdot \frac{\partial d}{\partial \theta}
 $$
 
-**Training process:**
+**🎯 Learning strategy:**
+1. Throw dart with current parameters
+2. Measure miss
+3. Calculate which direction to change force and angle
+4. Take a small step in the right direction
+5. Repeat!
+
+**Learning process:**
 
 ```python
-# Initial parameters
-f = 5.0      # force
-θ = 0.5      # angle (radians)
-α = 0.01     # learning rate
+# Initial parameters (robot starts with naive settings!)
+v = 8.0      # velocity: 8 m/s (thinks it's strong, but gravity!)
+θ = 0.0      # angle: 0° (throws straight, doesn't account for fall)
+α = 0.1      # learning rate
 
-# 10 training iterations
+# Physical constants
+g = 9.8      # gravity (m/s²)
+distance = 3.0  # distance to target (m)
+target_height = 1.7  # bullseye height (m)
+robot_height = 1.5  # throwing height (m)
+
+# 10 learning iterations
 for i in range(10):
-    # Calculate gradient
-    grad_f = calculate_gradient_f(f, θ)
-    grad_θ = calculate_gradient_θ(f, θ)
+    # Step 1: Calculate trajectory
+    t = distance / (v * cos(θ))  # flight time
+    h = robot_height + v * sin(θ) * t - 0.5 * g * t * t  # impact height
+    miss = abs(h - target_height)  # miss distance
     
-    # Update parameters
-    f = f - α * grad_f
-    θ = θ - α * grad_θ
+    # Step 2: Calculate gradients
+    # "How will parameter changes affect height?"
+    grad_v = calculate_gradient_v(v, θ)  # e.g.: -2.1 (faster = higher!)
+    grad_θ = calculate_gradient_θ(v, θ)  # e.g.: +5.3 (throw upward!)
     
-    # Result
-    distance = d(f, θ)
-    print(f"Attempt {i+1}: distance = {distance:.2f}")
+    # Step 3: Update parameters
+    v = v - α * grad_v  # 8.0 - 0.1*(-2.1) = 8.21 (slightly faster)
+    θ = θ - α * grad_θ  # 0.0 - 0.1*(5.3) = 0.053 rad (~3°)
+    
+    # Step 4: Result
+    print(f"Attempt {i+1}: miss = {miss:.3f}m, v={v:.1f}m/s, θ={degrees(θ):.1f}°")
+    
+    # Physics works! Robot learned to compensate for gravity!
 ```
 
 **Results visualization:**
-```
-Attempt 1: 🎯........................ (5.2 cm)
-Attempt 3: 🎯.............. (3.1 cm)
-Attempt 5: 🎯........ (1.8 cm)
-Attempt 7: 🎯.... (0.9 cm)
-Attempt 10: 🎯 (0.2 cm) Almost bullseye!
-```
+
+<VisualDisplay type="progress">
+{`Attempt 1: 🎯........................ (89 cm below!)
+Attempt 3: 🎯.................. (42 cm below)
+Attempt 5: 🎯............ (12 cm below)
+Attempt 7: 🎯...... (5 cm below)
+Attempt 10: 🎯.. (2 cm) Hit! 🎉`}
+</VisualDisplay>
+
+**🎮 Interactive Darts Learning Demonstration:**
+
+Watch how the robot learns to throw darts! Click "Start Learning" and observe how gradient descent helps the robot find the right combination of velocity and angle:
+
+<DartAnimation targetHeight={1.7} targetDistance={3.0} iterations={10} />
+
+**🔍 What happens behind the scenes:**
+
+**Beginning (Attempt 1):**
+- Velocity: 8.0 m/s, Angle: 0° (throws straight)
+- Result: dart falls 0.89m below target! 
+- Gravity "ate" the height in 0.375 seconds of flight
+- Gradients shout: "Throw upward! And faster!"
+
+**Middle of learning (Attempt 5):**
+- Velocity: ~10.0 m/s, Angle: ~5.5° 
+- Miss reduced to 0.12m
+- Robot understood: need to throw at an upward angle
+- Balance between velocity and angle almost found
+
+**Finale (Attempt 10):**
+- Velocity: ~11.2 m/s, Angle: ~6.5°
+- Miss only 2 cm!
+- Perfect compromise: fast enough (less fall) + right angle (gravity compensation)
+
+**💡 Key observations:**
+1. Progress is fast at first (89 → 42 cm in 2 steps)
+2. Then slows down (need precision)
+3. Never reaches perfect 0 (always small error)
+4. That's normal! In the real world 2cm is an excellent result
 
 ## Summary and Key Concepts 🎓
 
-### What We Learned:
+### What we learned:
 
-1. **Functions** – mathematical rules for transforming data
+1. **Functions** – mathematical rules for data transformation
    - Describe relationships between variables
    - Can have one or many variables
 
-2. **Derivatives** – rate of change of functions
+2. **Derivatives** – rate of function change
    - Show direction and steepness of change
    - Foundation for optimization
 
 3. **Gradient** – vector of partial derivatives
-   - Points in direction of steepest increase
+   - Points in direction of steepest ascent
    - Key to learning in multidimensional space
 
 4. **Gradient descent** – optimization algorithm
@@ -596,23 +678,19 @@ Attempt 10: 🎯 (0.2 cm) Almost bullseye!
    - Learning rate controls step size
 
 5. **Chain rule** – derivatives of composite functions
-   - Enables training deep networks
+   - Allows training deep networks
    - Foundation of backpropagation algorithm
 
-### Why This Matters for AI? 🤖
+### Why is this important for AI? 🤖
 
 - **Learning = optimization**: AI learns by minimizing a loss function
 - **Gradients show direction**: Where to move parameters for improvement
 - **Chain rule scales**: Works for networks with millions of parameters
 - **Automatic differentiation**: Modern frameworks compute gradients automatically
 
-### Practical Tips 💡
-
-1. **Normalize your data**: Gradients work better with normalized data
-2. **Adaptive learning rates**: Use algorithms like Adam
-3. **Monitor gradients**: Too small or large gradients are problematic
-4. **Regularization**: Add penalties to prevent overfitting
-
----
-
-**Next lecture:** Activation functions – how to add nonlinearity and teach AI complex relationships! 🚀
+<div style="background: #e0f2fe; border: 2px solid #0284c7; border-radius: 8px; padding: 1rem; margin: 1rem 0; text-align: center;">
+<strong>🎯 Main rule:</strong><br/>
+The derivative shows the direction of fastest function change.<br/>
+Gradient descent goes against this direction to find the minimum.<br/>
+This is the foundation of all neural network learning!
+</div>

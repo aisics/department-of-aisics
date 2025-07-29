@@ -12,7 +12,7 @@ prerequisites: ["01-vectors-in-ai"]
 relatedArticles: ["02-matrixes-in-ai"]
 ---
 
-# Lecture 4: Probabilities – How AI Deals with Uncertainty 🎲
+# Lecture 5: Probabilities – How AI Deals with Uncertainty 🎲
 
 Imagine you're playing chess against a computer. How does it decide which move to make? It can't know exactly what you'll do next, but it can estimate the probability of each of your possible moves. Probabilities enable AI to make intelligent decisions under uncertainty – from speech recognition to weather forecasting.
 

@@ -27,6 +27,23 @@ const articlesByCategory = articles.reduce((acc, article) => {
   acc[article.category].push(article);
   return acc;
 }, {} as Record<string, any[]>);
+
+// Sort articles within each category by filename (which includes the number prefix)
+Object.keys(articlesByCategory).forEach(category => {
+  articlesByCategory[category].sort((a, b) => {
+    // Extract the number from the filename (e.g., "01-vectors-in-ai" -> "01")
+    const getNumber = (article: any) => {
+      const match = article.filePath.match(/(\d+)-/);
+      return match ? parseInt(match[1]) : 999;
+    };
+    return getNumber(a) - getNumber(b);
+  });
+});
+
+// Create ordered categories array based on categories.json order
+const orderedCategories = categoriesMetadata
+  .map(cat => cat.path)
+  .filter(path => articlesByCategory[path]); // Only include categories that have articles
 ---
 
 <div class="max-w-7xl mx-auto px-6 py-16 relative">
@@ -35,7 +52,9 @@ const articlesByCategory = articles.reduce((acc, article) => {
   <div class="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-r from-secondary-200/30 to-accent-200/30 rounded-full blur-2xl translate-x-1/2 translate-y-1/2"></div>
   
   <div class="relative z-10">
-    {Object.entries(articlesByCategory).map(([category, categoryArticles], sectionIndex) => (
+    {orderedCategories.map((category, sectionIndex) => {
+      const categoryArticles = articlesByCategory[category];
+      return (
       <section class="mb-20 animate-fade-in-up" style={`animation-delay: ${sectionIndex * 0.2}s;`}>
         <!-- Category Header -->
         <div class="flex items-center mb-12">
@@ -161,7 +180,7 @@ const articlesByCategory = articles.reduce((acc, article) => {
           ))}
         </div>
       </section>
-    ))}
+    )})}
     
     {articles.length === 0 && (
       <div class="text-center py-20">

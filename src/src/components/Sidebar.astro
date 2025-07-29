@@ -188,7 +188,7 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
                 </button>
                 
                 <!-- Articles List -->
-                <div id={`category-${category.name}`} class={`overflow-hidden transition-all duration-500 ease-out ${isCurrentCategory ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div id={`category-${category.name}`} class={`overflow-hidden transition-all duration-500 ease-out ${isCurrentCategory ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div class="mt-3 ml-6 space-y-2">
                     {categoryArticles.length > 0 ? (
                       categoryArticles.map((article, articleIndex) => {
@@ -386,7 +386,7 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
                   </button>
                   
                   <!-- Articles List -->
-                  <div id={`mobile-category-${category.name}`} class={`overflow-hidden transition-all duration-500 ease-out ${isCurrentCategory ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div id={`mobile-category-${category.name}`} class={`overflow-hidden transition-all duration-500 ease-out ${isCurrentCategory ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div class="mt-3 ml-6 space-y-2">
                       {categoryArticles.length > 0 ? (
                         categoryArticles.map((article, articleIndex) => {
@@ -539,12 +539,12 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
       
       if (isOpen) {
         content.classList.add('max-h-0', 'opacity-0');
-        content.classList.remove('max-h-96', 'opacity-100');
+        content.classList.remove('max-h-[600px]', 'opacity-100');
         chevron.classList.remove('rotate-180');
         button.classList.remove('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
       } else {
         content.classList.remove('max-h-0', 'opacity-0');
-        content.classList.add('max-h-96', 'opacity-100');
+        content.classList.add('max-h-[600px]', 'opacity-100');
         chevron.classList.add('rotate-180');
         button.classList.add('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
       }
@@ -595,12 +595,12 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
       
       if (isOpen) {
         content.classList.add('max-h-0', 'opacity-0');
-        content.classList.remove('max-h-96', 'opacity-100');
+        content.classList.remove('max-h-[600px]', 'opacity-100');
         chevron.classList.remove('rotate-180');
         button.classList.remove('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
       } else {
         content.classList.remove('max-h-0', 'opacity-0');
-        content.classList.add('max-h-96', 'opacity-100');
+        content.classList.add('max-h-[600px]', 'opacity-100');
         chevron.classList.add('rotate-180');
         button.classList.add('bg-gradient-to-r', 'from-primary-500/10', 'to-secondary-500/10', 'border', 'border-primary-200/50', 'shadow-glow');
       }

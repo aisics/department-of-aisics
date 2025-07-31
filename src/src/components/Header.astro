@@ -52,6 +52,17 @@ const t = (key: string) => getTranslation(lang, key);
           </div>
         </div>
         
+        <!-- About Link -->
+        <a 
+          href="/about" 
+          class="p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 rounded-xl transition-all duration-300"
+          aria-label="About"
+        >
+          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </a>
+        
         <!-- Mobile Menu Button -->
         <button onclick="openMobileSidebar()" class="p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
           <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +73,7 @@ const t = (key: string) => getTranslation(lang, key);
     </div>
     
     <!-- Desktop Header -->
-    <div class="hidden lg:block max-w-7xl mx-auto px-6">
+    <div class="hidden lg:block px-6">
       <div class="flex justify-between items-center py-6">
       <!-- Logo Section -->
       <div class="flex items-center">
@@ -89,11 +100,22 @@ const t = (key: string) => getTranslation(lang, key);
       </div>
       
       <!-- Navigation Actions -->
-      <div class="hidden lg:flex items-center space-x-3">
+      <div class="flex items-center space-x-3">
         <!-- Language Selector -->
         <div class="relative" style="z-index: 99999;">
           <LanguageSelector />
         </div>
+        
+        <!-- About Link -->
+        <a 
+          href="/about" 
+          class="group relative p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 hover:border-primary-200/50 rounded-2xl transition-all duration-300 hover:shadow-neural hover:scale-105"
+          aria-label="About"
+        >
+          <svg class="w-5 h-5 text-neural-600 group-hover:text-primary-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </a>
         
         <!-- GitHub Link -->
         <a 

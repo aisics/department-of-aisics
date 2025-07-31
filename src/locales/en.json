@@ -19,5 +19,21 @@
   "popup.sorry.title": "Sorry",
   "popup.sorry.message": "This content is not yet available, stay tuned!",
   "popup.sorry.button": "Close",
-  "article.home": "Back"
+  "article.home": "Back",
+  "about.title": "About",
+  "about.instructor.title": "About the Instructor",
+  "about.instructor.description": "Welcome! My name is Mykhaylo Katruk. I created my first program back in 1999 and have been in love with programming ever since. For the past 6 years, I've been working at a large international company specializing in robotics, agents, and AI in general. With this experience, I've created this course to share my knowledge and make AI accessible to everyone.",
+  "about.instructor.credentials": "25+ years in programming • 6 years in AI • Robotics & AI Agent Developer",
+  "about.course.title": "About the Course",
+  "about.course.description": "The Department of AIsiCs (AI + Physics) is a comprehensive educational platform designed to teach artificial intelligence concepts from the ground up. Our approach combines theoretical knowledge with practical applications, making AI learning both engaging and effective.",
+  "about.features.practical.title": "Practical Focus",
+  "about.features.practical.description": "Learn by doing with hands-on examples and real-world applications",
+  "about.features.multilingual.title": "Multilingual Support",
+  "about.features.multilingual.description": "Available in both English and Ukrainian to reach a wider audience",
+  "about.features.updated.title": "Always Updated",
+  "about.features.updated.description": "Content is regularly updated to reflect the latest developments in AI",
+  "about.features.community.title": "Community Driven",
+  "about.features.community.description": "Open-source project welcoming contributions from the community",
+  "about.mission.title": "My Mission",
+  "about.mission.description": "To democratize AI education by providing high-quality, accessible content that empowers learners to understand and apply artificial intelligence in their fields of interest."
 } 

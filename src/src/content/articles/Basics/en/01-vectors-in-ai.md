@@ -5,14 +5,14 @@ author: "Department of AIsics"
 date: 2025-07-23
 readingTime: 15
 tags: ["vectors", "linear-algebra", "machine-learning", "neural-networks", "mathematics"]
-featured: true
+featured: false
 difficulty: "beginner"
 category: "Basics"
 prerequisites: []
 relatedArticles: []
 ---
 
-# Lecture 1: Vectors – The Language of Artificial Intelligence 🤖
+# Vectors – The Language of Artificial Intelligence 🤖
 
 Imagine we need to "explain" to a computer how concepts like "sunny day" and "warm weather" are similar, or how to distinguish tea from coffee. Vectors serve as the universal language of numbers that describes object characteristics for their further mathematical processing and machine understanding.
 

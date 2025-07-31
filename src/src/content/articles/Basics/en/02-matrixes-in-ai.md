@@ -5,16 +5,16 @@ author: "Department of AIsics"
 date: 2025-07-24
 readingTime: 20
 tags: ["matrices", "linear-algebra", "machine-learning", "neural-networks", "mathematics"]
-featured: true
+featured: false
 difficulty: "intermediate"
 category: "Basics"
 prerequisites: []
 relatedArticles: []
 ---
 
-# Lecture 2: Matrices – Data Organizers in the AI World 📊
+# Matrices – Data Organizers in the AI World 📊
 
-Remember our cat vector **[4.5, 46, 0.9, 0.2]** from the last lecture? But what if we have not just one cat, but a whole bunch? Or not just a photo, but a video with thousands of frames? Or not just one characteristic, but a complex network of connections between neurons?
+Remember our cat vector **[4.5, 46, 0.9, 0.2]** from the previous article? But what if we have not just one cat, but a whole bunch? Or not just a photo, but a video with thousands of frames? Or not just one characteristic, but a complex network of connections between neurons?
 
 This is where **matrices** come into play – a powerful tool for organizing and processing huge amounts of structured data. If vectors are lists of numbers, then matrices are **tables of numbers** that can store and process many vectors simultaneously.
 

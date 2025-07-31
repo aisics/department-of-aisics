@@ -5,20 +5,20 @@ author: "Department of AIsics"
 date: 2025-07-24
 readingTime: 15
 tags: ["matrices", "transformations", "image-processing", "visualization", "mathematics"]
-featured: true
+featured: false
 difficulty: "beginner"
 category: "Basics"
 prerequisites: ["vectors-in-ai", "matrixes-in-ai"]
 relatedArticles: []
 ---
 
-# Lecture 3: Matrix Transformations – The Magic of Data Transformation 🎨
+# Matrix Transformations – The Magic of Data Transformation 🎨
 
-In previous lectures, we learned that matrices can store data and perform operations on them. But the real magic begins when we use matrices to **transform** data. Today we'll draw a mushroom with numbers and learn how to transform it!
+In previous articles, we learned that matrices can store data and perform operations on them. But the real magic begins when we use matrices to **transform** data. Today we'll draw a mushroom with numbers and learn how to transform it!
 
 <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
 <strong>⚠️ Educational Simplification:</strong><br/>
-All examples in this lecture are simplified for better understanding of concepts. Real image processing algorithms may be more complex. The 10×10 matrix is used only for clarity – real images have hundreds or thousands of pixels in each dimension. Visualizations and calculations may be approximate to maintain simplicity of explanation.
+All examples in this article are simplified for better understanding of concepts. Real image processing algorithms may be more complex. The 10×10 matrix is used only for clarity – real images have hundreds or thousands of pixels in each dimension. Visualizations and calculations may be approximate to maintain simplicity of explanation.
 </div>
 
 ## Drawing a Mushroom with a Matrix 🍄
@@ -632,6 +632,6 @@ Matrix transformations are the foundation of image processing:
 3. **Composition = sequence of operations**
 4. **Efficiency = parallel computations**
 
-**In the next lecture** we'll learn about derivatives and gradients – how to teach a computer to find optimal transformations on its own!
+**In the next article** we'll learn about derivatives and gradients – how to teach a computer to find optimal transformations on its own!
 
 Thank you for your attention! 🚀

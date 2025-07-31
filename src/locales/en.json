@@ -35,5 +35,13 @@
   "about.features.community.title": "Community Driven",
   "about.features.community.description": "Open-source project welcoming contributions from the community",
   "about.mission.title": "My Mission",
-  "about.mission.description": "To democratize AI education by providing high-quality, accessible content that empowers learners to understand and apply artificial intelligence in their fields of interest."
+  "about.mission.description": "To democratize AI education by providing high-quality, accessible content that empowers learners to understand and apply artificial intelligence in their fields of interest.",
+  "sidebar.chooseTopic": "Choose a topic to learn",
+  "sidebar.navigation": "Navigation",
+  "sidebar.article": "article",
+  "sidebar.articles": "articles",
+  "sidebar.empty": "Empty for now",
+  "articles.minRead": "min read",
+  "articles.featured": "Featured",
+  "articles.readMore": "Read more"
 } 

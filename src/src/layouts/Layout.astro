@@ -34,16 +34,14 @@ const { title, description = "AI Education Portal - Learn artificial intelligenc
       crossorigin="anonymous"
     />
   </head>
-  <body class="bg-white text-gray-800 font-sans">
+  <body class="bg-white text-gray-800 font-sans overflow-x-hidden">
     <slot />
   </body>
 </html>
 
 <style is:global>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  
   * {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
   
   html {

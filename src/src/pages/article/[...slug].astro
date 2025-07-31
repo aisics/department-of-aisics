@@ -6,24 +6,29 @@ import { getCollection } from 'astro:content';
 import { getCategories } from '../../utils/articles';
 import { getTranslation } from '../../utils/i18n';
 
-export async function getStaticPaths() {
-  const articles = await getCollection('articles');
-  
-  return articles
-    .filter(article => !article.data.draft)
-    .map(article => ({
-      params: { 
-        slug: `${article.data.category.toLowerCase()}-${article.id.includes('/en/') ? 'en' : 'uk'}-${article.slug.split('/').pop().replace('.md', '')}`
-      },
-      props: { article }
-    }));
+// Get the slug from the URL
+const { slug } = Astro.params;
+
+// Get all articles
+const articles = await getCollection('articles');
+
+// Find the article that matches this slug
+const article = articles.find(a => {
+  const articleSlug = `${a.data.category.toLowerCase()}-${a.id.includes('/en/') ? 'en' : 'uk'}-${a.slug.split('/').pop().replace('.md', '')}`;
+  return articleSlug === slug;
+});
+
+// If article not found, return 404
+if (!article) {
+  return Astro.redirect('/404');
 }
 
-const { article } = Astro.props;
 const { Content } = await article.render();
 
-// For static builds, default to Ukrainian and let client-side handle language switching
-const lang = article.id.includes('/en/') ? 'en' : 'uk';
+// Get language from cookie or from article
+const cookieLang = Astro.cookies.get('language')?.value;
+const articleLang = article.id.includes('/en/') ? 'en' : 'uk';
+const lang = cookieLang || articleLang;
 const t = (key: string) => getTranslation(lang, key);
 
 // Get categories for sidebar
@@ -44,7 +49,7 @@ const categoriesFromRepo = getCategories();
     
     <main class="lg:flex-1 relative overflow-hidden">
       <!-- Background Elements -->
-      <div class="absolute inset-0 bg-gradient-to-br from-neural-50 via-white to-primary-50/30"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-primary-50/30"></div>
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary-200/20 to-secondary-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-br from-secondary-200/20 to-accent-200/20 rounded-full blur-2xl"></div>
       
@@ -54,7 +59,7 @@ const categoriesFromRepo = getCategories();
           <nav class="mb-12 animate-fade-in-up">
             <ol class="flex items-center space-x-3 text-sm">
               <li>
-                <a href="/" class="flex items-center space-x-2 text-neural-600 hover:text-primary-600 transition-all duration-300 hover:scale-105">
+                <a href="/" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-all duration-300 hover:scale-105">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 21l4-4 4 4"></path>
@@ -62,13 +67,13 @@ const categoriesFromRepo = getCategories();
                   <span class="font-medium">{t('article.home')}</span>
                 </a>
               </li>
-              <li class="flex items-center text-neural-400">
+              <li class="flex items-center text-gray-400">
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <span class="text-neural-600 font-medium">{article.data.category}</span>
+                <span class="text-gray-600 font-medium">{t(`CATEGORY_${article.data.category.toUpperCase()}`)}</span>
               </li>
-              <li class="flex items-center text-neural-400">
+              <li class="flex items-center text-gray-400">
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -81,13 +86,13 @@ const categoriesFromRepo = getCategories();
           <header class="mb-16 animate-fade-in-up" style="animation-delay: 0.1s;">
             <!-- Title -->
             <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-8 leading-tight">
-              <span class="bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
+              <span class="bg-gradient-to-r from-gray-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
                 {article.data.title}
               </span>
             </h1>
             
             <!-- Meta Info -->
-            <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 text-neural-600">
+            <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 text-gray-600">
               <div class="flex items-center space-x-2">
                 <div class="w-10 h-10 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center">
                   <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,8 +100,8 @@ const categoriesFromRepo = getCategories();
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{article.data.author}</p>
-                  <p class="text-sm text-neural-500">Автор</p>
+                  <p class="font-semibold text-gray-800">{article.data.author}</p>
+                  <p class="text-sm text-gray-500">Автор</p>
                 </div>
               </div>
               
@@ -107,8 +112,8 @@ const categoriesFromRepo = getCategories();
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{article.data.readingTime} хвилин</p>
-                  <p class="text-sm text-neural-500">Час читання</p>
+                  <p class="font-semibold text-gray-800">{article.data.readingTime} хвилин</p>
+                  <p class="text-sm text-gray-500">Час читання</p>
                 </div>
               </div>
               
@@ -119,8 +124,8 @@ const categoriesFromRepo = getCategories();
                   </svg>
                 </div>
                 <div>
-                  <p class="font-semibold text-neural-800">{article.data.date.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-US')}</p>
-                  <p class="text-sm text-neural-500">Дата публікації</p>
+                  <p class="font-semibold text-gray-800">{article.data.date.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-US')}</p>
+                  <p class="text-sm text-gray-500">Дата публікації</p>
                 </div>
               </div>
             </div>
@@ -129,7 +134,7 @@ const categoriesFromRepo = getCategories();
             <div class="flex flex-wrap items-center gap-4">
               {article.data.difficulty && (
                 <div class="flex items-center space-x-2">
-                  <span class="text-sm text-neural-600 font-medium">Рівень:</span>
+                  <span class="text-sm text-gray-600 font-medium">Рівень:</span>
                   <span class={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 shadow-lg ${
                     article.data.difficulty === 'beginner' ? 'bg-secondary-100 text-secondary-700' :
                     article.data.difficulty === 'intermediate' ? 'bg-accent-100 text-accent-700' :
@@ -152,7 +157,7 @@ const categoriesFromRepo = getCategories();
                 <div class="flex flex-wrap gap-2">
                   <span class="text-sm text-neural-600 font-medium mr-2">Теги:</span>
                   {article.data.tags.map(tag => (
-                    <span class="px-3 py-1.5 bg-gradient-to-r from-neural-100 to-primary-50 text-neural-700 text-sm rounded-full border border-neural-200/50 font-medium hover:shadow-neural hover:scale-105 transition-all duration-300">
+                    <span class="px-3 py-1.5 bg-gradient-to-r from-gray-100 to-primary-50 text-gray-700 text-sm rounded-full border border-gray-200/50 font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
                       #{tag}
                     </span>
                   ))}
@@ -164,7 +169,7 @@ const categoriesFromRepo = getCategories();
           <!-- Article Content -->
           <div class="animate-fade-in-up" style="animation-delay: 0.2s;">
             <!-- Content Card -->
-            <div class="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 border border-white/20 shadow-neural-lg mb-12">
+            <div class="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 border border-white/20 shadow-xl mb-12">
               <div class="markdown-content">
                 <Content />
               </div>
@@ -173,11 +178,11 @@ const categoriesFromRepo = getCategories();
 
           <!-- Article Footer -->
           <footer class="animate-fade-in-up" style="animation-delay: 0.3s;">
-            <div class="bg-white/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20 shadow-neural">
+            <div class="bg-white/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-white/20 shadow-lg">
               <div class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
                 <div class="text-center sm:text-left">
-                  <h3 class="text-xl font-bold text-neural-900 mb-2">Дякуємо за читання!</h3>
-                  <p class="text-neural-600">{lang === 'uk' ? 'Сподіваємось, стаття була корисною' : 'Hope this article was helpful'}</p>
+                  <h3 class="text-xl font-bold text-gray-900 mb-2">Дякуємо за читання!</h3>
+                  <p class="text-gray-600">{lang === 'uk' ? 'Сподіваємось, стаття була корисною' : 'Hope this article was helpful'}</p>
                 </div>
                 <a 
                   href="/" 
@@ -200,11 +205,11 @@ const categoriesFromRepo = getCategories();
 <style>
   /* Astro-optimized markdown styles */
   .markdown-content {
-    @apply max-w-none text-neural-700 leading-relaxed;
+    @apply max-w-none text-gray-700 leading-relaxed;
   }
   
   .markdown-content :global(h1) {
-    @apply text-4xl font-bold mb-8 text-neural-900 border-b border-neural-200 pb-4;
+    @apply text-4xl font-bold mb-8 text-gray-900 border-b border-gray-200 pb-4;
     background: linear-gradient(135deg, #6366f1, #14b8a6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -212,19 +217,19 @@ const categoriesFromRepo = getCategories();
   }
   
   .markdown-content :global(h2) {
-    @apply text-3xl font-bold mb-6 mt-12 text-neural-800 border-b border-neural-200 pb-2;
+    @apply text-3xl font-bold mb-6 mt-12 text-gray-800 border-b border-gray-200 pb-2;
   }
   
   .markdown-content :global(h3) {
-    @apply text-2xl font-semibold mb-4 mt-8 text-neural-700;
+    @apply text-2xl font-semibold mb-4 mt-8 text-gray-700;
   }
   
   .markdown-content :global(h4) {
-    @apply text-xl font-semibold mb-3 mt-6 text-neural-700;
+    @apply text-xl font-semibold mb-3 mt-6 text-gray-700;
   }
   
   .markdown-content :global(p) {
-    @apply mb-6 leading-relaxed text-neural-600;
+    @apply mb-6 leading-relaxed text-gray-600;
   }
   
   .markdown-content :global(a) {
@@ -232,11 +237,11 @@ const categoriesFromRepo = getCategories();
   }
   
   .markdown-content :global(strong) {
-    @apply font-semibold text-neural-800;
+    @apply font-semibold text-gray-800;
   }
   
   .markdown-content :global(em) {
-    @apply italic text-neural-600;
+    @apply italic text-gray-600;
   }
   
   .markdown-content :global(ul) {
@@ -248,7 +253,7 @@ const categoriesFromRepo = getCategories();
   }
   
   .markdown-content :global(li) {
-    @apply text-neural-600 leading-relaxed;
+    @apply text-gray-600 leading-relaxed;
   }
   
   .markdown-content :global(ul li) {
@@ -314,21 +319,21 @@ const categoriesFromRepo = getCategories();
   }
   
   .markdown-content :global(th) {
-    @apply bg-gray-50 border border-gray-200 px-4 py-3 text-left font-semibold text-neural-800;
+    @apply bg-gray-50 border border-gray-200 px-4 py-3 text-left font-semibold text-gray-800;
   }
   
   .markdown-content :global(td) {
-    @apply border border-gray-200 px-4 py-3 text-neural-600;
+    @apply border border-gray-200 px-4 py-3 text-gray-600;
   }
   
   /* Images */
   .markdown-content :global(img) {
-    @apply rounded-2xl shadow-neural max-w-full h-auto my-6;
+    @apply rounded-2xl shadow-lg max-w-full h-auto my-6;
   }
   
   /* Horizontal rule */
   .markdown-content :global(hr) {
-    @apply border-0 border-t border-neural-200 my-12;
+    @apply border-0 border-t border-gray-200 my-12;
   }
   
   /* KaTeX Math Styling */

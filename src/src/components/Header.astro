@@ -1,180 +1,113 @@
 ---
-import SearchBox from './SearchBox.astro';
 import LanguageSelector from './LanguageSelector.astro';
 import { getTranslation } from '../utils/i18n';
 
-// For static builds, default to Ukrainian and let client-side handle language switching
-const lang = 'uk';
+// Get language from cookies or default to Ukrainian
+const lang = Astro.cookies.get('language')?.value || 'uk';
 const t = (key: string) => getTranslation(lang, key);
 ---
 
-<header class="sticky top-0 z-50 overflow-hidden">
-  <!-- Glassmorphism Background -->
-  <div class="absolute inset-0 bg-white/95 backdrop-blur-xl border-b border-white/20 shadow-neural"></div>
-  
-  <!-- Animated Background Pattern -->
-  <div class="absolute inset-0 bg-neural-pattern opacity-10"></div>
-  
-  <!-- Content -->
-  <div class="relative z-10">
-    <!-- Mobile Header -->
-    <div class="lg:hidden flex items-center justify-between px-4 py-4">
-      <!-- Mobile Logo -->
+<header class="sticky top-0 z-50 bg-white border-b border-gray-200">
+  <div class="px-4 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
       <a href="/" class="flex items-center space-x-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
-          <img src="/robot-logo.png" alt="AI Robot Logo" class="w-8 h-8 object-contain" />
+        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
         </div>
         <div>
-          <h1 class="text-lg font-black bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent">
+          <h1 class="text-xl font-bold text-gray-900">
             {t('site.title')}
           </h1>
         </div>
       </a>
       
-      <!-- Mobile Actions -->
-      <div class="flex items-center space-x-2">
-        <!-- Mobile Language Selector -->
-        <div class="relative">
-          <button 
-            onclick="toggleMobileLanguageDropdown()" 
-            class="flex items-center space-x-2 px-3 py-2 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 rounded-xl transition-all duration-300"
-          >
-            <span class="text-sm font-semibold text-neural-700">{lang.toUpperCase()}</span>
-            <svg class="w-4 h-4 text-neural-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          
-          <!-- Mobile Language Dropdown -->
-          <div id="mobile-language-dropdown" class="absolute right-0 top-full mt-2 bg-white/95 backdrop-blur-xl rounded-xl shadow-neural border border-white/20 hidden z-50 min-w-max">
-            <a href="#" onclick="setLanguage('uk')" class="block px-4 py-3 text-sm text-neural-700 hover:bg-neural-50 first:rounded-t-xl transition-colors">🇺🇦 Українська</a>
-            <a href="#" onclick="setLanguage('en')" class="block px-4 py-3 text-sm text-neural-700 hover:bg-neural-50 last:rounded-b-xl transition-colors">🇺🇸 English</a>
-          </div>
-        </div>
-        
-        <!-- About Link -->
-        <a 
-          href="/about" 
-          class="p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 rounded-xl transition-all duration-300"
-          aria-label="About"
-        >
-          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </a>
-        
-        <!-- Mobile Menu Button -->
-        <button onclick="openMobileSidebar()" class="p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
-          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-    
-    <!-- Desktop Header -->
-    <div class="hidden lg:block px-6">
-      <div class="flex justify-between items-center py-6">
-      <!-- Logo Section -->
-      <div class="flex items-center">
-        <a href="/" class="group flex items-center space-x-4 hover:scale-105 transition-all duration-300">
-          <!-- Logo Icon -->
-          <div class="relative">
-            <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center shadow-glow group-hover:shadow-glow-lg transition-all duration-300 group-hover:rotate-12 overflow-hidden">
-              <img src="/robot-logo.png" alt="AI Robot Logo" class="w-10 h-10 object-contain" />
-            </div>
-            <!-- Floating dot -->
-            <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-accent-500 to-secondary-500 rounded-full animate-pulse-slow"></div>
-          </div>
-          
-          <!-- Logo Text -->
-          <div>
-            <h1 class="text-2xl font-black bg-gradient-to-r from-neural-900 via-primary-700 to-secondary-700 bg-clip-text text-transparent group-hover:from-primary-600 group-hover:to-secondary-600 transition-all duration-300">
-              {t('site.title')}
-            </h1>
-            <p class="text-sm text-neural-500 font-medium -mt-1 group-hover:text-primary-600 transition-colors duration-300">
-              {t('site.subtitle')}
-            </p>
-          </div>
-        </a>
-      </div>
       
-      <!-- Navigation Actions -->
+      <!-- Actions -->
       <div class="flex items-center space-x-3">
         <!-- Language Selector -->
-        <div class="relative" style="z-index: 99999;">
+        <div class="hidden lg:block">
           <LanguageSelector />
         </div>
         
-        <!-- About Link -->
+        <!-- About Icon -->
         <a 
           href="/about" 
-          class="group relative p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 hover:border-primary-200/50 rounded-2xl transition-all duration-300 hover:shadow-neural hover:scale-105"
+          class="hidden lg:flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all"
           aria-label="About"
         >
-          <svg class="w-5 h-5 text-neural-600 group-hover:text-primary-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </a>
         
-        <!-- GitHub Link -->
+        <!-- GitHub Icon -->
         <a 
           href="https://github.com/aisics/department-of-aisics" 
           target="_blank"
-          class="group relative p-3 bg-white/50 backdrop-blur-sm hover:bg-white/80 border border-white/20 hover:border-primary-200/50 rounded-2xl transition-all duration-300 hover:shadow-neural hover:scale-105"
+          class="hidden lg:flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-all"
           aria-label="View on GitHub"
         >
-          <svg class="w-5 h-5 text-neural-600 group-hover:text-primary-600 transition-colors duration-300" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd" />
           </svg>
         </a>
         
         <!-- Mobile Menu Button -->
-        <button onclick="openMobileSidebar()" class="lg:hidden p-3 bg-white/50 backdrop-blur-sm border border-white/20 rounded-2xl hover:bg-white/80 hover:border-primary-200/50 transition-all duration-300" aria-label="Menu">
-          <svg class="w-5 h-5 text-neural-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
       </div>
-      </div>
     </div>
   </div>
   
-  <!-- Gradient Border Bottom -->
-  <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent"></div>
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="lg:hidden hidden border-t border-gray-200 bg-white">
+    <div class="px-4 py-4">
+      <nav class="space-y-1">
+        <a href="/" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+          {lang === 'uk' ? 'Головна' : 'Home'}
+        </a>
+        <a href="/about" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+          {t('about.title')}
+        </a>
+        
+        <div class="pt-3 border-t border-gray-200">
+          <div class="px-3 py-2">
+            <p class="text-sm text-gray-500 mb-2">{lang === 'uk' ? 'Мова' : 'Language'}</p>
+            <div class="flex space-x-2">
+              <button onclick="setLanguage('uk')" class={`px-3 py-1.5 text-sm rounded-lg transition-colors ${lang === 'uk' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                🇺🇦 UA
+              </button>
+              <button onclick="setLanguage('en')" class={`px-3 py-1.5 text-sm rounded-lg transition-colors ${lang === 'en' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                🇺🇸 EN
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
 </header>
 
 <script>
-  function toggleMobileLanguageDropdown() {
-    const dropdown = document.getElementById('mobile-language-dropdown');
-    if (dropdown) {
-      dropdown.classList.toggle('hidden');
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    if (menu) {
+      menu.classList.toggle('hidden');
     }
   }
   
   function setLanguage(newLang: string) {
-    // Close the dropdown
-    const dropdown = document.getElementById('mobile-language-dropdown');
-    if (dropdown) {
-      dropdown.classList.add('hidden');
-    }
-    
-    // Set language cookie and reload
     document.cookie = `language=${newLang}; path=/; max-age=31536000`;
     window.location.reload();
   }
   
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('mobile-language-dropdown');
-    const button = e.target?.closest('button');
-    
-    if (dropdown && !dropdown.contains(e.target as Node) && button?.getAttribute('onclick') !== 'toggleMobileLanguageDropdown()') {
-      dropdown.classList.add('hidden');
-    }
-  });
-  
   // Make functions available globally
-  (window as any).toggleMobileLanguageDropdown = toggleMobileLanguageDropdown;
+  (window as any).toggleMobileMenu = toggleMobileMenu;
   (window as any).setLanguage = setLanguage;
 </script>

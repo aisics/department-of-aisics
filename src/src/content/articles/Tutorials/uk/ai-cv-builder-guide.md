@@ -5,7 +5,7 @@ author: "Кафедра ШІзики"
 date: 2025-07-24
 readingTime: 25
 tags: ["ШІ", "CV", "резюме", "пошук-роботи", "ATS", "кар'єра", "туторіал", "автоматизація"]
-featured: true
+featured: false
 difficulty: "beginner"
 category: "Tutorials"
 prerequisites: []

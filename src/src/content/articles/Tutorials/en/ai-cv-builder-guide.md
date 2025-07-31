@@ -5,7 +5,7 @@ author: "Department of AIsics"
 date: 2025-07-24
 readingTime: 25
 tags: ["AI", "CV", "resume", "job-search", "ATS", "career", "tutorial", "automation"]
-featured: true
+featured: false
 difficulty: "beginner"
 category: "Tutorials"
 prerequisites: []

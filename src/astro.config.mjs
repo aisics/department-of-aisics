@@ -10,10 +10,10 @@ import rehypeKatex from 'rehype-katex';
 import { rehypeCopyCode } from './src/utils/rehype-copy-code.js';
 
 export default defineConfig({
-  output: 'server',
-  adapter: node({
-    mode: 'standalone'
-  }),
+  output: 'static',
+  // adapter: node({
+  //   mode: 'standalone'
+  // }),
   integrations: [
     tailwind(),
     mdx()

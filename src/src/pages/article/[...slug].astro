@@ -6,17 +6,22 @@ import { getCollection } from 'astro:content';
 import { getCategories } from '../../utils/articles';
 import { getTranslation } from '../../utils/i18n';
 
-// Get the slug from the URL
+// Generate static paths for all articles
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  
+  return articles.map(article => {
+    const slug = `${article.data.category.toLowerCase().replace(' ', '-')}-${article.id.includes('/en/') ? 'en' : 'uk'}-${article.slug.split('/').pop().replace('.md', '')}`;
+    return {
+      params: { slug },
+      props: { article }
+    };
+  });
+}
+
+// Get the article from props
+const { article } = Astro.props;
 const { slug } = Astro.params;
-
-// Get all articles
-const articles = await getCollection('articles');
-
-// Find the article that matches this slug
-const article = articles.find(a => {
-  const articleSlug = `${a.data.category.toLowerCase().replace(' ', '-')}-${a.id.includes('/en/') ? 'en' : 'uk'}-${a.slug.split('/').pop().replace('.md', '')}`;
-  return articleSlug === slug;
-});
 
 // If article not found, return 404
 if (!article) {
@@ -25,10 +30,9 @@ if (!article) {
 
 const { Content } = await article.render();
 
-// Get language from cookie or from article
-const cookieLang = Astro.cookies.get('language')?.value;
+// Get language from article (cookies don't work in static mode)
 const articleLang = article.id.includes('/en/') ? 'en' : 'uk';
-const lang = cookieLang || articleLang;
+const lang = articleLang;
 const t = (key: string) => getTranslation(lang, key);
 
 // Get categories for sidebar

@@ -1,0 +1,231 @@
+---
+interface TreeNode {
+  label: string;
+  value?: string;
+  description?: string;
+  color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'gray';
+  children?: TreeNode[];
+}
+
+interface Props {
+  title?: string;
+  root: TreeNode;
+  showValues?: boolean;
+  showDescriptions?: boolean;
+}
+
+const { 
+  title,
+  root,
+  showValues = true,
+  showDescriptions = true
+} = Astro.props as Props;
+
+const colorClasses = {
+  blue: 'bg-blue-100 border-blue-400 text-blue-900',
+  green: 'bg-green-100 border-green-400 text-green-900',
+  purple: 'bg-purple-100 border-purple-400 text-purple-900',
+  orange: 'bg-orange-100 border-orange-400 text-orange-900',
+  red: 'bg-red-100 border-red-400 text-red-900',
+  gray: 'bg-gray-100 border-gray-400 text-gray-900'
+};
+
+function renderNode(node: TreeNode, isRoot = false): string {
+  const nodeColorClass = colorClasses[node.color || 'gray'];
+  const hasChildren = node.children && node.children.length > 0;
+  
+  let html = `<div class="tree-node ${isRoot ? 'root-node' : ''}">`;
+  html += `<div class="node-content ${nodeColorClass}">`;
+  html += `<div class="node-label">${node.label}</div>`;
+  
+  if (showValues && node.value) {
+    html += `<div class="node-value">${node.value}</div>`;
+  }
+  
+  if (showDescriptions && node.description) {
+    html += `<div class="node-description">${node.description}</div>`;
+  }
+  
+  html += `</div>`;
+  
+  if (hasChildren && node.children) {
+    // Add connector wrapper
+    html += `<div class="tree-connector"></div>`;
+    html += `<div class="node-children">`;
+    for (let i = 0; i < node.children.length; i++) {
+      const isFirst = i === 0;
+      const isLast = i === node.children.length - 1;
+      const isOnly = node.children.length === 1;
+      html += `<div class="child-wrapper ${isFirst ? 'first-child' : ''} ${isLast ? 'last-child' : ''} ${isOnly ? 'only-child' : ''}">`;
+      html += `<div class="child-connector"></div>`;
+      html += renderNode(node.children[i], false);
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  
+  html += `</div>`;
+  
+  return html;
+}
+---
+
+<div class="ml-tree-container">
+  {title && <h4 class="tree-title">{title}</h4>}
+  <div class="tree-wrapper" set:html={renderNode(root, true)} />
+</div>
+
+<style>
+  .ml-tree-container {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow-x: auto;
+  }
+
+  .tree-title {
+    margin: 0 0 1.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .tree-wrapper {
+    display: flex;
+    justify-content: center;
+    min-width: fit-content;
+    padding: 1rem;
+  }
+
+  :global(.tree-node) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  :global(.node-content) {
+    padding: 1rem 1.5rem;
+    border: 2px solid;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 140px;
+    transition: all 0.3s ease;
+    position: relative;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 2;
+  }
+
+  :global(.node-content:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  :global(.root-node > .node-content) {
+    font-weight: 600;
+    min-width: 200px;
+  }
+
+  :global(.node-label) {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.node-value) {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0.25rem 0;
+  }
+
+  :global(.node-description) {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-top: 0.25rem;
+  }
+
+  /* Tree connectors */
+  :global(.tree-connector) {
+    width: 2px;
+    height: 30px;
+    background: #cbd5e0;
+    margin: 0 auto;
+  }
+
+  :global(.node-children) {
+    display: flex;
+    gap: 2rem;
+    position: relative;
+  }
+
+  :global(.child-wrapper) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  :global(.child-connector) {
+    width: 2px;
+    height: 30px;
+    background: #cbd5e0;
+    position: relative;
+  }
+
+  /* Horizontal line for multiple children */
+  :global(.child-wrapper:not(.only-child)::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 2px;
+    background: #cbd5e0;
+  }
+
+  :global(.child-wrapper.first-child::before) {
+    left: 50%;
+    right: -1rem;
+  }
+
+  :global(.child-wrapper.last-child::before) {
+    right: 50%;
+    left: -1rem;
+  }
+
+  :global(.child-wrapper:not(.first-child):not(.last-child)::before) {
+    left: -1rem;
+    right: -1rem;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .ml-tree-container {
+      padding: 1rem;
+    }
+
+    :global(.node-content) {
+      padding: 0.75rem 1rem;
+      min-width: 120px;
+    }
+
+    :global(.node-children) {
+      gap: 1rem;
+      flex-direction: column;
+    }
+
+    :global(.child-wrapper::before) {
+      display: none;
+    }
+
+    :global(.tree-connector) {
+      height: 20px;
+    }
+
+    :global(.child-connector) {
+      display: none;
+    }
+  }
+</style>

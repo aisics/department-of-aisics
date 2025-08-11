@@ -1,0 +1,227 @@
+---
+interface Props {
+  title?: string;
+  folds?: number;
+  showLabels?: boolean;
+}
+
+const { 
+  title = "Cross-Validation Splits",
+  folds = 5,
+  showLabels = true
+} = Astro.props;
+
+// Generate fold data
+const foldData = Array.from({ length: folds }, (_, i) => ({
+  round: i + 1,
+  train: Array.from({ length: folds }, (_, j) => j !== i),
+  test: i
+}));
+---
+
+<div class="cv-container">
+  {title && <h4 class="cv-title">{title}</h4>}
+  
+  <div class="cv-grid">
+    {foldData.map((fold) => (
+      <div class="cv-round">
+        <div class="round-label">Round {fold.round}</div>
+        <div class="fold-visualization">
+          {Array.from({ length: folds }, (_, i) => (
+            <div 
+              class={`fold-segment ${fold.test === i ? 'test' : 'train'}`}
+              title={fold.test === i ? 'Test Set' : 'Training Set'}
+            >
+              <span class="fold-number">{i + 1}</span>
+            </div>
+          ))}
+        </div>
+        {showLabels && (
+          <div class="fold-labels">
+            <span class="train-label">Train: {fold.train.length}/{folds}</span>
+            <span class="test-label">Test: 1/{folds}</span>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+  
+  <div class="cv-legend">
+    <div class="legend-item">
+      <div class="legend-box train"></div>
+      <span>Training Data</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box test"></div>
+      <span>Test Data</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cv-container {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .cv-title {
+    margin: 0 0 1.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .cv-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cv-round {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .cv-round:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .round-label {
+    min-width: 80px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+  }
+
+  .fold-visualization {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .fold-segment {
+    flex: 1;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: help;
+  }
+
+  .fold-segment.train {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: white;
+    border: 2px solid #16a34a;
+  }
+
+  .fold-segment.test {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+    border: 2px solid #d97706;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .fold-segment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+  }
+
+  .fold-number {
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+
+  .fold-labels {
+    display: flex;
+    gap: 1rem;
+    min-width: 150px;
+    font-size: 0.85rem;
+  }
+
+  .train-label {
+    color: #16a34a;
+    font-weight: 500;
+  }
+
+  .test-label {
+    color: #d97706;
+    font-weight: 500;
+  }
+
+  .cv-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #495057;
+  }
+
+  .legend-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid;
+  }
+
+  .legend-box.train {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    border-color: #16a34a;
+  }
+
+  .legend-box.test {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #d97706;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .cv-round {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .fold-visualization {
+      width: 100%;
+    }
+
+    .fold-labels {
+      width: 100%;
+      justify-content: space-around;
+    }
+  }
+</style>

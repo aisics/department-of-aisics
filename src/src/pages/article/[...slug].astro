@@ -260,13 +260,29 @@ const categoriesFromRepo = getCategories();
     @apply relative;
   }
   
-  .markdown-content :global(ul li::before) {
+  /* Only add bullets to ul li that are NOT inside ol */
+  .markdown-content :global(ul:not(ol ul) > li::before) {
     content: '•';
     @apply absolute -left-4 text-primary-500 font-bold;
   }
   
+  /* Remove bullets from ul inside ol (nested lists in numbered lists) */
+  .markdown-content :global(ol ul > li::before) {
+    content: none !important;
+  }
+  
   .markdown-content :global(ol li) {
     @apply list-decimal;
+  }
+  
+  /* Style nested ul inside ol differently */
+  .markdown-content :global(ol ul) {
+    @apply pl-4;
+  }
+  
+  .markdown-content :global(ol ul > li) {
+    @apply pl-2;
+    list-style-type: none;
   }
   
   .markdown-content :global(blockquote) {

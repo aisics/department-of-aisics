@@ -1,0 +1,266 @@
+---
+export interface Props {
+  title?: string;
+  maze?: ('robot' | 'goal' | 'wall' | 'danger' | 'empty')[];
+  attempts?: {
+    number: string;
+    path: string;
+    result: number;
+    success?: boolean;
+  }[];
+  summary?: string;
+}
+
+const { 
+  title = "🎮 Лабіринт навчання",
+  maze = [
+    'robot', 'empty', 'empty', 'goal',
+    'empty', 'wall', 'empty', 'empty',
+    'empty', 'empty', 'empty', 'empty',
+    'danger', 'empty', 'empty', 'empty'
+  ],
+  attempts = [],
+  summary
+} = Astro.props;
+
+const cellIcons = {
+  robot: '🤖',
+  goal: '🎯',
+  wall: '⬛',
+  danger: '🔥',
+  empty: ''
+};
+---
+
+<div class="ml-maze-container">
+  <h4 class="maze-title">{title}</h4>
+  
+  <div class="maze-grid">
+    {maze.map(cell => (
+      <div class={`maze-cell ${cell}`}>
+        {cellIcons[cell]}
+      </div>
+    ))}
+  </div>
+  
+  <div class="maze-legend">
+    <span class="legend-item">
+      <span class="legend-icon">🤖</span> Робот
+    </span>
+    <span class="legend-item">
+      <span class="legend-icon">🎯</span> Ціль (+100)
+    </span>
+    <span class="legend-item">
+      <span class="legend-icon">⬛</span> Стіна (-10)
+    </span>
+    <span class="legend-item">
+      <span class="legend-icon">🔥</span> Небезпека (-100)
+    </span>
+  </div>
+  
+  {attempts.length > 0 && (
+    <div class="learning-attempts">
+      <h4 class="attempts-title">📈 Процес навчання:</h4>
+      {attempts.map(attempt => (
+        <div class={`attempt ${attempt.success ? 'success' : 'fail'}`}>
+          <span class="attempt-number">{attempt.number}:</span>
+          <span class="attempt-path">{attempt.path}</span>
+          <span class={`attempt-result ${attempt.success ? 'success' : 'fail'}`}>
+            {attempt.result > 0 ? '+' : ''}{attempt.result} балів{attempt.success ? '!' : ''}
+          </span>
+        </div>
+      ))}
+      {summary && (
+        <div class="attempt-summary">
+          {summary}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+<style>
+  .ml-maze-container {
+    margin: 2rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  .ml-maze-container > * {
+    background: white;
+    padding: 1.5rem;
+  }
+
+  .ml-maze-container > *:first-child {
+    border-radius: 10px 10px 0 0;
+  }
+
+  .ml-maze-container > *:last-child {
+    border-radius: 0 0 10px 10px;
+  }
+
+  .maze-title, .attempts-title {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .maze-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 80px);
+    grid-template-rows: repeat(4, 80px);
+    gap: 2px;
+    background: #dee2e6;
+    padding: 2px;
+    border-radius: 8px;
+    margin: 1rem auto;
+    width: fit-content;
+  }
+
+  .maze-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    font-size: 2rem;
+    border-radius: 4px;
+    transition: transform 0.2s;
+  }
+
+  .maze-cell:hover {
+    transform: scale(1.05);
+  }
+
+  .maze-cell.robot { 
+    background: #e3f2fd; 
+  }
+  
+  .maze-cell.goal { 
+    background: #e8f5e9; 
+  }
+  
+  .maze-cell.wall { 
+    background: #263238; 
+  }
+  
+  .maze-cell.danger { 
+    background: #ffebee; 
+  }
+  
+  .maze-cell.empty { 
+    background: #fafafa; 
+  }
+
+  .maze-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 1rem 0 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #495057;
+  }
+
+  .legend-icon {
+    font-size: 1.2rem;
+  }
+
+  .learning-attempts {
+    margin-top: 3px;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .attempt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem;
+    margin: 0.5rem 0;
+    border-radius: 6px;
+    background: #f8f9fa;
+  }
+
+  .attempt.fail { 
+    background: #ffebee; 
+  }
+  
+  .attempt.success { 
+    background: #e8f5e9; 
+  }
+
+  .attempt-number {
+    font-weight: 600;
+    min-width: 80px;
+    color: #495057;
+  }
+
+  .attempt-path {
+    flex: 1;
+    text-align: center;
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: #333;
+  }
+
+  .attempt-result {
+    min-width: 100px;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .attempt-result.fail { 
+    color: #d32f2f; 
+  }
+  
+  .attempt-result.success { 
+    color: #2e7d32; 
+  }
+
+  .attempt-summary {
+    padding: 1rem;
+    background: linear-gradient(90deg, #667eea20 0%, #764ba220 100%);
+    border-radius: 6px;
+    text-align: center;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  @media (max-width: 768px) {
+    .maze-grid {
+      grid-template-columns: repeat(4, 60px);
+      grid-template-rows: repeat(4, 60px);
+    }
+
+    .maze-cell {
+      font-size: 1.5rem;
+    }
+
+    .legend-item {
+      font-size: 0.8rem;
+    }
+
+    .attempt {
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+    .attempt-number, .attempt-result {
+      min-width: auto;
+    }
+  }
+</style>

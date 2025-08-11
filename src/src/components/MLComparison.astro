@@ -1,0 +1,180 @@
+---
+export interface Props {
+  types?: {
+    name: string;
+    icon: string;
+    data: string;
+    goal: string;
+    feedback: string;
+    example: string;
+  }[];
+}
+
+const { 
+  types = [
+    {
+      name: "Supervised",
+      icon: "👨‍🏫",
+      data: "With labels",
+      goal: "Predict label",
+      feedback: "Immediate",
+      example: "Recognize cat"
+    },
+    {
+      name: "Unsupervised",
+      icon: "🔍",
+      data: "Without labels",
+      goal: "Find structure",
+      feedback: "None",
+      example: "Group photos"
+    },
+    {
+      name: "Reinforcement",
+      icon: "🎮",
+      data: "No data",
+      goal: "Find strategy",
+      feedback: "Through rewards",
+      example: "Win at chess"
+    }
+  ]
+} = Astro.props;
+
+const rows = [
+  { label: "Дані", key: "data" },
+  { label: "Мета", key: "goal" },
+  { label: "Зворотній зв'язок", key: "feedback" },
+  { label: "Приклад", key: "example" }
+];
+---
+
+<div class="ml-comparison-container">
+  <div class="comparison-header">
+    <div class="header-cell corner"></div>
+    {types.map(type => (
+      <div class="header-cell type-header">
+        <span class="type-icon">{type.icon}</span>
+        <span class="type-name">{type.name}</span>
+      </div>
+    ))}
+  </div>
+  
+  {rows.map((row, index) => (
+    <div class={`comparison-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
+      <div class="row-label">{row.label}</div>
+      {types.map(type => (
+        <div class="row-cell">{type[row.key as keyof typeof type]}</div>
+      ))}
+    </div>
+  ))}
+</div>
+
+<style>
+  .ml-comparison-container {
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    background: white;
+  }
+
+  .comparison-header {
+    display: grid;
+    grid-template-columns: 150px repeat(3, 1fr);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .header-cell {
+    padding: 1.25rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+  }
+
+  .header-cell.corner {
+    background: rgba(0,0,0,0.1);
+  }
+
+  .type-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    border-left: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .type-icon {
+    font-size: 1.75rem;
+  }
+
+  .type-name {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .comparison-row {
+    display: grid;
+    grid-template-columns: 150px repeat(3, 1fr);
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .comparison-row:last-child {
+    border-bottom: none;
+  }
+
+  .row-label {
+    padding: 1rem;
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #dee2e6;
+  }
+
+  .row-cell {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #333;
+    border-right: 1px solid #e9ecef;
+  }
+
+  .row-cell:last-child {
+    border-right: none;
+  }
+
+  .comparison-row.even .row-cell {
+    background: #f8f9fa;
+  }
+
+  .comparison-row.odd .row-cell {
+    background: white;
+  }
+
+  .comparison-row:hover .row-cell {
+    background: #e9ecef;
+    transition: background 0.3s;
+  }
+
+  @media (max-width: 768px) {
+    .comparison-header,
+    .comparison-row {
+      grid-template-columns: 100px repeat(3, 1fr);
+    }
+
+    .header-cell, .row-label, .row-cell {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .type-icon {
+      font-size: 1.25rem;
+    }
+
+    .type-name {
+      font-size: 0.85rem;
+    }
+  }
+</style>

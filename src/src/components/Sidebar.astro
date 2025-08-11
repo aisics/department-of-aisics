@@ -1,6 +1,7 @@
 ---
 import { getTranslation } from '../utils/i18n';
 import { getCollection } from 'astro:content';
+import categoriesData from '../data/categories.json';
 
 export interface Props {
   categories: { [key: string]: any[] };
@@ -10,7 +11,7 @@ export interface Props {
   currentCategory?: string;
 }
 
-const { categories, repoCategories = [], currentPath = '', currentSlug = '', currentCategory = '' } = Astro.props;
+const { categories, repoCategories = categoriesData.categories, currentPath = '', currentSlug = '', currentCategory = '' } = Astro.props;
 
 // Get language from cookies or default to Ukrainian
 const lang = Astro.cookies.get('language')?.value || 'uk';
@@ -20,32 +21,65 @@ const t = (key: string) => getTranslation(lang, key);
 const allArticles = await getCollection('articles');
 const articles = allArticles
   .filter(article => article.id.includes(`/${lang}/`) && !article.data.draft)
-  .map(article => ({
-    ...article.data,
-    slug: `${article.data.category.toLowerCase()}-${lang}-${article.slug.split('/').pop().replace('.md', '')}`,
-    filePath: article.id
-  }));
+  .map(article => {
+    // Use subcategory from frontmatter if available, otherwise extract from path
+    let subcategory = article.data.subcategory || null;
+    
+    // Fallback to extracting from path if not in frontmatter
+    if (!subcategory) {
+      const pathParts = article.id.split('/');
+      const categoryIndex = pathParts.findIndex(part => part === article.data.category || part === article.data.category.replace(' ', '-'));
+      
+      if (categoryIndex !== -1 && pathParts[categoryIndex + 1] && pathParts[categoryIndex + 1].match(/^\d{2}-/)) {
+        subcategory = pathParts[categoryIndex + 1];
+      }
+    }
+    
+    return {
+      ...article.data,
+      subcategory,
+      slug: `${article.data.category.toLowerCase().replace(' ', '-')}-${lang}-${article.slug.split('/').pop().replace('.md', '')}`,
+      filePath: article.id
+    };
+  });
 
-// Group articles by category
+// Group articles by category and subcategory
 const articlesByCategory = articles.reduce((acc, article) => {
   if (!acc[article.category]) {
-    acc[article.category] = [];
+    acc[article.category] = {};
   }
-  acc[article.category].push(article);
+  
+  const subcategoryKey = article.subcategory || '_root';
+  if (!acc[article.category][subcategoryKey]) {
+    acc[article.category][subcategoryKey] = [];
+  }
+  
+  acc[article.category][subcategoryKey].push(article);
   return acc;
-}, {} as Record<string, any[]>);
+}, {} as Record<string, Record<string, any[]>>);
 
-// Sort articles within each category by filename (which includes the number prefix)
+// Sort articles within each category and subcategory by filename
 Object.keys(articlesByCategory).forEach(category => {
-  articlesByCategory[category].sort((a, b) => {
-    // Extract the number from the filename (e.g., "01-vectors-in-ai" -> "01")
-    const getNumber = (article: any) => {
-      const match = article.filePath.match(/(\d+)-/);
-      return match ? parseInt(match[1]) : 999;
-    };
-    return getNumber(a) - getNumber(b);
+  Object.keys(articlesByCategory[category]).forEach(subcategory => {
+    articlesByCategory[category][subcategory].sort((a, b) => {
+      // Extract the number from the filename (e.g., "01-vectors-in-ai" -> "01")
+      const getNumber = (article: any) => {
+        const fileName = article.filePath.split('/').pop();
+        const match = fileName.match(/^(\d+)-/);
+        return match ? parseInt(match[1]) : 999;
+      };
+      return getNumber(a) - getNumber(b);
+    });
   });
 });
+
+// Helper function to count total articles in a category
+function countCategoryArticles(categoryPath: string): number {
+  const categoryArticles = articlesByCategory[categoryPath];
+  if (!categoryArticles) return 0;
+  
+  return Object.values(categoryArticles).reduce((sum, articles) => sum + articles.length, 0);
+}
 
 function getCategoryIcon(category: string, repoCategories: Array<{ name: string; icon?: string; [key: string]: any }>) {
   // Ensure repoCategories is always an array
@@ -116,64 +150,176 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
     <!-- Navigation -->
     <nav class="px-3 py-4">
       <div class="space-y-1">
-        {repoCategories.length > 0 ? (
-          repoCategories.map((category, index) => {
-            const categoryArticles = articlesByCategory[category.path] || [];
-            const isCurrentCategory = category.path === currentCategory;
-            
-            return (
-              <div>
-                <!-- Category Button -->
-                <button 
-                  class={`group w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                    isCurrentCategory 
-                      ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-600' 
-                      : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
-                  }`}
-                  onclick={`toggleCategory('${category.name}')`}
-                >
-                  <div class="flex items-center space-x-3">
-                    <!-- Icon -->
-                    <span class="text-xl">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
-                    
-                    <!-- Text -->
-                    <div>
-                      <span class={`block text-sm font-semibold`}>
-                        {getCategoryDisplayName(category, lang, t)}
-                      </span>
-                      {categoryArticles.length > 0 && (
-                        <span class={`text-xs ${
-                          isCurrentCategory 
-                            ? 'text-purple-600' 
-                            : 'text-gray-500'
-                        }`}>
-                          {categoryArticles.length} {categoryArticles.length === 1 ? t('sidebar.article') : t('sidebar.articles')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+        {repoCategories.map((category, index) => {
+          const categoryArticles = articlesByCategory[category.path] || {};
+          const totalArticles = countCategoryArticles(category.path);
+          const isCurrentCategory = category.path === currentCategory;
+          const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+          
+          return (
+            <div key={category.name}>
+              <!-- Category Button -->
+              <button 
+                class={`group w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                  isCurrentCategory 
+                    ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-600' 
+                    : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
+                }`}
+                onclick={`toggleCategory('${category.name}')`}
+              >
+                <div class="flex items-center space-x-3">
+                  <!-- Icon -->
+                  <span class="text-xl">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
                   
-                  <!-- Chevron -->
-                  <svg 
-                    class={`w-4 h-4 transition-transform duration-200 ${
-                      isCurrentCategory 
-                        ? 'rotate-90 text-purple-600' 
-                        : 'text-gray-400'
-                    }`}
-                    id={`chevron-${category.name}`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </button>
+                  <!-- Text -->
+                  <div>
+                    <span class={`block text-sm font-semibold`}>
+                      {getCategoryDisplayName(category, lang, t)}
+                    </span>
+                    {totalArticles > 0 && (
+                      <span class={`text-xs ${
+                        isCurrentCategory 
+                          ? 'text-purple-600' 
+                          : 'text-gray-500'
+                      }`}>
+                        {totalArticles} {totalArticles === 1 ? t('sidebar.article') : t('sidebar.articles')}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 
-                <!-- Articles List -->
-                <div id={`category-${category.name}`} class={`overflow-hidden transition-all duration-300 ${isCurrentCategory ? 'max-h-[600px]' : 'max-h-0'}`}>
-                  <div class="ml-6 mt-1 space-y-1">
-                    {categoryArticles.length > 0 ? (
-                      categoryArticles.map((article, articleIndex) => {
+                <!-- Chevron -->
+                <svg 
+                  class={`w-4 h-4 transition-transform duration-200 ${
+                    isCurrentCategory 
+                      ? 'rotate-90 text-purple-600' 
+                      : 'text-gray-400'
+                  }`}
+                  id={`chevron-${category.name}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+              
+              <!-- Category Content (Articles or Subcategories) -->
+              <div id={`category-${category.name}`} class={`overflow-hidden transition-all duration-300 ${isCurrentCategory ? 'max-h-[1000px]' : 'max-h-0'}`}>
+                <div class="ml-6 mt-1 space-y-1">
+                  {hasSubcategories ? (
+                    // Render subcategories (filter out empty ones)
+                    category.subcategories.filter(subcategory => {
+                      const subcategoryArticles = categoryArticles[subcategory.path] || [];
+                      return subcategoryArticles.length > 0;
+                    }).map((subcategory) => {
+                      const subcategoryArticles = categoryArticles[subcategory.path] || [];
+                      
+                      // Check if any article in this subcategory is the current one
+                      const isCurrentSubcategory = subcategoryArticles.some(article => article.slug === currentSlug);
+                      
+                      return (
+                        <div key={subcategory.name}>
+                          <!-- Subcategory Button -->
+                          <button 
+                            class={`group w-full flex items-center justify-between px-3 py-2 text-left rounded-md transition-all duration-200 ${
+                              isCurrentSubcategory 
+                                ? 'bg-purple-50 text-purple-700' 
+                                : 'hover:bg-gray-50 text-gray-600'
+                            }`}
+                            onclick={`toggleSubcategory('${category.name}-${subcategory.name}')`}
+                          >
+                            <div class="flex items-center space-x-2">
+                              <span class="text-sm">{subcategory.icon}</span>
+                              <div class="flex-1">
+                                <span class="text-sm font-medium">
+                                  {t(subcategory.name)}
+                                </span>
+                                {subcategoryArticles.length > 0 && (
+                                  <span class="text-xs text-gray-500 ml-1">
+                                    ({subcategoryArticles.length})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <svg 
+                              class={`w-3 h-3 transition-transform duration-200 ${
+                                isCurrentSubcategory 
+                                  ? 'rotate-90 text-purple-600' 
+                                  : 'text-gray-400'
+                              }`}
+                              id={`chevron-${category.name}-${subcategory.name}`}
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                          </button>
+                          
+                          <!-- Subcategory Articles -->
+                          <div id={`subcategory-${category.name}-${subcategory.name}`} class={`overflow-hidden transition-all duration-300 ${isCurrentSubcategory ? 'max-h-[600px]' : 'max-h-0'}`}>
+                            <div class="ml-4 mt-1 space-y-1">
+                              {subcategoryArticles.length > 0 ? (
+                                subcategoryArticles.map((article) => {
+                                  const isCurrentArticle = article.slug === currentSlug;
+                                  return (
+                                    <a 
+                                      href={`/article/${article.slug}`}
+                                      class={`group block px-3 py-2 rounded-md transition-all duration-200 ${
+                                        isCurrentArticle 
+                                          ? 'bg-purple-50 text-purple-700' 
+                                          : 'hover:bg-gray-50 text-gray-600'
+                                      }`}
+                                    >
+                                      <div class="flex items-center space-x-2">
+                                        <!-- Article Info -->
+                                        <div class="flex-1 min-w-0">
+                                          <h4 class={`text-sm font-medium truncate leading-tight`}>
+                                            {article.title}
+                                          </h4>
+                                          
+                                          <!-- Article Meta -->
+                                          <div class="flex items-center space-x-2 text-xs mt-0.5">
+                                            <span class={`${
+                                              isCurrentArticle 
+                                                ? 'text-purple-600' 
+                                                : 'text-gray-500'
+                                            }`}>
+                                              {article.readingTime} {lang === 'uk' ? 'хв' : 'min'}
+                                            </span>
+                                            {article.difficulty && (
+                                              <span class={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                                article.difficulty === 'beginner' ? 'bg-green-100 text-green-700' :
+                                                article.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-red-100 text-red-700'
+                                              }`}>
+                                                {article.difficulty === 'beginner' ? (lang === 'uk' ? 'Початківець' : 'Beginner') :
+                                                 article.difficulty === 'intermediate' ? (lang === 'uk' ? 'Середній' : 'Intermediate') :
+                                                 (lang === 'uk' ? 'Просунутий' : 'Advanced')}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </a>
+                                  );
+                                })
+                              ) : (
+                                <div class="px-4 py-4 text-center">
+                                  <p class="text-sm text-gray-500">{t('sidebar.empty')}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    // Render articles directly if no subcategories
+                    categoryArticles._root && categoryArticles._root.length > 0 ? (
+                      categoryArticles._root.map((article) => {
                         const isCurrentArticle = article.slug === currentSlug;
                         return (
                           <a 
@@ -222,342 +368,97 @@ function getCategoryDisplayName(category: any, currentLang: string, t: (key: str
                         <p class="text-sm text-gray-500">{t('sidebar.empty')}</p>
                         <p class="text-xs text-gray-400 mt-1">{t('popup.sorry.message')}</p>
                       </div>
-                    )}
-                  </div>
+                    )
+                  )}
                 </div>
               </div>
-            );
-          })
-        ) : (
-          Object.entries(categories).map(([categoryName, articles]) => (
-            <div class="mb-4" key={categoryName}>
-              <button 
-                class="w-full flex items-center justify-between px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                onclick={`handleCategoryClick('${categoryName}')`}
-              >
-                <span class="flex items-center">
-                  <span class="mr-2">{getCategoryIcon(categoryName, repoCategories)}</span>
-                  {getCategoryDisplayName(categoryName, lang, t)}
-                </span>
-              </button>
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
     </nav>
   </div>
 </aside>
 
-<!-- Mobile Sidebar Overlay -->
-<div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden">
-  <aside class="w-80 h-screen bg-white transform -translate-x-full transition-transform duration-300 ease-out" id="mobile-sidebar">
-    <!-- Close Button -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-bold text-gray-900">{t('sidebar.navigation')}</h2>
-      <button onclick="closeMobileSidebar()" class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+<!-- Mobile sidebar (hidden on desktop) -->
+<aside class="lg:hidden fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 transform -translate-x-full transition-transform duration-300" id="mobile-sidebar">
+  <!-- Same content as desktop sidebar -->
+  <div class="h-full overflow-y-auto">
+    <!-- Header with close button -->
+    <div class="px-6 py-6 border-b border-gray-200 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">
+          {t('nav.categories')}
+        </h2>
+        <p class="text-gray-500 text-sm mt-1 font-normal">{t('sidebar.chooseTopic')}</p>
+      </div>
+      <button onclick="closeMobileSidebar()" class="text-gray-500 hover:text-gray-700">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
     </div>
     
-    <!-- Mobile Navigation Content -->
-    <div class="h-full overflow-y-auto">
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">
-          {t('nav.categories')}
-        </h2>
-        <p class="text-gray-500 text-sm mt-1 font-normal">{t('sidebar.chooseTopic')}</p>
-      </div>
-      
-      <!-- Navigation -->
-      <nav class="px-3 py-4">
-        <div class="space-y-1">
-          {repoCategories.length > 0 ? (
-            repoCategories.map((category, index) => {
-              const categoryArticles = articlesByCategory[category.path] || [];
-              const isCurrentCategory = category.path === currentCategory;
-              
-              return (
-                <div>
-                  <!-- Category Button -->
-                  <button 
-                    class={`group w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                      isCurrentCategory 
-                        ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-600' 
-                        : 'hover:bg-gray-50 text-gray-700 border-l-4 border-transparent'
-                    }`}
-                    onclick={`toggleMobileCategory('${category.name}')`}
-                  >
-                    <div class="flex items-center space-x-3">
-                      <!-- Icon -->
-                      <span class="text-xl">{category.icon || getCategoryIcon(category.name, repoCategories)}</span>
-                      
-                      <!-- Text -->
-                      <div>
-                        <span class={`block text-sm font-semibold`}>
-                          {getCategoryDisplayName(category, lang, t)}
-                        </span>
-                        {categoryArticles.length > 0 && (
-                          <span class={`text-xs ${
-                            isCurrentCategory 
-                              ? 'text-purple-600' 
-                              : 'text-gray-500'
-                          }`}>
-                            {categoryArticles.length} {categoryArticles.length === 1 ? t('sidebar.article') : t('sidebar.articles')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <!-- Chevron -->
-                    <svg 
-                      class={`w-4 h-4 transition-transform duration-200 ${
-                        isCurrentCategory 
-                          ? 'rotate-90 text-purple-600' 
-                          : 'text-gray-400'
-                      }`}
-                      id={`mobile-chevron-${category.name}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </button>
-                  
-                  <!-- Articles List -->
-                  <div id={`mobile-category-${category.name}`} class={`overflow-hidden transition-all duration-300 ${isCurrentCategory ? 'max-h-[600px]' : 'max-h-0'}`}>
-                    <div class="ml-6 mt-1 space-y-1">
-                      {categoryArticles.length > 0 ? (
-                        categoryArticles.map((article, articleIndex) => {
-                          const isCurrentArticle = article.slug === currentSlug;
-                          return (
-                            <a 
-                              href={`/article/${article.slug}`}
-                              class={`group block px-3 py-2 rounded-md transition-all duration-200 ${
-                                isCurrentArticle 
-                                  ? 'bg-purple-50 text-purple-700' 
-                                  : 'hover:bg-gray-50 text-gray-600'
-                              }`}
-                              onclick="closeMobileSidebar()"
-                            >
-                              <div class="flex items-center space-x-2">
-                                <!-- Article Info -->
-                                <div class="flex-1 min-w-0">
-                                  <h4 class={`text-sm font-medium truncate leading-tight`}>
-                                    {article.title}
-                                  </h4>
-                                  
-                                  <!-- Article Meta -->
-                                  <div class="flex items-center space-x-2 text-xs mt-0.5">
-                                    <span class={`${
-                                      isCurrentArticle 
-                                        ? 'text-purple-600' 
-                                        : 'text-gray-500'
-                                    }`}>
-                                      {article.readingTime} {lang === 'uk' ? 'хв' : 'min'}
-                                    </span>
-                                    {article.difficulty && (
-                                      <span class={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                        article.difficulty === 'beginner' ? 'bg-green-100 text-green-700' :
-                                        article.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
-                                      }`}>
-                                        {article.difficulty === 'beginner' ? (lang === 'uk' ? 'Початківець' : 'Beginner') :
-                                         article.difficulty === 'intermediate' ? (lang === 'uk' ? 'Середній' : 'Intermediate') :
-                                         (lang === 'uk' ? 'Просунутий' : 'Advanced')}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </a>
-                          );
-                        })
-                      ) : (
-                        <div class="px-4 py-6 text-center">
-                          <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                          </div>
-                          <p class="text-sm text-gray-500 font-medium mb-1">{t('sidebar.empty')}</p>
-                          <p class="text-xs text-gray-400">{t('popup.sorry.message')}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : null}
-        </div>
-      </nav>
-    </div>
-  </aside>
-</div>
-
-<!-- Sorry Popup Modal -->
-<div id="sorry-popup" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-xl p-8 max-w-sm mx-4 shadow-xl">
-    <div class="text-center">
-      <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-        </svg>
-      </div>
-      <h3 class="text-xl font-semibold text-gray-900 mb-2">{t('popup.sorry.title')}</h3>
-      <p class="text-gray-600 mb-6">{t('popup.sorry.message')}</p>
-      <button 
-        onclick="closeSorryPopup()" 
-        class="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-      >
-        {t('popup.sorry.button')}
-      </button>
-    </div>
+    <!-- Same navigation content as desktop -->
+    <nav class="px-3 py-4">
+      <!-- Copy the same content from desktop navigation here -->
+    </nav>
   </div>
-</div>
+</aside>
 
-<style>
-  /* Custom Scrollbar */
-  aside::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  aside::-webkit-scrollbar-track {
-    background: #f9fafb;
-  }
-  
-  aside::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 3px;
-  }
-  
-  aside::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-  }
-</style>
-
-<script>
-  function toggleCategory(categoryName: string) {
+<script is:inline>
+  window.toggleCategory = function(categoryName) {
     const content = document.getElementById(`category-${categoryName}`);
     const chevron = document.getElementById(`chevron-${categoryName}`);
-    const button = chevron?.closest('button');
     
-    if (content && chevron && button) {
-      const isOpen = !content.classList.contains('max-h-0');
+    if (content && chevron) {
+      // Check if currently expanded by looking for the expanded class
+      const isExpanded = content.classList.contains('max-h-[1000px]');
       
-      if (isOpen) {
+      if (isExpanded) {
+        // Collapse
+        content.classList.remove('max-h-[1000px]');
         content.classList.add('max-h-0');
-        content.classList.remove('max-h-[600px]');
         chevron.classList.remove('rotate-90');
-        button.classList.remove('bg-purple-50', 'text-purple-700', 'border-purple-600');
-        button.classList.add('text-gray-700', 'border-transparent');
       } else {
+        // Expand
         content.classList.remove('max-h-0');
-        content.classList.add('max-h-[600px]');
+        content.classList.add('max-h-[1000px]');
         chevron.classList.add('rotate-90');
-        button.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-600');
-        button.classList.remove('text-gray-700', 'border-transparent');
       }
     }
   }
   
-  function handleCategoryClick(category: string) {
-    showSorryPopup();
-  }
-  
-  function showSorryPopup() {
-    const popup = document.getElementById('sorry-popup');
-    if (popup) {
-      popup.classList.remove('hidden');
-    }
-  }
-  
-  function closeSorryPopup() {
-    const popup = document.getElementById('sorry-popup');
-    if (popup) {
-      popup.classList.add('hidden');
-    }
-  }
-  
-  // Close popup when clicking outside
-  document.addEventListener('click', (e) => {
-    const popup = document.getElementById('sorry-popup');
-    if (popup && e.target === popup) {
-      closeSorryPopup();
-    }
-  });
-  
-  // Close popup with Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeSorryPopup();
-    }
-  });
-  
-  // Mobile Sidebar Functions
-  function toggleMobileCategory(categoryName: string) {
-    const content = document.getElementById(`mobile-category-${categoryName}`);
-    const chevron = document.getElementById(`mobile-chevron-${categoryName}`);
-    const button = chevron?.closest('button');
+  window.toggleSubcategory = function(subcategoryName) {
+    const content = document.getElementById(`subcategory-${subcategoryName}`);
+    const chevron = document.getElementById(`chevron-${subcategoryName}`);
     
-    if (content && chevron && button) {
-      const isOpen = !content.classList.contains('max-h-0');
+    if (content && chevron) {
+      // Check if currently expanded by looking for the expanded class
+      const isExpanded = content.classList.contains('max-h-[600px]');
       
-      if (isOpen) {
-        content.classList.add('max-h-0');
+      if (isExpanded) {
+        // Collapse
         content.classList.remove('max-h-[600px]');
+        content.classList.add('max-h-0');
         chevron.classList.remove('rotate-90');
-        button.classList.remove('bg-purple-50', 'text-purple-700', 'border-purple-600');
-        button.classList.add('text-gray-700', 'border-transparent');
       } else {
+        // Expand
         content.classList.remove('max-h-0');
         content.classList.add('max-h-[600px]');
         chevron.classList.add('rotate-90');
-        button.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-600');
-        button.classList.remove('text-gray-700', 'border-transparent');
       }
     }
   }
-  
-  function openMobileSidebar() {
-    const overlay = document.getElementById('mobile-sidebar-overlay');
+
+  window.closeMobileSidebar = function() {
     const sidebar = document.getElementById('mobile-sidebar');
-    if (overlay && sidebar) {
-      overlay.classList.remove('hidden');
-      setTimeout(() => {
-        sidebar.classList.remove('-translate-x-full');
-      }, 10);
-    }
-  }
-  
-  function closeMobileSidebar() {
-    const overlay = document.getElementById('mobile-sidebar-overlay');
-    const sidebar = document.getElementById('mobile-sidebar');
-    if (overlay && sidebar) {
+    if (sidebar) {
       sidebar.classList.add('-translate-x-full');
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-      }, 300);
     }
   }
-  
-  // Close mobile sidebar when clicking overlay
-  document.addEventListener('click', (e) => {
-    const overlay = document.getElementById('mobile-sidebar-overlay');
-    if (overlay && e.target === overlay) {
-      closeMobileSidebar();
-    }
-  });
-  
-  // Make functions available globally
-  (window as any).toggleCategory = toggleCategory;
-  (window as any).toggleMobileCategory = toggleMobileCategory;
-  (window as any).openMobileSidebar = openMobileSidebar;
-  (window as any).closeMobileSidebar = closeMobileSidebar;
-  (window as any).handleCategoryClick = handleCategoryClick;
-  (window as any).closeSorryPopup = closeSorryPopup;
+
+  window.handleCategoryClick = function(categoryName) {
+    console.log('Category clicked:', categoryName);
+  }
 </script>

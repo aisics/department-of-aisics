@@ -14,7 +14,7 @@ const articles = await getCollection('articles');
 
 // Find the article that matches this slug
 const article = articles.find(a => {
-  const articleSlug = `${a.data.category.toLowerCase()}-${a.id.includes('/en/') ? 'en' : 'uk'}-${a.slug.split('/').pop().replace('.md', '')}`;
+  const articleSlug = `${a.data.category.toLowerCase().replace(' ', '-')}-${a.id.includes('/en/') ? 'en' : 'uk'}-${a.slug.split('/').pop().replace('.md', '')}`;
   return articleSlug === slug;
 });
 

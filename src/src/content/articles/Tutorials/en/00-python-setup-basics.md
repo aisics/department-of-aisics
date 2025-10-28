@@ -2,7 +2,7 @@
 title: "Python Setup for Machine Learning - From Zero to First Code"
 description: "Get started with Python for ML in minutes using Google Colab or local installation - no prior experience required"
 author: "Department of AIsiCs"
-date: 2025-01-28
+date: 2025-10-28
 readingTime: 35
 tags: ["python", "setup", "jupyter", "colab", "pandas", "beginner", "tutorial", "getting-started"]
 featured: true

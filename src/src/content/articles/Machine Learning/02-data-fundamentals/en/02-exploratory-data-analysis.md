@@ -2,7 +2,7 @@
 title: "Understanding Your Data - Exploratory Data Analysis (EDA)"
 description: "How to discover patterns, relationships, and insights in your data through visualization and statistics before building ML models"
 author: "Department of AIsiCs"
-date: 2025-01-28
+date: 2025-10-28
 readingTime: 30
 tags: ["eda", "data-analysis", "visualization", "statistics", "pandas", "practice"]
 featured: false

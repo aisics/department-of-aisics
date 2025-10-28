@@ -2,7 +2,7 @@
 title: "Feature Engineering - Turning Data into Gold"
 description: "Transform raw data into powerful predictors with practical feature creation, encoding, scaling, and selection techniques"
 author: "Department of AIsiCs"
-date: 2025-01-28
+date: 2025-10-28
 readingTime: 35
 tags: ["feature-engineering", "data-transformation", "encoding", "scaling", "machine-learning", "practice"]
 featured: false

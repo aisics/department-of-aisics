@@ -2,7 +2,7 @@
 title: "Data Quality - The Foundation of Good ML"
 description: "Why 80% of machine learning work is data cleaning, and how to do it right with practical techniques and real examples"
 author: "Department of AIsiCs"
-date: 2025-01-28
+date: 2025-10-28
 readingTime: 25
 tags: ["data-quality", "data-cleaning", "data-preparation", "machine-learning", "practice"]
 featured: false

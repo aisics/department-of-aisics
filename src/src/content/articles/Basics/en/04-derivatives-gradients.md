@@ -2,7 +2,7 @@
 title: "Derivatives and Gradients - Teaching AI to Learn"
 description: "How derivatives and gradients enable machine learning by helping AI find optimal solutions and learn from data"
 author: "Department of AIsics"
-date: 2025-01-28
+date: 2025-10-28
 readingTime: 20
 tags: ["derivatives", "gradients", "gradient-descent", "optimization", "calculus", "machine-learning", "neural-networks"]
 featured: false

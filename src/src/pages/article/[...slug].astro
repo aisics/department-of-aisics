@@ -333,17 +333,85 @@ const categoriesFromRepo = getCategories();
     @apply bg-gray-100 text-gray-800 px-2 py-1 rounded-lg font-mono text-sm;
   }
   
-  /* Tables */
+  /* Tables - Modern Design with Responsive Scroll */
   .markdown-content :global(table) {
-    @apply w-full border-collapse border border-gray-200 rounded-lg overflow-hidden my-6;
+    @apply w-full border-collapse my-8 shadow-lg rounded-xl overflow-hidden;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
+
+  /* Gradient header with brand colors */
+  .markdown-content :global(thead) {
+    @apply bg-gradient-to-r from-primary-50 via-primary-100/50 to-secondary-50;
+  }
+
   .markdown-content :global(th) {
-    @apply bg-gray-50 border border-gray-200 px-4 py-3 text-left font-semibold text-gray-800;
+    @apply px-6 py-4 text-left font-bold text-primary-900 border-b-2 border-primary-300/50;
+    white-space: nowrap;
   }
-  
+
+  /* Table body styling */
+  .markdown-content :global(tbody) {
+    @apply bg-white;
+  }
+
+  /* Zebra striping for better readability */
+  .markdown-content :global(tbody tr:nth-child(even)) {
+    @apply bg-gray-50/50;
+  }
+
+  /* Hover effect for interactivity */
+  .markdown-content :global(tbody tr) {
+    @apply transition-colors duration-200;
+  }
+
+  .markdown-content :global(tbody tr:hover) {
+    @apply bg-primary-50/30;
+  }
+
+  /* Cell styling with cleaner borders */
   .markdown-content :global(td) {
-    @apply border border-gray-200 px-4 py-3 text-gray-600;
+    @apply px-6 py-4 text-gray-700 border-b border-gray-200;
+  }
+
+  /* Remove border from last row */
+  .markdown-content :global(tbody tr:last-child td) {
+    @apply border-b-0;
+  }
+
+  /* First column emphasis (often IDs or labels) */
+  .markdown-content :global(tbody td:first-child) {
+    @apply font-semibold text-gray-900;
+  }
+
+  /* Custom scrollbar styling for tables */
+  .markdown-content :global(table)::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .markdown-content :global(table)::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+
+  .markdown-content :global(table)::-webkit-scrollbar-thumb {
+    @apply bg-primary-300 rounded-full;
+  }
+
+  .markdown-content :global(table)::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-400;
+  }
+
+  /* Responsive table optimization for mobile */
+  @media (max-width: 768px) {
+    .markdown-content :global(table) {
+      font-size: 0.875rem;
+    }
+
+    .markdown-content :global(th),
+    .markdown-content :global(td) {
+      @apply px-3 py-2;
+    }
   }
   
   /* Images */

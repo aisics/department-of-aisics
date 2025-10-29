@@ -1,0 +1,356 @@
+---
+export interface Props {
+  title?: string;
+  example?: 'umbrella' | 'weekend' | 'pizza';
+}
+
+const {
+  title = 'Приклад дерева рішень / Decision Tree Example',
+  example = 'umbrella'
+} = Astro.props;
+
+const examples = {
+  umbrella: {
+    title: 'Чи брати парасольку? / Should I take an umbrella?',
+    tree: {
+      question: 'Чи йде дощ? / Is it raining?',
+      left: {
+        label: 'Так / Yes',
+        result: '☂️ Візьми парасольку / Take umbrella',
+        color: '#667eea'
+      },
+      right: {
+        label: 'Ні / No',
+        question: 'Чи хмарно? / Is it cloudy?',
+        left: {
+          label: 'Так / Yes',
+          result: '🌂 Візьми на всяк / Take just in case',
+          color: '#9333ea'
+        },
+        right: {
+          label: 'Ні / No',
+          result: '☀️ Не потрібна / No need',
+          color: '#f093fb'
+        }
+      }
+    }
+  },
+  weekend: {
+    title: 'Чим зайнятись на вихідних? / Weekend activity?',
+    tree: {
+      question: 'Погода хороша? / Nice weather?',
+      left: {
+        label: 'Так / Yes',
+        question: 'Є компанія? / Have company?',
+        left: {
+          label: 'Так / Yes',
+          result: '🏞️ Пікнік / Picnic',
+          color: '#10b981'
+        },
+        right: {
+          label: 'Ні / No',
+          result: '🚴 Велопрогулянка / Bike ride',
+          color: '#3b82f6'
+        }
+      },
+      right: {
+        label: 'Ні / No',
+        question: 'Є настрій? / Feeling good?',
+        left: {
+          label: 'Так / Yes',
+          result: '🎬 Кіно / Movie',
+          color: '#8b5cf6'
+        },
+        right: {
+          label: 'Ні / No',
+          result: '😴 Поспати / Sleep',
+          color: '#6366f1'
+        }
+      }
+    }
+  },
+  pizza: {
+    title: 'Яку піцу замовити? / Which pizza to order?',
+    tree: {
+      question: 'Любиш м\'ясо? / Like meat?',
+      left: {
+        label: 'Так / Yes',
+        question: 'Гострі страви? / Spicy food?',
+        left: {
+          label: 'Так / Yes',
+          result: '🌶️ Пепероні / Pepperoni',
+          color: '#ef4444'
+        },
+        right: {
+          label: 'Ні / No',
+          result: '🍖 М\'ясна / Meat lovers',
+          color: '#f97316'
+        }
+      },
+      right: {
+        label: 'Ні / No',
+        question: 'Любиш овочі? / Like vegetables?',
+        left: {
+          label: 'Так / Yes',
+          result: '🥗 Вегетаріанська / Vegetarian',
+          color: '#22c55e'
+        },
+        right: {
+          label: 'Ні / No',
+          result: '🧀 Маргарита / Margherita',
+          color: '#eab308'
+        }
+      }
+    }
+  }
+};
+
+const selectedExample = examples[example];
+---
+
+<div class="simple-tree">
+  <div class="tree-header">
+    <h3>{title}</h3>
+    <p class="tree-subtitle">{selectedExample.title}</p>
+  </div>
+
+  <div class="tree-container">
+    <svg width="100%" height="420" class="decision-tree-svg">
+      <!-- Root Node -->
+      <g class="node">
+        <rect x="250" y="20" width="200" height="60" rx="8" fill="white" stroke="#667eea" stroke-width="3"/>
+        <text x="350" y="50" text-anchor="middle" fill="#2c3e50" font-size="13" font-weight="600">
+          {selectedExample.tree.question.split(' / ')[0]}
+        </text>
+        <text x="350" y="65" text-anchor="middle" fill="#666" font-size="11">
+          {selectedExample.tree.question.split(' / ')[1]}
+        </text>
+      </g>
+
+      <!-- Left Branch -->
+      <line x1="300" y1="80" x2="200" y2="140" stroke="#667eea" stroke-width="2"/>
+      <text x="235" y="105" fill="#667eea" font-size="12" font-weight="bold">
+        {selectedExample.tree.left.label.split(' / ')[0]}
+      </text>
+
+      {selectedExample.tree.left.result ? (
+        <!-- Left Leaf -->
+        <g class="leaf">
+          <rect x="100" y="150" width="200" height="60" rx="8" fill="white" stroke={selectedExample.tree.left.color} stroke-width="3"/>
+          <text x="200" y="175" text-anchor="middle" fill={selectedExample.tree.left.color} font-size="14" font-weight="700">
+            {selectedExample.tree.left.result.split(' / ')[0]}
+          </text>
+          <text x="200" y="195" text-anchor="middle" fill="#666" font-size="11">
+            {selectedExample.tree.left.result.split(' / ')[1]}
+          </text>
+        </g>
+      ) : (
+        <!-- Left Internal Node -->
+        <g class="node">
+          <rect x="100" y="150" width="200" height="60" rx="8" fill="white" stroke="#667eea" stroke-width="3"/>
+          <text x="200" y="175" text-anchor="middle" fill="#2c3e50" font-size="12" font-weight="600">
+            {selectedExample.tree.left.question.split(' / ')[0]}
+          </text>
+          <text x="200" y="190" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.left.question.split(' / ')[1]}
+          </text>
+        </g>
+
+        <!-- Left-Left Branch -->
+        <line x1="150" y1="210" x2="100" y2="270" stroke="#667eea" stroke-width="2"/>
+        <text x="115" y="235" fill="#667eea" font-size="11" font-weight="bold">
+          {selectedExample.tree.left.left.label.split(' / ')[0]}
+        </text>
+
+        <!-- Left-Left Leaf -->
+        <g class="leaf">
+          <rect x="20" y="280" width="160" height="55" rx="8" fill="white" stroke={selectedExample.tree.left.left.color} stroke-width="3"/>
+          <text x="100" y="303" text-anchor="middle" fill={selectedExample.tree.left.left.color} font-size="13" font-weight="700">
+            {selectedExample.tree.left.left.result.split(' / ')[0]}
+          </text>
+          <text x="100" y="320" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.left.left.result.split(' / ')[1]}
+          </text>
+        </g>
+
+        <!-- Left-Right Branch -->
+        <line x1="250" y1="210" x2="280" y2="270" stroke="#667eea" stroke-width="2"/>
+        <text x="270" y="235" fill="#667eea" font-size="11" font-weight="bold">
+          {selectedExample.tree.left.right.label.split(' / ')[0]}
+        </text>
+
+        <!-- Left-Right Leaf -->
+        <g class="leaf">
+          <rect x="200" y="280" width="160" height="55" rx="8" fill="white" stroke={selectedExample.tree.left.right.color} stroke-width="3"/>
+          <text x="280" y="303" text-anchor="middle" fill={selectedExample.tree.left.right.color} font-size="13" font-weight="700">
+            {selectedExample.tree.left.right.result.split(' / ')[0]}
+          </text>
+          <text x="280" y="320" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.left.right.result.split(' / ')[1]}
+          </text>
+        </g>
+      )}
+
+      <!-- Right Branch -->
+      <line x1="400" y1="80" x2="500" y2="140" stroke="#667eea" stroke-width="2"/>
+      <text x="465" y="105" fill="#667eea" font-size="12" font-weight="bold">
+        {selectedExample.tree.right.label.split(' / ')[0]}
+      </text>
+
+      {selectedExample.tree.right.result ? (
+        <!-- Right Leaf -->
+        <g class="leaf">
+          <rect x="400" y="150" width="200" height="60" rx="8" fill="white" stroke={selectedExample.tree.right.color} stroke-width="3"/>
+          <text x="500" y="175" text-anchor="middle" fill={selectedExample.tree.right.color} font-size="14" font-weight="700">
+            {selectedExample.tree.right.result.split(' / ')[0]}
+          </text>
+          <text x="500" y="195" text-anchor="middle" fill="#666" font-size="11">
+            {selectedExample.tree.right.result.split(' / ')[1]}
+          </text>
+        </g>
+      ) : (
+        <!-- Right Internal Node -->
+        <g class="node">
+          <rect x="400" y="150" width="200" height="60" rx="8" fill="white" stroke="#667eea" stroke-width="3"/>
+          <text x="500" y="175" text-anchor="middle" fill="#2c3e50" font-size="12" font-weight="600">
+            {selectedExample.tree.right.question.split(' / ')[0]}
+          </text>
+          <text x="500" y="190" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.right.question.split(' / ')[1]}
+          </text>
+        </g>
+
+        <!-- Right-Left Branch -->
+        <line x1="450" y1="210" x2="420" y2="270" stroke="#667eea" stroke-width="2"/>
+        <text x="425" y="235" fill="#667eea" font-size="11" font-weight="bold">
+          {selectedExample.tree.right.left.label.split(' / ')[0]}
+        </text>
+
+        <!-- Right-Left Leaf -->
+        <g class="leaf">
+          <rect x="340" y="280" width="160" height="55" rx="8" fill="white" stroke={selectedExample.tree.right.left.color} stroke-width="3"/>
+          <text x="420" y="303" text-anchor="middle" fill={selectedExample.tree.right.left.color} font-size="13" font-weight="700">
+            {selectedExample.tree.right.left.result.split(' / ')[0]}
+          </text>
+          <text x="420" y="320" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.right.left.result.split(' / ')[1]}
+          </text>
+        </g>
+
+        <!-- Right-Right Branch -->
+        <line x1="550" y1="210" x2="600" y2="270" stroke="#667eea" stroke-width="2"/>
+        <text x="585" y="235" fill="#667eea" font-size="11" font-weight="bold">
+          {selectedExample.tree.right.right.label.split(' / ')[0]}
+        </text>
+
+        <!-- Right-Right Leaf -->
+        <g class="leaf">
+          <rect x="520" y="280" width="160" height="55" rx="8" fill="white" stroke={selectedExample.tree.right.right.color} stroke-width="3"/>
+          <text x="600" y="303" text-anchor="middle" fill={selectedExample.tree.right.right.color} font-size="13" font-weight="700">
+            {selectedExample.tree.right.right.result.split(' / ')[0]}
+          </text>
+          <text x="600" y="320" text-anchor="middle" fill="#666" font-size="10">
+            {selectedExample.tree.right.right.result.split(' / ')[1]}
+          </text>
+        </g>
+      )}
+    </svg>
+
+    <div class="tree-explanation">
+      <p>
+        <strong>Як читати дерево / How to read the tree:</strong>
+      </p>
+      <ol>
+        <li>🔵 <strong>Починаємо з кореня / Start at the root</strong> — перше питання вгорі</li>
+        <li>➡️ <strong>Відповідаємо Так/Ні / Answer Yes/No</strong> — йдемо лівою або правою гілкою</li>
+        <li>🔁 <strong>Повторюємо / Repeat</strong> — поки не дійдемо до листка (кінцеве рішення)</li>
+        <li>✅ <strong>Отримуємо результат / Get result</strong> — листок показує фінальну відповідь</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<style>
+  .simple-tree {
+    margin: 2rem 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .tree-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .tree-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .tree-subtitle {
+    margin: 0;
+    font-size: 1.1rem;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  .tree-container {
+    padding: 2rem;
+    background: #f8f9fa;
+  }
+
+  .decision-tree-svg {
+    display: block;
+    margin: 0 auto 2rem;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 720px;
+  }
+
+  .tree-explanation {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+  }
+
+  .tree-explanation p {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #2c3e50;
+  }
+
+  .tree-explanation ol {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+
+  .tree-explanation li {
+    margin: 0.75rem 0;
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .decision-tree-svg {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .tree-header h3 {
+      font-size: 1.2rem;
+    }
+
+    .tree-subtitle {
+      font-size: 1rem;
+    }
+  }
+</style>

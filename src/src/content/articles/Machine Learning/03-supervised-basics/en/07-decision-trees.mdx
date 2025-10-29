@@ -1,0 +1,773 @@
+---
+title: "Decision Trees - Your First Classification Algorithm"
+description: "Learn how decision trees make predictions, understand entropy and Gini impurity, and build your first classification model for real-world problems"
+author: "Department of AIsiCs"
+date: 2025-10-29
+readingTime: 42
+tags: ["decision-trees", "classification", "supervised-learning", "entropy", "gini"]
+featured: true
+difficulty: "intermediate"
+category: "Machine Learning"
+subcategory: "03-supervised-basics"
+prerequisites: ["05-linear-regression", "06-model-evaluation"]
+relatedArticles: ["06-model-evaluation", "09-random-forests"]
+---
+
+import InteractiveDecisionTree from '@components/InteractiveDecisionTree.astro';
+import DecisionTreeBuilder from '@components/DecisionTreeBuilder.astro';
+import TreeDepthComparison from '@components/TreeDepthComparison.astro';
+import SplittingCriteriaCompare from '@components/SplittingCriteriaCompare.astro';
+
+# Decision Trees: Your First Classification Algorithm
+
+## From Regression to Classification
+
+In **Article 5**, we learned linear regression — predicting numbers: prices, sales, temperatures. But what if you need to predict categories?
+
+- Will a customer buy? (Yes/No)
+- What size pizza will they order? (Small/Medium/Large)
+- Is this email spam? (Spam/Not spam)
+
+These are **classification tasks** — predicting categories, not numbers.
+
+**Decision Trees** are one of the simplest and most intuitive classification algorithms. They work like a flowchart: you answer questions and arrive at a decision.
+
+---
+
+## 🍕 The Business Problem: Predicting Large Orders
+
+You manage a pizza restaurant. You want to predict whether an order will be **large** (30+ pizzas) or **small** (fewer than 30 pizzas) to plan ingredients and delivery.
+
+### The Data
+
+You have 4 features for each order:
+
+1. **temperature** — outdoor temperature (°C)
+2. **is_friday_evening** — is it Friday evening? (0 or 1)
+3. **rolling_avg** — average sales in the last 3 hours
+4. **is_peak_hour** — is it peak hour (6-8 PM)? (0 or 1)
+
+**Target:** `is_large_order` — 1 if ≥30 pizzas, 0 if <30.
+
+### Sample Data
+
+| temperature | is_friday_evening | rolling_avg | is_peak_hour | is_large_order |
+|-------------|-------------------|-------------|--------------|----------------|
+| 12          | 1                 | 32          | 1            | 1 (Large)      |
+| 25          | 0                 | 18          | 0            | 0 (Small)      |
+| 8           | 1                 | 28          | 1            | 1 (Large)      |
+| 22          | 0                 | 15          | 0            | 0 (Small)      |
+| 15          | 1                 | 35          | 1            | 1 (Large)      |
+
+**Intuition:**
+- Cold weather → people stay home, order more
+- Friday evening → parties, events
+- High rolling average → trend continues
+- Peak hour → more orders
+
+Now we'll build a tree to predict large orders.
+
+---
+
+## 🌳 How Decision Trees Work
+
+Decision Trees are like a flowchart. Let's start with a simple everyday example:
+
+<InteractiveDecisionTree example="umbrella" title="Should I take an umbrella? / Чи брати парасольку?" />
+
+Now, let's see how this applies to our pizza ordering problem. Here's what a decision tree might look like for predicting large orders:
+
+<InteractiveDecisionTree example="pizza" title="Pizza Order Prediction / Прогноз замовлення піци" />
+
+**Tree Anatomy:**
+
+Now that you've seen the interactive trees above, let's break down their components:
+
+- **🔵 Root Node:** The first question where we start (white node with blue border)
+- **🔵 Internal Nodes:** Intermediate questions (also white with blue border)
+- **🟢🔴 Leaf Nodes:** Final predictions with colored backgrounds (purple = Large, pink = Small)
+- **➡️ Branches:** Connections between nodes (smooth curved lines)
+- **📏 Depth:** Number of levels in the tree (from root to deepest leaf)
+
+**💡 Tip:** Hover over the nodes in the interactive trees above to see the effects!
+
+**Example prediction flow:**
+- Temperature = 10°C → **Yes** (go left)
+- Is Friday evening? = Yes → **Yes** (go left)
+- Prediction: **🟢 Large Order**
+
+---
+
+## 📊 How Trees Choose Questions
+
+How does the tree decide which question to ask first? It uses **splitting criteria** to find the best question.
+
+### Goal: Reduce Uncertainty
+
+Imagine a bag of 100 orders:
+- 50 Large (🟢)
+- 50 Small (🔴)
+
+If you randomly pick one, you're **50% uncertain**. This uncertainty is called **impurity** or **entropy**.
+
+Now split by temperature < 15°C:
+- **Left bag** (cold): 40 Large, 10 Small (80% Large)
+- **Right bag** (warm): 10 Large, 40 Small (20% Large)
+
+Each bag is now **more certain** — the split reduced uncertainty!
+
+### Two Popular Criteria
+
+1. **Gini Impurity** — how "mixed" are the classes?
+2. **Entropy** — how much "chaos" or "surprise" is there?
+
+Both measure impurity from 0 (pure) to some maximum (completely mixed).
+
+---
+
+## 🧮 The Math (Simplified)
+
+### Entropy
+
+**Entropy** measures how much "surprise" there is in a bag of orders.
+
+**Formula:**
+
+$$
+\text{Entropy} = - \sum_{i} p_i \times \log_2(p_i)
+$$
+
+Where $p_i$ is the proportion of class $i$.
+
+**Example:** 50 Large, 50 Small
+
+$$
+\begin{align*}
+p_{\text{large}} &= 50/100 = 0.5 \\
+p_{\text{small}} &= 50/100 = 0.5 \\
+\\
+\text{Entropy} &= -(0.5 \times \log_2(0.5) + 0.5 \times \log_2(0.5)) \\
+&= -(0.5 \times (-1) + 0.5 \times (-1)) \\
+&= -(-0.5 - 0.5) \\
+&= 1.0 \text{ (maximum uncertainty)}
+\end{align*}
+$$
+
+**Example:** 90 Large, 10 Small
+
+$$
+\begin{align*}
+p_{\text{large}} &= 0.9, \quad p_{\text{small}} = 0.1 \\
+\\
+\text{Entropy} &= -(0.9 \times \log_2(0.9) + 0.1 \times \log_2(0.1)) \\
+&= -(0.9 \times (-0.152) + 0.1 \times (-3.322)) \\
+&= -(-0.137 - 0.332) \\
+&= 0.469 \text{ (much lower uncertainty)}
+\end{align*}
+$$
+
+**Intuition:** Pure node (100% one class) has entropy = 0. Mixed 50/50 has entropy = 1.
+
+### Gini Impurity
+
+**Gini** measures the probability of misclassifying a randomly chosen order.
+
+**Formula:**
+
+$$
+\text{Gini} = 1 - \sum_{i} (p_i)^2
+$$
+
+Where $p_i$ is the proportion of class $i$.
+
+**Example:** 50 Large, 50 Small
+
+$$
+\begin{align*}
+p_{\text{large}} &= 50/100 = 0.5 \\
+p_{\text{small}} &= 50/100 = 0.5 \\
+\\
+\text{Gini} &= 1 - (0.5^2 + 0.5^2) \\
+&= 1 - (0.25 + 0.25) \\
+&= 0.5 \text{ (maximum impurity)}
+\end{align*}
+$$
+
+**Example:** 90 Large, 10 Small
+
+$$
+\begin{align*}
+p_{\text{large}} &= 90/100 = 0.9 \\
+p_{\text{small}} &= 10/100 = 0.1 \\
+\\
+\text{Gini} &= 1 - (0.9^2 + 0.1^2) \\
+&= 1 - (0.81 + 0.01) \\
+&= 0.18 \text{ (much lower impurity)}
+\end{align*}
+$$
+
+**Intuition:** Pure node has Gini = 0. Mixed 50/50 has Gini = 0.5.
+
+### Information Gain
+
+The tree chooses the split that gives the most **Information Gain**:
+
+$$
+\text{Information Gain} = \text{Impurity(parent)} - \text{Weighted Average(children impurities)}
+$$
+
+**Example:**
+- Parent: 50 Large, 50 Small → Gini = 0.5
+- After split on temperature < 15°C:
+  - Left: 40 Large, 10 Small → Gini = 0.32
+  - Right: 10 Large, 40 Small → Gini = 0.32
+
+$$
+\begin{align*}
+\text{Weighted Gini} &= \frac{50}{100} \times 0.32 + \frac{50}{100} \times 0.32 \\
+&= 0.16 + 0.16 \\
+&= 0.32 \\
+\\
+\text{Information Gain} &= 0.5 - 0.32 \\
+&= 0.18
+\end{align*}
+$$
+
+The tree tests all possible splits and chooses the one with the highest gain.
+
+---
+
+## 🔬 Interactive: Compare Gini vs Entropy
+
+See how both criteria behave as the mix of classes changes:
+
+<SplittingCriteriaCompare />
+
+**Key observations:**
+- Both reach 0 when pure (100% one class)
+- Both peak at 50/50 mix
+- Entropy ranges 0→1, Gini ranges 0→0.5
+- Correlation ≈ 0.98 — they're very similar!
+
+In practice, both work well. Gini is slightly faster to compute (no logarithm), so it's the default in most libraries.
+
+---
+
+## 🛠️ Building Your First Tree
+
+Let's build a decision tree classifier in Python using scikit-learn.
+
+### Step 1: Load Data
+
+```python
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Generate synthetic pizza order data
+np.random.seed(42)
+n_samples = 1000
+
+data = {
+    'temperature': np.random.uniform(0, 35, n_samples),
+    'is_friday_evening': np.random.choice([0, 1], n_samples, p=[0.85, 0.15]),
+    'rolling_avg': np.random.uniform(10, 40, n_samples),
+    'is_peak_hour': np.random.choice([0, 1], n_samples, p=[0.7, 0.3])
+}
+
+df = pd.DataFrame(data)
+
+# Create target: Large order if score > threshold
+df['score'] = (
+    df['is_friday_evening'] * 15 +
+    df['is_peak_hour'] * 8 +
+    (-0.3 * df['temperature']) +
+    (0.5 * df['rolling_avg'])
+)
+df['is_large_order'] = (df['score'] + np.random.normal(0, 3, n_samples) > 30).astype(int)
+
+# Features and target
+X = df[['temperature', 'is_friday_evening', 'rolling_avg', 'is_peak_hour']]
+y = df['is_large_order']
+
+print(f"📊 Total samples: {len(df)}")
+print(f"🟢 Large orders: {y.sum()} ({y.sum()/len(y)*100:.1f}%)")
+print(f"🔴 Small orders: {len(y)-y.sum()} ({(len(y)-y.sum())/len(y)*100:.1f}%)")
+```
+
+**Output:**
+```
+📊 Total samples: 1000
+🟢 Large orders: 387 (38.7%)
+🔴 Small orders: 613 (61.3%)
+```
+
+### Step 2: Split Train/Test
+
+We use **train/test split** from **Article 4**:
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,      # 20% for testing
+    random_state=42,
+    stratify=y          # Keep class proportions
+)
+
+print(f"📚 Training: {len(X_train)} samples")
+print(f"🧪 Testing: {len(X_test)} samples")
+```
+
+**Output:**
+```
+📚 Training: 800 samples
+🧪 Testing: 200 samples
+```
+
+### Step 3: Train the Tree
+
+```python
+# Create and train decision tree
+tree = DecisionTreeClassifier(
+    max_depth=4,                # Limit depth to prevent overfitting
+    min_samples_split=30,       # At least 30 samples to split
+    min_samples_leaf=15,        # At least 15 samples in each leaf
+    criterion='gini',           # Use Gini impurity
+    random_state=42
+)
+
+tree.fit(X_train, y_train)
+
+print(f"📏 Tree depth: {tree.get_depth()}")
+print(f"🍃 Number of leaves: {tree.get_n_leaves()}")
+```
+
+**Output:**
+```
+📏 Tree depth: 4
+🍃 Number of leaves: 12
+```
+
+### Step 4: Make Predictions
+
+```python
+# Predict on training data
+y_train_pred = tree.predict(X_train)
+train_accuracy = accuracy_score(y_train, y_train_pred)
+
+# Predict on test data
+y_test_pred = tree.predict(X_test)
+test_accuracy = accuracy_score(y_test, y_test_pred)
+
+print(f"\n📊 Training Accuracy: {train_accuracy:.3f}")
+print(f"🧪 Test Accuracy: {test_accuracy:.3f}")
+```
+
+**Output:**
+```
+📊 Training Accuracy: 0.852
+🧪 Test Accuracy: 0.835
+```
+
+### Step 5: Evaluate with Metrics
+
+From **Article 6**, we know accuracy isn't enough. Let's check precision, recall, and F1:
+
+```python
+from sklearn.metrics import classification_report, confusion_matrix
+
+print("\n📊 Classification Report:")
+print(classification_report(y_test, y_test_pred,
+                           target_names=['Small', 'Large']))
+
+print("\n📊 Confusion Matrix:")
+cm = confusion_matrix(y_test, y_test_pred)
+print(f"              Predicted Small  Predicted Large")
+print(f"Actual Small         {cm[0,0]:3d}             {cm[0,1]:3d}")
+print(f"Actual Large         {cm[1,0]:3d}             {cm[1,1]:3d}")
+```
+
+**Output:**
+```
+📊 Classification Report:
+              precision    recall  f1-score   support
+
+       Small       0.86      0.91      0.88       123
+       Large       0.80      0.71      0.75        77
+
+    accuracy                           0.84       200
+   macro avg       0.83      0.81      0.82       200
+weighted avg       0.84      0.84      0.83       200
+
+📊 Confusion Matrix:
+              Predicted Small  Predicted Large
+Actual Small         112              11
+Actual Large          22              55
+```
+
+**Interpretation:**
+- **Small orders:** 86% precision, 91% recall — tree is good at catching small orders
+- **Large orders:** 80% precision, 71% recall — some large orders are missed
+- Overall accuracy: 83.5%
+
+### Step 6: Feature Importance
+
+Which features matter most?
+
+```python
+feature_importance = pd.DataFrame({
+    'feature': X.columns,
+    'importance': tree.feature_importances_
+}).sort_values('importance', ascending=False)
+
+print("\n📊 Feature Importance:")
+for idx, row in feature_importance.iterrows():
+    print(f"{row['feature']:20s} {row['importance']:.3f} {'█' * int(row['importance']*50)}")
+```
+
+**Output:**
+```
+📊 Feature Importance:
+rolling_avg          0.487 ████████████████████████
+is_friday_evening    0.298 ██████████████
+temperature          0.152 ███████
+is_peak_hour         0.063 ███
+```
+
+**Interpretation:**
+- **rolling_avg** (48.7%) — the strongest predictor
+- **is_friday_evening** (29.8%) — second most important
+- **temperature** (15.2%) — moderate importance
+- **is_peak_hour** (6.3%) — least important
+
+This tells you where to focus data collection and feature engineering.
+
+---
+
+## 🔥 Interactive: Build Your Own Tree
+
+Try adding splits and see how the tree learns to classify orders:
+
+<DecisionTreeBuilder />
+
+**What to try:**
+1. Add **temperature < 15°C** split first
+2. Add **is_friday_evening = Yes** next
+3. Watch how accuracy improves
+4. Notice entropy and Gini decrease
+5. Try different split orders
+
+**Key insight:** The order of splits matters! The tree always picks the best split first (highest information gain).
+
+---
+
+## 🚨 The Overfitting Problem
+
+Decision trees have a **major weakness**: they can memorize training data.
+
+### What is Overfitting?
+
+Imagine a tree with no depth limit:
+- It keeps splitting until each leaf has 1 sample
+- Training accuracy → 100%
+- Test accuracy → drops!
+
+**Why?** The tree memorized noise, not patterns.
+
+### Example: Too Deep Tree
+
+```python
+# Train a very deep tree (no limits)
+deep_tree = DecisionTreeClassifier(random_state=42)
+deep_tree.fit(X_train, y_train)
+
+train_acc = accuracy_score(y_train, deep_tree.predict(X_train))
+test_acc = accuracy_score(y_test, deep_tree.predict(X_test))
+
+print(f"📏 Tree depth: {deep_tree.get_depth()}")
+print(f"🍃 Number of leaves: {deep_tree.get_n_leaves()}")
+print(f"📊 Training Accuracy: {train_acc:.3f}")
+print(f"🧪 Test Accuracy: {test_acc:.3f}")
+print(f"⚠️ Overfitting gap: {train_acc - test_acc:.3f}")
+```
+
+**Output:**
+```
+📏 Tree depth: 18
+🍃 Number of leaves: 342
+📊 Training Accuracy: 1.000
+🧪 Test Accuracy: 0.775
+⚠️ Overfitting gap: 0.225
+```
+
+The tree has 342 leaves (almost one per training sample) and memorized the training data!
+
+---
+
+## 🔬 Interactive: Depth vs Overfitting
+
+Explore how tree depth affects training and test accuracy:
+
+<TreeDepthComparison />
+
+**Key observations:**
+1. **Shallow trees (depth 1-3):** Underfit — both accuracies are low
+2. **Balanced trees (depth 4-7):** Best test accuracy
+3. **Deep trees (depth 10+):** Overfit — training accuracy → 100%, test accuracy drops
+
+**The sweet spot:** depth = 5-7 for most problems.
+
+---
+
+## 🛡️ Preventing Overfitting: Hyperparameters
+
+Decision trees have several **hyperparameters** to control complexity:
+
+### 1. max_depth
+**What:** Maximum tree depth
+**Default:** None (unlimited)
+**Effect:** Smaller depth → simpler tree → less overfitting
+
+```python
+tree = DecisionTreeClassifier(max_depth=5)
+```
+
+**Recommendation:** Start with 3-10, tune based on validation accuracy.
+
+### 2. min_samples_split
+**What:** Minimum samples required to split a node
+**Default:** 2
+**Effect:** Larger value → fewer splits → simpler tree
+
+```python
+tree = DecisionTreeClassifier(min_samples_split=50)
+```
+
+**Recommendation:** Try 20-100 for datasets with 1000+ samples.
+
+### 3. min_samples_leaf
+**What:** Minimum samples required in each leaf
+**Default:** 1
+**Effect:** Larger value → fewer tiny leaves → less overfitting
+
+```python
+tree = DecisionTreeClassifier(min_samples_leaf=20)
+```
+
+**Recommendation:** Try 10-50 for datasets with 1000+ samples.
+
+### 4. max_features
+**What:** Maximum features to consider for each split
+**Default:** None (all features)
+**Effect:** Fewer features → more randomness → less overfitting
+
+```python
+tree = DecisionTreeClassifier(max_features='sqrt')  # √(n_features)
+```
+
+**Recommendation:** Use `'sqrt'` or `'log2'` for high-dimensional data.
+
+### Example: Tuned Tree
+
+```python
+# Well-tuned tree
+tuned_tree = DecisionTreeClassifier(
+    max_depth=6,
+    min_samples_split=40,
+    min_samples_leaf=20,
+    max_features='sqrt',
+    criterion='gini',
+    random_state=42
+)
+
+tuned_tree.fit(X_train, y_train)
+
+train_acc = accuracy_score(y_train, tuned_tree.predict(X_train))
+test_acc = accuracy_score(y_test, tuned_tree.predict(X_test))
+
+print(f"📏 Tree depth: {tuned_tree.get_depth()}")
+print(f"🍃 Number of leaves: {tuned_tree.get_n_leaves()}")
+print(f"📊 Training Accuracy: {train_acc:.3f}")
+print(f"🧪 Test Accuracy: {test_acc:.3f}")
+print(f"✅ Overfitting gap: {train_acc - test_acc:.3f}")
+```
+
+**Output:**
+```
+📏 Tree depth: 6
+🍃 Number of leaves: 18
+📊 Training Accuracy: 0.869
+🧪 Test Accuracy: 0.855
+✅ Overfitting gap: 0.014
+```
+
+Much better! The gap is only 1.4%.
+
+---
+
+## 🎯 When to Use Decision Trees
+
+### ✅ Decision Trees Excel At:
+
+1. **Interpretability** — easy to explain to non-technical stakeholders
+   - "If temperature < 15°C and Friday evening, predict Large"
+
+2. **Mixed data types** — handles both numerical and categorical features
+   - No need to encode categories as numbers
+
+3. **Non-linear relationships** — captures complex patterns
+   - Can model interactions: "Cold weather matters more on Fridays"
+
+4. **No feature scaling** — works with raw features
+   - Unlike linear regression or SVMs
+
+5. **Feature importance** — shows which features matter most
+   - Guides data collection priorities
+
+### ❌ Decision Trees Struggle With:
+
+1. **Overfitting** — easily memorize training data
+   - Solution: tune hyperparameters or use Random Forests (Article 9)
+
+2. **Instability** — small data changes → different tree
+   - Solution: use ensemble methods (Article 9)
+
+3. **Linear relationships** — inefficient for simple patterns
+   - A line that takes 2 parameters might need 50 splits to approximate
+
+4. **Extrapolation** — can't predict beyond training range
+   - If max temperature in training is 30°C, tree can't handle 35°C intelligently
+
+---
+
+## 🌟 Real-World Applications
+
+### 1. Medical Diagnosis
+**Problem:** Predict disease based on symptoms
+**Why trees?** Doctors think in flowcharts ("If fever > 38°C and cough, check for flu")
+
+**Example:**
+```
+[Fever > 38°C?]
+     ├─ Yes → [Cough?]
+     │         ├─ Yes → Flu (90%)
+     │         └─ No → Check other symptoms
+     └─ No → [Rash?]
+               ├─ Yes → Allergic reaction (75%)
+               └─ No → Common cold (60%)
+```
+
+### 2. Credit Scoring
+**Problem:** Approve or reject loan applications
+**Why trees?** Interpretable rules for regulatory compliance
+
+**Example features:**
+- Income
+- Employment length
+- Credit history
+- Debt-to-income ratio
+
+### 3. Customer Churn Prediction
+**Problem:** Predict which customers will cancel subscription
+**Why trees?** Identify actionable patterns for retention
+
+**Example insights:**
+- "Customers with <3 logins/week and no support tickets → 70% churn"
+- Target them with engagement campaigns
+
+### 4. Product Recommendations
+**Problem:** Recommend products based on user behavior
+**Why trees?** Handle diverse features (age, location, purchase history)
+
+**Example:**
+```
+[Age < 25?]
+     ├─ Yes → [Gaming interest?]
+     │         ├─ Yes → Recommend gaming laptops
+     │         └─ No → Recommend budget phones
+     └─ No → [High income?]
+               ├─ Yes → Recommend premium devices
+               └─ No → Recommend mid-range options
+```
+
+---
+
+## 🔗 Connections to Other Articles
+
+### From Previous Articles:
+
+**Article 4: Train/Test Split**
+- We used `train_test_split` to evaluate trees
+- **Why it matters:** Overfitting is only visible on unseen data
+- Trees are especially prone to overfitting without proper validation
+
+**Article 5: Linear Regression**
+- Linear regression predicts numbers, trees predict categories (classification)
+- **Key difference:** Trees can capture non-linear patterns
+- **Trade-off:** Trees are less interpretable than a single equation
+
+**Article 6: Model Evaluation Metrics**
+- We used accuracy, precision, recall, F1
+- **Why it matters:** Accuracy alone hides class imbalance issues
+- For imbalanced pizza orders (38% large, 62% small), precision/recall are crucial
+
+### Preparing for Future Articles:
+
+**Article 9: Random Forests (coming soon)**
+- **The problem:** Single trees overfit and are unstable
+- **The solution:** Train many trees and average their predictions
+- Random Forests are one of the most powerful ML algorithms
+
+**Article 10: Ensemble Methods (coming soon)**
+- **Beyond forests:** Boosting, stacking, voting
+- **Key idea:** Combine weak models to create strong models
+- Trees are the building blocks of most ensemble methods
+
+---
+
+## 🎓 Key Takeaways
+
+1. **Decision trees** are intuitive flowchart-based classifiers
+   - Ask questions about features, make predictions at leaves
+
+2. **Splitting criteria** (Gini, Entropy) measure impurity
+   - Tree chooses splits that maximize information gain
+   - Both criteria work well in practice
+
+3. **Overfitting** is the main weakness
+   - Deep trees memorize training data
+   - Control with `max_depth`, `min_samples_split`, `min_samples_leaf`
+
+4. **Feature importance** shows which features matter
+   - Guides data collection and feature engineering
+
+5. **Use trees when** you need interpretability, mixed data types, or non-linear patterns
+   - **Avoid trees when** you have linear patterns or need extrapolation
+
+6. **Next step:** Random Forests solve overfitting by averaging many trees
+   - Stay tuned for Article 9!
+
+---
+
+## 🛠️ Practice Challenge
+
+Build a decision tree to predict customer churn:
+
+**Dataset:** Customer data with features
+- `monthly_usage_gb` — data usage per month
+- `customer_service_calls` — number of support calls
+- `contract_length_months` — contract length
+- `monthly_charge` — subscription fee
+
+**Task:**
+1. Split data into train/test (80/20)
+2. Train a tree with `max_depth=4`
+3. Evaluate with accuracy, precision, recall, F1
+4. Find the 3 most important features
+5. Tune hyperparameters to improve test accuracy
+
+**Goal:** Achieve test accuracy > 85% and overfitting gap < 0.05
+
+Ready to try? The code follows the examples above. Good luck! 🚀

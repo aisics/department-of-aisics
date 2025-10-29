@@ -1,0 +1,545 @@
+---
+export interface Props {
+  title?: string;
+  initialTP: number;
+  initialTN: number;
+  initialFP: number;
+  initialFN: number;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Інтерактивна матриця плутанини / Interactive Confusion Matrix',
+  initialTP,
+  initialTN,
+  initialFP,
+  initialFN,
+  darkMode = false
+} = Astro.props;
+
+const componentId = `confusion-matrix-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="confusion-matrix-explorer">
+  <div class="explorer-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="explorer-content">
+    <div class="controls-section">
+      <h4>Налаштування / Controls</h4>
+      <div class="controls-grid">
+        <div class="control-group tp">
+          <label>
+            True Positive (TP)
+            <span class="tooltip">✓ Правильно передбачені позитиви</span>
+          </label>
+          <input type="range" min="0" max="100" value={initialTP} class="slider" data-type="tp" />
+          <input type="number" min="0" max="1000" value={initialTP} class="number-input" data-type="tp" />
+        </div>
+
+        <div class="control-group tn">
+          <label>
+            True Negative (TN)
+            <span class="tooltip">✓ Правильно передбачені негативи</span>
+          </label>
+          <input type="range" min="0" max="100" value={initialTN} class="slider" data-type="tn" />
+          <input type="number" min="0" max="1000" value={initialTN} class="number-input" data-type="tn" />
+        </div>
+
+        <div class="control-group fp">
+          <label>
+            False Positive (FP)
+            <span class="tooltip">✗ Хибна тривога</span>
+          </label>
+          <input type="range" min="0" max="100" value={initialFP} class="slider" data-type="fp" />
+          <input type="number" min="0" max="1000" value={initialFP} class="number-input" data-type="fp" />
+        </div>
+
+        <div class="control-group fn">
+          <label>
+            False Negative (FN)
+            <span class="tooltip">✗ Пропущені позитиви</span>
+          </label>
+          <input type="range" min="0" max="100" value={initialFN} class="slider" data-type="fn" />
+          <input type="number" min="0" max="1000" value={initialFN} class="number-input" data-type="fn" />
+        </div>
+      </div>
+    </div>
+
+    <div class="visualization-section">
+      <div class="matrix-heatmap"></div>
+    </div>
+
+    <div class="metrics-section">
+      <h4>Метрики / Metrics</h4>
+      <div class="metrics-grid">
+        <div class="metric-card accuracy">
+          <div class="metric-label">Accuracy</div>
+          <div class="metric-value" id={`${componentId}-accuracy`}>0.00%</div>
+          <div class="metric-formula">(TP + TN) / Total</div>
+        </div>
+
+        <div class="metric-card precision">
+          <div class="metric-label">Precision</div>
+          <div class="metric-value" id={`${componentId}-precision`}>0.00%</div>
+          <div class="metric-formula">TP / (TP + FP)</div>
+        </div>
+
+        <div class="metric-card recall">
+          <div class="metric-label">Recall</div>
+          <div class="metric-value" id={`${componentId}-recall`}>0.00%</div>
+          <div class="metric-formula">TP / (TP + FN)</div>
+        </div>
+
+        <div class="metric-card f1">
+          <div class="metric-label">F1-Score</div>
+          <div class="metric-value" id={`${componentId}-f1`}>0.00%</div>
+          <div class="metric-formula">2 × (P × R) / (P + R)</div>
+        </div>
+      </div>
+
+      <div class="summary-stats">
+        <div class="stat">
+          <span class="stat-label">Total Samples:</span>
+          <span class="stat-value" id={`${componentId}-total`}>0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Actual Positives:</span>
+          <span class="stat-value" id={`${componentId}-actual-pos`}>0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Actual Negatives:</span>
+          <span class="stat-value" id={`${componentId}-actual-neg`}>0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Predicted Positives:</span>
+          <span class="stat-value" id={`${componentId}-pred-pos`}>0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Predicted Negatives:</span>
+          <span class="stat-value" id={`${componentId}-pred-neg`}>0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, initialTP, initialTN, initialFP, initialFN, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const heatmapContainer = container.querySelector('.matrix-heatmap');
+
+        let values = {
+          tp: initialTP,
+          tn: initialTN,
+          fp: initialFP,
+          fn: initialFN
+        };
+
+        function calculateMetrics() {
+          const { tp, tn, fp, fn } = values;
+          const total = tp + tn + fp + fn;
+
+          if (total === 0) {
+            return {
+              accuracy: 0,
+              precision: 0,
+              recall: 0,
+              f1: 0,
+              total: 0,
+              actualPos: 0,
+              actualNeg: 0,
+              predPos: 0,
+              predNeg: 0
+            };
+          }
+
+          const accuracy = (tp + tn) / total * 100;
+          const precision = (tp + fp) > 0 ? tp / (tp + fp) * 100 : 0;
+          const recall = (tp + fn) > 0 ? tp / (tp + fn) * 100 : 0;
+          const f1 = (precision + recall) > 0 ? 2 * (precision * recall) / (precision + recall) : 0;
+
+          return {
+            accuracy,
+            precision,
+            recall,
+            f1,
+            total,
+            actualPos: tp + fn,
+            actualNeg: tn + fp,
+            predPos: tp + fp,
+            predNeg: tn + fn
+          };
+        }
+
+        function updateDisplay() {
+          const metrics = calculateMetrics();
+
+          // Update metric cards
+          container.querySelector(`#${componentId}-accuracy`).textContent = metrics.accuracy.toFixed(2) + '%';
+          container.querySelector(`#${componentId}-precision`).textContent = metrics.precision.toFixed(2) + '%';
+          container.querySelector(`#${componentId}-recall`).textContent = metrics.recall.toFixed(2) + '%';
+          container.querySelector(`#${componentId}-f1`).textContent = metrics.f1.toFixed(2) + '%';
+
+          // Update summary stats
+          container.querySelector(`#${componentId}-total`).textContent = metrics.total;
+          container.querySelector(`#${componentId}-actual-pos`).textContent = metrics.actualPos;
+          container.querySelector(`#${componentId}-actual-neg`).textContent = metrics.actualNeg;
+          container.querySelector(`#${componentId}-pred-pos`).textContent = metrics.predPos;
+          container.querySelector(`#${componentId}-pred-neg`).textContent = metrics.predNeg;
+
+          // Update heatmap
+          updateHeatmap();
+        }
+
+        function updateHeatmap() {
+          const { tp, tn, fp, fn } = values;
+
+          const data = [{
+            z: [[tp, fp], [fn, tn]],
+            x: ['Positive', 'Negative'],
+            y: ['Positive', 'Negative'],
+            type: 'heatmap',
+            colorscale: [
+              [0, '#e74c3c'],
+              [0.5, '#f39c12'],
+              [1, '#2ecc71']
+            ],
+            showscale: true,
+            text: [
+              [`TP: ${tp}`, `FP: ${fp}`],
+              [`FN: ${fn}`, `TN: ${tn}`]
+            ],
+            texttemplate: '%{text}',
+            textfont: {
+              size: 20,
+              color: 'white',
+              family: 'Arial, sans-serif'
+            },
+            hovertemplate: '%{text}<extra></extra>'
+          }];
+
+          const layout = {
+            title: {
+              text: 'Матриця плутанини / Confusion Matrix',
+              font: { size: 16 }
+            },
+            annotations: [
+              {
+                text: 'Фактичне / Actual',
+                x: -0.15,
+                y: 0.5,
+                xref: 'paper',
+                yref: 'paper',
+                textangle: -90,
+                showarrow: false,
+                font: { size: 14, color: darkMode ? '#ffffff' : '#000000' }
+              },
+              {
+                text: 'Прогноз / Predicted',
+                x: 0.5,
+                y: 1.15,
+                xref: 'paper',
+                yref: 'paper',
+                showarrow: false,
+                font: { size: 14, color: darkMode ? '#ffffff' : '#000000' }
+              }
+            ],
+            xaxis: {
+              side: 'top',
+              tickfont: { size: 12 }
+            },
+            yaxis: {
+              tickfont: { size: 12 }
+            },
+            height: 400,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            }
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: false
+          };
+
+          window.Plotly.newPlot(heatmapContainer, data, layout, config);
+        }
+
+        // Set up event listeners
+        const sliders = container.querySelectorAll('.slider');
+        const numberInputs = container.querySelectorAll('.number-input');
+
+        sliders.forEach(slider => {
+          slider.addEventListener('input', (e) => {
+            const type = e.target.dataset.type;
+            const value = parseInt(e.target.value);
+            values[type] = value;
+
+            // Update corresponding number input
+            const numberInput = container.querySelector(`.number-input[data-type="${type}"]`);
+            numberInput.value = value;
+
+            updateDisplay();
+          });
+        });
+
+        numberInputs.forEach(input => {
+          input.addEventListener('input', (e) => {
+            const type = e.target.dataset.type;
+            const value = parseInt(e.target.value) || 0;
+            values[type] = Math.max(0, value);
+
+            // Update corresponding slider (capped at 100)
+            const slider = container.querySelector(`.slider[data-type="${type}"]`);
+            slider.value = Math.min(100, value);
+
+            updateDisplay();
+          });
+        });
+
+        // Initial render
+        updateDisplay();
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .confusion-matrix-explorer {
+    margin: 2rem 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .explorer-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .explorer-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .explorer-content {
+    padding: 1.5rem;
+  }
+
+  .controls-section h4,
+  .metrics-section h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .control-group {
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+  }
+
+  .control-group.tp {
+    border-left: 4px solid #2ecc71;
+  }
+
+  .control-group.tn {
+    border-left: 4px solid #3498db;
+  }
+
+  .control-group.fp {
+    border-left: 4px solid #e74c3c;
+  }
+
+  .control-group.fn {
+    border-left: 4px solid #f39c12;
+  }
+
+  .control-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+  }
+
+  .tooltip {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #7f8c8d;
+    margin-top: 0.25rem;
+  }
+
+  .slider {
+    width: 100%;
+    margin: 0.5rem 0;
+    height: 8px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: none;
+  }
+
+  .number-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .number-input:focus {
+    outline: none;
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .visualization-section {
+    margin: 2rem 0;
+  }
+
+  .matrix-heatmap {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0 2rem 0;
+  }
+
+  .metric-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .metric-card.accuracy {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  }
+
+  .metric-card.precision {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  }
+
+  .metric-card.recall {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  }
+
+  .metric-card.f1 {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-formula {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-family: 'Courier New', monospace;
+  }
+
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .stat-label {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #667eea;
+  }
+
+  @media (max-width: 768px) {
+    .controls-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .summary-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

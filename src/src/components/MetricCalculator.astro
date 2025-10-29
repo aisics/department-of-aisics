@@ -1,0 +1,398 @@
+---
+export interface Props {
+  title?: string;
+  initialData: string; // JSON string of [{actual, predicted}]
+  height?: number;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Калькулятор метрик / Metric Calculator',
+  initialData,
+  height = 500,
+  darkMode = false
+} = Astro.props;
+
+const componentId = `metric-calc-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="metric-calculator">
+  <div class="calculator-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="calculator-content">
+    <div class="data-section">
+      <h4>Дані / Data</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Фактичне / Actual</th>
+            <th>Прогноз / Predicted</th>
+            <th>Помилка / Error</th>
+          </tr>
+        </thead>
+        <tbody class="data-tbody">
+          <!-- Will be populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="metrics-section">
+      <h4>Метрики / Metrics</h4>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">MAE</div>
+          <div class="metric-value" id={`${componentId}-mae`}>0.00</div>
+          <div class="metric-description">Середня абсолютна помилка</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">MSE</div>
+          <div class="metric-value" id={`${componentId}-mse`}>0.00</div>
+          <div class="metric-description">Середня квадратична помилка</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">RMSE</div>
+          <div class="metric-value" id={`${componentId}-rmse`}>0.00</div>
+          <div class="metric-description">Корінь із MSE</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">R²</div>
+          <div class="metric-value" id={`${componentId}-r2`}>0.000</div>
+          <div class="metric-description">Коефіцієнт детермінації</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="visualization-section">
+      <div class="plot-container"></div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, initialData, height, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(initialData);
+        } catch (e) {
+          console.error('Failed to parse initial data:', e);
+          return;
+        }
+
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const tbody = container.querySelector('.data-tbody');
+        const plotContainer = container.querySelector('.plot-container');
+
+        function calculateMetrics(data) {
+          const n = data.length;
+
+          // Calculate errors
+          const errors = data.map(d => d.actual - d.predicted);
+          const absErrors = errors.map(e => Math.abs(e));
+          const sqErrors = errors.map(e => e * e);
+
+          // MAE
+          const mae = absErrors.reduce((a, b) => a + b, 0) / n;
+
+          // MSE
+          const mse = sqErrors.reduce((a, b) => a + b, 0) / n;
+
+          // RMSE
+          const rmse = Math.sqrt(mse);
+
+          // R²
+          const actualMean = data.reduce((sum, d) => sum + d.actual, 0) / n;
+          const ssTot = data.reduce((sum, d) => sum + Math.pow(d.actual - actualMean, 2), 0);
+          const ssRes = sqErrors.reduce((a, b) => a + b, 0);
+          const r2 = 1 - (ssRes / ssTot);
+
+          return { mae, mse, rmse, r2, errors };
+        }
+
+        function updateDisplay() {
+          const metrics = calculateMetrics(data);
+
+          // Update metric cards
+          container.querySelector(`#${componentId}-mae`).textContent = metrics.mae.toFixed(2);
+          container.querySelector(`#${componentId}-mse`).textContent = metrics.mse.toFixed(2);
+          container.querySelector(`#${componentId}-rmse`).textContent = metrics.rmse.toFixed(2);
+          container.querySelector(`#${componentId}-r2`).textContent = metrics.r2.toFixed(3);
+
+          // Update table
+          tbody.innerHTML = data.map((d, i) => `
+            <tr>
+              <td>${d.actual.toFixed(1)}</td>
+              <td>
+                <input
+                  type="number"
+                  step="0.1"
+                  value="${d.predicted.toFixed(1)}"
+                  data-index="${i}"
+                  class="predicted-input"
+                />
+              </td>
+              <td class="error-cell ${metrics.errors[i] < 0 ? 'negative' : 'positive'}">
+                ${metrics.errors[i].toFixed(2)}
+              </td>
+            </tr>
+          `).join('');
+
+          // Add event listeners to inputs
+          tbody.querySelectorAll('.predicted-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+              const index = parseInt(e.target.dataset.index);
+              data[index].predicted = parseFloat(e.target.value) || 0;
+              updateDisplay();
+            });
+          });
+
+          // Update plot
+          updatePlot();
+        }
+
+        function updatePlot() {
+          const actuals = data.map(d => d.actual);
+          const predicted = data.map(d => d.predicted);
+
+          // Perfect prediction line
+          const minVal = Math.min(...actuals, ...predicted);
+          const maxVal = Math.max(...actuals, ...predicted);
+
+          const plotData = [
+            {
+              x: actuals,
+              y: predicted,
+              mode: 'markers',
+              type: 'scatter',
+              name: 'Прогнози / Predictions',
+              marker: {
+                size: 12,
+                color: '#FF6B6B',
+                opacity: 0.7,
+                line: {
+                  color: '#C92A2A',
+                  width: 2
+                }
+              }
+            },
+            {
+              x: [minVal, maxVal],
+              y: [minVal, maxVal],
+              mode: 'lines',
+              type: 'scatter',
+              name: 'Ідеальна модель / Perfect Model',
+              line: {
+                color: '#4ECDC4',
+                width: 2,
+                dash: 'dash'
+              }
+            }
+          ];
+
+          const layout = {
+            title: {
+              text: 'Фактичні vs Прогнозовані значення',
+              font: { size: 16 }
+            },
+            height: height,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            },
+            xaxis: {
+              title: 'Фактичні значення / Actual Values',
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis: {
+              title: 'Прогнозовані значення / Predicted Values',
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            showlegend: true,
+            legend: {
+              x: 0.02,
+              y: 0.98,
+              bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+            }
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false
+          };
+
+          window.Plotly.newPlot(plotContainer, plotData, layout, config);
+        }
+
+        // Initial render
+        updateDisplay();
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .metric-calculator {
+    margin: 2rem 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .calculator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .calculator-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .calculator-content {
+    padding: 1.5rem;
+    background: white;
+  }
+
+  .data-section,
+  .metrics-section,
+  .visualization-section {
+    margin-bottom: 2rem;
+  }
+
+  .data-section h4,
+  .metrics-section h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+
+  .data-table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+  }
+
+  .predicted-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+
+  .predicted-input:focus {
+    outline: none;
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .error-cell {
+    font-weight: 600;
+  }
+
+  .error-cell.positive {
+    color: #2ecc71;
+  }
+
+  .error-cell.negative {
+    color: #e74c3c;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-description {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .plot-container {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  @media (max-width: 768px) {
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .data-table {
+      font-size: 0.9rem;
+    }
+
+    .predicted-input {
+      width: 60px;
+      font-size: 0.9rem;
+    }
+  }
+</style>

@@ -1,0 +1,677 @@
+---
+export interface Props {
+  title?: string;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Вплив глибини дерева на перенавчання / Tree Depth Impact on Overfitting',
+  darkMode = false
+} = Astro.props;
+
+const componentId = `tree-depth-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="tree-depth-comparison">
+  <div class="comparison-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="comparison-content">
+    <div class="depth-control">
+      <label for={`${componentId}-depth`}>
+        Максимальна глибина дерева / Maximum Tree Depth:
+        <span class="depth-value" id={`${componentId}-depth-display`}>5</span>
+      </label>
+      <input
+        type="range"
+        id={`${componentId}-depth`}
+        min="1"
+        max="20"
+        value="5"
+        class="depth-slider"
+      />
+      <div class="depth-labels">
+        <span>1 (Underfitted)</span>
+        <span>5 (Balanced)</span>
+        <span>20 (Overfitted)</span>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-box train">
+        <div class="metric-icon">📚</div>
+        <div class="metric-label">Training Accuracy</div>
+        <div class="metric-value" id={`${componentId}-train-acc`}>0.850</div>
+        <div class="metric-bar">
+          <div class="bar-fill train-bar" id={`${componentId}-train-bar`}></div>
+        </div>
+      </div>
+
+      <div class="metric-box test">
+        <div class="metric-icon">✅</div>
+        <div class="metric-label">Test Accuracy</div>
+        <div class="metric-value" id={`${componentId}-test-acc`}>0.834</div>
+        <div class="metric-bar">
+          <div class="bar-fill test-bar" id={`${componentId}-test-bar`}></div>
+        </div>
+      </div>
+
+      <div class="metric-box gap">
+        <div class="metric-icon">⚠️</div>
+        <div class="metric-label">Overfitting Gap</div>
+        <div class="metric-value" id={`${componentId}-gap`}>0.016</div>
+        <div class="gap-indicator" id={`${componentId}-gap-indicator`}>✅ Добре / Good</div>
+      </div>
+
+      <div class="metric-box complexity">
+        <div class="metric-icon">🌿</div>
+        <div class="metric-label">Tree Complexity</div>
+        <div class="metric-value" id={`${componentId}-leaves`}>23</div>
+        <div class="complexity-label">листків / leaves</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-container"></div>
+    </div>
+
+    <div class="status-section">
+      <div class="status-card" id={`${componentId}-status`}>
+        <!-- Will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <div class="examples-section">
+      <h4>Типові випадки / Common Cases:</h4>
+      <div class="examples-grid">
+        <button class="example-btn" data-depth="2">
+          <span class="example-depth">Depth = 2</span>
+          <span class="example-label">Underfitted</span>
+        </button>
+        <button class="example-btn" data-depth="5">
+          <span class="example-depth">Depth = 5</span>
+          <span class="example-label">Balanced ⭐</span>
+        </button>
+        <button class="example-btn" data-depth="15">
+          <span class="example-depth">Depth = 15</span>
+          <span class="example-label">Overfitted</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const slider = container.querySelector(`#${componentId}-depth`);
+        const chartContainer = container.querySelector('.chart-container');
+
+        // Simulate realistic accuracy curves based on depth
+        function getAccuracies(depth) {
+          // Training accuracy (increases with depth, plateaus at 1.0)
+          let trainAcc = Math.min(0.65 + (depth * 0.025), 0.998);
+
+          // Test accuracy (increases, peaks around depth 5-7, then decreases)
+          let testAcc;
+          if (depth <= 1) {
+            testAcc = 0.65;
+          } else if (depth <= 5) {
+            testAcc = 0.65 + (depth - 1) * 0.045;
+          } else if (depth <= 10) {
+            testAcc = 0.83 - (depth - 5) * 0.015;
+          } else {
+            testAcc = Math.max(0.70 - (depth - 10) * 0.012, 0.65);
+          }
+
+          // Add some realistic noise
+          trainAcc += (Math.random() - 0.5) * 0.01;
+          testAcc += (Math.random() - 0.5) * 0.015;
+
+          // Number of leaves (exponential growth)
+          const leaves = Math.min(Math.round(Math.pow(2, depth) * 0.7), 500);
+
+          return {
+            train: Math.max(0, Math.min(1, trainAcc)),
+            test: Math.max(0, Math.min(1, testAcc)),
+            gap: Math.abs(trainAcc - testAcc),
+            leaves: leaves
+          };
+        }
+
+        // Get status message based on depth
+        function getStatus(depth, gap) {
+          if (depth <= 2) {
+            return {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Underfitted / Недонавчена',
+              message: 'Дерево занадто просте. Не вловлює патерни в даних.<br>Tree is too simple. Doesn\'t capture patterns in data.'
+            };
+          } else if (depth >= 12) {
+            return {
+              type: 'error',
+              icon: '❌',
+              title: 'Overfitted / Перенавчена',
+              message: 'Дерево занадто складне. Запам\'ятовує навчальні дані.<br>Tree is too complex. Memorizing training data.'
+            };
+          } else if (gap > 0.10) {
+            return {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Starting to Overfit / Починає перенавчатися',
+              message: 'Великий розрив між навчанням та тестуванням.<br>Large gap between training and test accuracy.'
+            };
+          } else {
+            return {
+              type: 'success',
+              icon: '✅',
+              title: 'Well Balanced / Добре збалансована',
+              message: 'Оптимальна глибина. Гарна генералізація.<br>Optimal depth. Good generalization.'
+            };
+          }
+        }
+
+        // Update display
+        function updateDisplay() {
+          const depth = parseInt(slider.value);
+          const acc = getAccuracies(depth);
+
+          // Update text values
+          container.querySelector(`#${componentId}-depth-display`).textContent = depth;
+          container.querySelector(`#${componentId}-train-acc`).textContent = acc.train.toFixed(3);
+          container.querySelector(`#${componentId}-test-acc`).textContent = acc.test.toFixed(3);
+          container.querySelector(`#${componentId}-gap`).textContent = acc.gap.toFixed(3);
+          container.querySelector(`#${componentId}-leaves`).textContent = acc.leaves;
+
+          // Update bars
+          container.querySelector(`#${componentId}-train-bar`).style.width = `${acc.train * 100}%`;
+          container.querySelector(`#${componentId}-test-bar`).style.width = `${acc.test * 100}%`;
+
+          // Update gap indicator
+          const gapIndicator = container.querySelector(`#${componentId}-gap-indicator`);
+          if (acc.gap < 0.05) {
+            gapIndicator.textContent = '✅ Добре / Good';
+            gapIndicator.className = 'gap-indicator good';
+          } else if (acc.gap < 0.10) {
+            gapIndicator.textContent = '⚠️ Помірно / Moderate';
+            gapIndicator.className = 'gap-indicator moderate';
+          } else {
+            gapIndicator.textContent = '❌ Погано / Bad';
+            gapIndicator.className = 'gap-indicator bad';
+          }
+
+          // Update status
+          const status = getStatus(depth, acc.gap);
+          const statusCard = container.querySelector(`#${componentId}-status`);
+          statusCard.className = `status-card ${status.type}`;
+          statusCard.innerHTML = `
+            <div class="status-icon">${status.icon}</div>
+            <div class="status-title">${status.title}</div>
+            <div class="status-message">${status.message}</div>
+          `;
+
+          // Update chart
+          updateChart(depth);
+        }
+
+        // Create learning curve chart
+        function updateChart(currentDepth) {
+          const depths = [];
+          const trainAccs = [];
+          const testAccs = [];
+
+          for (let d = 1; d <= 20; d++) {
+            depths.push(d);
+            const acc = getAccuracies(d);
+            trainAccs.push(acc.train);
+            testAccs.push(acc.test);
+          }
+
+          const currentAcc = getAccuracies(currentDepth);
+
+          const traces = [
+            {
+              x: depths,
+              y: trainAccs,
+              type: 'scatter',
+              mode: 'lines',
+              name: 'Training Accuracy',
+              line: {
+                color: '#3498db',
+                width: 3
+              }
+            },
+            {
+              x: depths,
+              y: testAccs,
+              type: 'scatter',
+              mode: 'lines',
+              name: 'Test Accuracy',
+              line: {
+                color: '#e74c3c',
+                width: 3
+              }
+            },
+            {
+              x: [currentDepth],
+              y: [currentAcc.train],
+              type: 'scatter',
+              mode: 'markers',
+              name: 'Current',
+              marker: {
+                size: 14,
+                color: '#3498db',
+                symbol: 'circle',
+                line: {
+                  color: 'white',
+                  width: 3
+                }
+              },
+              showlegend: false
+            },
+            {
+              x: [currentDepth],
+              y: [currentAcc.test],
+              type: 'scatter',
+              mode: 'markers',
+              marker: {
+                size: 14,
+                color: '#e74c3c',
+                symbol: 'circle',
+                line: {
+                  color: 'white',
+                  width: 3
+                }
+              },
+              showlegend: false
+            }
+          ];
+
+          const layout = {
+            title: {
+              text: 'Learning Curve: Accuracy vs Tree Depth',
+              font: { size: 16 }
+            },
+            xaxis: {
+              title: 'Maximum Tree Depth',
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis: {
+              title: 'Accuracy',
+              range: [0.60, 1.02],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            height: 400,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            },
+            showlegend: true,
+            legend: {
+              x: 0.02,
+              y: 0.98,
+              bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+            },
+            annotations: [
+              {
+                x: 5,
+                y: 0.85,
+                xref: 'x',
+                yref: 'y',
+                text: 'Optimal<br>Depth',
+                showarrow: true,
+                arrowhead: 2,
+                ax: 30,
+                ay: -40,
+                font: {
+                  size: 12,
+                  color: '#2ecc71'
+                },
+                arrowcolor: '#2ecc71'
+              }
+            ]
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+          };
+
+          window.Plotly.newPlot(chartContainer, traces, layout, config);
+        }
+
+        // Event listeners
+        slider.addEventListener('input', updateDisplay);
+
+        // Example buttons
+        const exampleButtons = container.querySelectorAll('.example-btn');
+        exampleButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const depth = parseInt(btn.dataset.depth);
+            slider.value = depth;
+            updateDisplay();
+          });
+        });
+
+        // Initial render
+        updateDisplay();
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .tree-depth-comparison {
+    margin: 2rem 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .comparison-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .comparison-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .comparison-content {
+    padding: 2rem;
+    background: white;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .depth-control {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+
+  .depth-control label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+
+  .depth-value {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    font-family: monospace;
+    font-size: 1.3rem;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .depth-slider {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #e74c3c 0%, #f39c12 25%, #2ecc71 40%, #f39c12 60%, #e74c3c 100%);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .depth-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .depth-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .depth-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .metric-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .metric-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .metric-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0.5rem 0;
+  }
+
+  .metric-bar {
+    width: 100%;
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .train-bar {
+    background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+  }
+
+  .test-bar {
+    background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  .gap-indicator {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .gap-indicator.good {
+    background: #d5f4e6;
+    color: #27ae60;
+  }
+
+  .gap-indicator.moderate {
+    background: #ffeaa7;
+    color: #f39c12;
+  }
+
+  .gap-indicator.bad {
+    background: #ffcdd2;
+    color: #e74c3c;
+  }
+
+  .complexity-label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 0.25rem;
+  }
+
+  .chart-section {
+    margin: 2rem 0;
+  }
+
+  .chart-container {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  .status-section {
+    margin: 2rem 0;
+  }
+
+  .status-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 6px solid;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .status-card.success {
+    background: #d5f4e6;
+    border-left-color: #27ae60;
+  }
+
+  .status-card.warning {
+    background: #ffeaa7;
+    border-left-color: #f39c12;
+  }
+
+  .status-card.error {
+    background: #ffcdd2;
+    border-left-color: #e74c3c;
+  }
+
+  .status-icon {
+    font-size: 3rem;
+  }
+
+  .status-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .status-message {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .examples-section {
+    margin-top: 2rem;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+
+  .examples-section h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+  }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .example-btn {
+    background: white;
+    border: 2px solid #667eea;
+    padding: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .example-btn:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .example-depth {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .example-label {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 768px) {
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .status-card {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .examples-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

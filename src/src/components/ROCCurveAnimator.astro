@@ -1,0 +1,610 @@
+---
+export interface Props {
+  title?: string;
+  modelData: string; // JSON string of [{actual: 0/1, probability: 0-1}]
+  height?: number;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'ROC-крива та вибір порогу / ROC Curve & Threshold Selection',
+  modelData,
+  height = 500,
+  darkMode = false
+} = Astro.props;
+
+const componentId = `roc-curve-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="roc-curve-animator">
+  <div class="animator-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="animator-content">
+    <div class="threshold-control">
+      <div class="threshold-header">
+        <label for={`${componentId}-threshold`}>
+          Поріг класифікації / Classification Threshold:
+          <span class="threshold-value" id={`${componentId}-threshold-display`}>0.50</span>
+        </label>
+      </div>
+      <input
+        type="range"
+        id={`${componentId}-threshold`}
+        min="0"
+        max="1"
+        step="0.01"
+        value="0.5"
+        class="threshold-slider"
+      />
+      <div class="threshold-labels">
+        <span>0.0 (все Positive)</span>
+        <span>1.0 (все Negative)</span>
+      </div>
+    </div>
+
+    <div class="visualization-grid">
+      <div class="roc-plot-container"></div>
+      <div class="metrics-panel">
+        <h4>Метрики при поточному порозі</h4>
+
+        <div class="metric-display">
+          <div class="metric-row">
+            <span class="metric-name">TPR (True Positive Rate)</span>
+            <span class="metric-value tpr" id={`${componentId}-tpr`}>0.00%</span>
+          </div>
+          <div class="metric-description">Recall = TP / (TP + FN)</div>
+        </div>
+
+        <div class="metric-display">
+          <div class="metric-row">
+            <span class="metric-name">FPR (False Positive Rate)</span>
+            <span class="metric-value fpr" id={`${componentId}-fpr`}>0.00%</span>
+          </div>
+          <div class="metric-description">FP / (FP + TN)</div>
+        </div>
+
+        <div class="metric-display">
+          <div class="metric-row">
+            <span class="metric-name">Precision</span>
+            <span class="metric-value precision" id={`${componentId}-precision`}>0.00%</span>
+          </div>
+          <div class="metric-description">TP / (TP + FP)</div>
+        </div>
+
+        <div class="metric-display">
+          <div class="metric-row">
+            <span class="metric-name">F1-Score</span>
+            <span class="metric-value f1" id={`${componentId}-f1`}>0.00%</span>
+          </div>
+          <div class="metric-description">2 × (P × R) / (P + R)</div>
+        </div>
+
+        <div class="auc-display">
+          <div class="auc-label">AUC (Area Under Curve)</div>
+          <div class="auc-value" id={`${componentId}-auc`}>0.000</div>
+          <div class="auc-interpretation" id={`${componentId}-auc-interpretation`}>
+            Calculating...
+          </div>
+        </div>
+
+        <div class="confusion-preview">
+          <h5>Матриця плутанини / Confusion Matrix</h5>
+          <div class="confusion-grid">
+            <div class="confusion-cell tp">
+              <div class="cell-label">TP</div>
+              <div class="cell-value" id={`${componentId}-tp`}>0</div>
+            </div>
+            <div class="confusion-cell fp">
+              <div class="cell-label">FP</div>
+              <div class="cell-value" id={`${componentId}-fp`}>0</div>
+            </div>
+            <div class="confusion-cell fn">
+              <div class="cell-label">FN</div>
+              <div class="cell-value" id={`${componentId}-fn`}>0</div>
+            </div>
+            <div class="confusion-cell tn">
+              <div class="cell-label">TN</div>
+              <div class="cell-value" id={`${componentId}-tn`}>0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, modelData, height, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(modelData);
+        } catch (e) {
+          console.error('Failed to parse model data:', e);
+          return;
+        }
+
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const plotContainer = container.querySelector('.roc-plot-container');
+        const thresholdSlider = container.querySelector(`#${componentId}-threshold`);
+
+        // Sort data by probability descending
+        data.sort((a, b) => b.probability - a.probability);
+
+        // Calculate ROC curve points
+        function calculateROCCurve() {
+          const rocPoints = [];
+          const totalPositive = data.filter(d => d.actual === 1).length;
+          const totalNegative = data.filter(d => d.actual === 0).length;
+
+          // Start point (threshold = 1.0, predict all negative)
+          rocPoints.push({ threshold: 1.0, fpr: 0, tpr: 0, tp: 0, fp: 0, fn: totalPositive, tn: totalNegative });
+
+          // Calculate for each unique threshold
+          let tp = 0, fp = 0;
+          data.forEach((point, i) => {
+            if (point.actual === 1) tp++;
+            else fp++;
+
+            const tpr = tp / totalPositive;
+            const fpr = fp / totalNegative;
+            const fn = totalPositive - tp;
+            const tn = totalNegative - fp;
+
+            rocPoints.push({
+              threshold: point.probability,
+              fpr,
+              tpr,
+              tp,
+              fp,
+              fn,
+              tn
+            });
+          });
+
+          // End point (threshold = 0.0, predict all positive)
+          rocPoints.push({ threshold: 0.0, fpr: 1, tpr: 1, tp: totalPositive, fp: totalNegative, fn: 0, tn: 0 });
+
+          return rocPoints;
+        }
+
+        const rocPoints = calculateROCCurve();
+
+        // Calculate AUC using trapezoidal rule
+        function calculateAUC(points) {
+          let auc = 0;
+          for (let i = 1; i < points.length; i++) {
+            const width = points[i].fpr - points[i-1].fpr;
+            const height = (points[i].tpr + points[i-1].tpr) / 2;
+            auc += width * height;
+          }
+          return auc;
+        }
+
+        const auc = calculateAUC(rocPoints);
+
+        function getAUCInterpretation(auc) {
+          if (auc >= 0.9) return '🌟 Відмінна модель / Excellent Model';
+          if (auc >= 0.8) return '✅ Хороша модель / Good Model';
+          if (auc >= 0.7) return '👍 Прийнятна модель / Acceptable Model';
+          if (auc >= 0.6) return '⚠️ Слабка модель / Poor Model';
+          if (auc >= 0.5) return '❌ Дуже слабка / Very Poor';
+          return '💀 Гірше за випадкову / Worse than Random';
+        }
+
+        // Find closest ROC point for given threshold
+        function findROCPoint(threshold) {
+          let closest = rocPoints[0];
+          let minDiff = Math.abs(rocPoints[0].threshold - threshold);
+
+          for (const point of rocPoints) {
+            const diff = Math.abs(point.threshold - threshold);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = point;
+            }
+          }
+
+          return closest;
+        }
+
+        function updateMetrics(threshold) {
+          const point = findROCPoint(threshold);
+
+          const { tp, tn, fp, fn, tpr, fpr } = point;
+
+          const precision = (tp + fp) > 0 ? tp / (tp + fp) : 0;
+          const recall = tpr;
+          const f1 = (precision + recall) > 0 ? 2 * precision * recall / (precision + recall) : 0;
+
+          // Update displays
+          container.querySelector(`#${componentId}-threshold-display`).textContent = threshold.toFixed(2);
+          container.querySelector(`#${componentId}-tpr`).textContent = (tpr * 100).toFixed(2) + '%';
+          container.querySelector(`#${componentId}-fpr`).textContent = (fpr * 100).toFixed(2) + '%';
+          container.querySelector(`#${componentId}-precision`).textContent = (precision * 100).toFixed(2) + '%';
+          container.querySelector(`#${componentId}-f1`).textContent = (f1 * 100).toFixed(2) + '%';
+
+          container.querySelector(`#${componentId}-tp`).textContent = tp;
+          container.querySelector(`#${componentId}-fp`).textContent = fp;
+          container.querySelector(`#${componentId}-fn`).textContent = fn;
+          container.querySelector(`#${componentId}-tn`).textContent = tn;
+
+          // Update plot with current point
+          updatePlot(threshold, point);
+        }
+
+        function updatePlot(threshold, currentPoint) {
+          const fprValues = rocPoints.map(p => p.fpr);
+          const tprValues = rocPoints.map(p => p.tpr);
+
+          const traces = [
+            // ROC Curve
+            {
+              x: fprValues,
+              y: tprValues,
+              mode: 'lines',
+              type: 'scatter',
+              name: `ROC Curve (AUC = ${auc.toFixed(3)})`,
+              line: {
+                color: '#667eea',
+                width: 3
+              },
+              fill: 'tonexty',
+              fillcolor: 'rgba(102, 126, 234, 0.2)'
+            },
+            // Random Classifier Line
+            {
+              x: [0, 1],
+              y: [0, 1],
+              mode: 'lines',
+              type: 'scatter',
+              name: 'Випадковий класифікатор / Random',
+              line: {
+                color: '#95a5a6',
+                width: 2,
+                dash: 'dash'
+              }
+            },
+            // Current threshold point
+            {
+              x: [currentPoint.fpr],
+              y: [currentPoint.tpr],
+              mode: 'markers',
+              type: 'scatter',
+              name: `Поріг = ${threshold.toFixed(2)}`,
+              marker: {
+                size: 15,
+                color: '#e74c3c',
+                symbol: 'circle',
+                line: {
+                  color: 'white',
+                  width: 3
+                }
+              }
+            }
+          ];
+
+          const layout = {
+            title: {
+              text: 'ROC Крива / ROC Curve',
+              font: { size: 18 }
+            },
+            xaxis: {
+              title: 'False Positive Rate (FPR)',
+              range: [0, 1],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis: {
+              title: 'True Positive Rate (TPR)',
+              range: [0, 1],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            height: height,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            },
+            showlegend: true,
+            legend: {
+              x: 0.6,
+              y: 0.1,
+              bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+            },
+            hovermode: 'closest'
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false
+          };
+
+          window.Plotly.newPlot(plotContainer, traces, layout, config);
+        }
+
+        // Set AUC display
+        container.querySelector(`#${componentId}-auc`).textContent = auc.toFixed(3);
+        container.querySelector(`#${componentId}-auc-interpretation`).textContent = getAUCInterpretation(auc);
+
+        // Threshold slider event
+        thresholdSlider.addEventListener('input', (e) => {
+          const threshold = parseFloat(e.target.value);
+          updateMetrics(threshold);
+        });
+
+        // Initial render
+        updateMetrics(0.5);
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .roc-curve-animator {
+    margin: 2rem 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .animator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .animator-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .animator-content {
+    padding: 1.5rem;
+  }
+
+  .threshold-control {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+
+  .threshold-header {
+    margin-bottom: 1rem;
+  }
+
+  .threshold-header label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .threshold-value {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    font-family: monospace;
+    font-size: 1.2rem;
+  }
+
+  .threshold-slider {
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #e74c3c 0%, #f39c12 50%, #2ecc71 100%);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .threshold-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .threshold-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .threshold-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+
+  .visualization-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .roc-plot-container {
+    width: 100%;
+    min-height: 500px;
+  }
+
+  .metrics-panel {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+
+  .metrics-panel h4 {
+    margin: 0 0 1.5rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  .metrics-panel h5 {
+    margin: 1.5rem 0 0.75rem 0;
+    color: #2c3e50;
+    font-size: 1rem;
+  }
+
+  .metric-display {
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+  }
+
+  .metric-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .metric-value.tpr {
+    color: #2ecc71;
+  }
+
+  .metric-value.fpr {
+    color: #e74c3c;
+  }
+
+  .metric-value.precision {
+    color: #3498db;
+  }
+
+  .metric-value.f1 {
+    color: #9b59b6;
+  }
+
+  .metric-description {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    font-family: 'Courier New', monospace;
+  }
+
+  .auc-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+
+  .auc-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+  }
+
+  .auc-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .auc-interpretation {
+    font-size: 0.85rem;
+    opacity: 0.95;
+  }
+
+  .confusion-preview {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .confusion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .confusion-cell {
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  .confusion-cell.tp {
+    background: #2ecc71;
+    color: white;
+  }
+
+  .confusion-cell.tn {
+    background: #3498db;
+    color: white;
+  }
+
+  .confusion-cell.fp {
+    background: #e74c3c;
+    color: white;
+  }
+
+  .confusion-cell.fn {
+    background: #f39c12;
+    color: white;
+  }
+
+  .cell-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin-bottom: 0.25rem;
+  }
+
+  .cell-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 1024px) {
+    .visualization-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .roc-plot-container {
+      min-height: 400px;
+    }
+  }
+</style>

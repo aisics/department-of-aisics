@@ -1,0 +1,572 @@
+---
+export interface Props {
+  title?: string;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Порівняння Gini vs Entropy / Comparing Gini vs Entropy',
+  darkMode = false
+} = Astro.props;
+
+const componentId = `splitting-criteria-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="splitting-criteria-compare">
+  <div class="compare-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="compare-content">
+    <div class="controls-section">
+      <div class="control-group">
+        <label for={`${componentId}-large-pct`}>
+          Відсоток "Великих" замовлень / Percentage of "Large" orders:
+          <span class="value-display" id={`${componentId}-large-display`}>50%</span>
+        </label>
+        <input
+          type="range"
+          id={`${componentId}-large-pct`}
+          min="0"
+          max="100"
+          value="50"
+          class="slider"
+        />
+      </div>
+
+      <div class="sample-preview">
+        <div class="preview-label">Візуалізація мішка / Bag Visualization:</div>
+        <div class="bag-container" id={`${componentId}-bag`}>
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <div class="metrics-section">
+      <div class="metric-card gini">
+        <div class="metric-icon">📊</div>
+        <div class="metric-name">Gini Impurity</div>
+        <div class="metric-value" id={`${componentId}-gini`}>0.500</div>
+        <div class="metric-formula">1 - (P²_large + P²_small)</div>
+        <div class="metric-range">Діапазон / Range: 0.0 - 0.5</div>
+      </div>
+
+      <div class="metric-card entropy">
+        <div class="metric-icon">🔢</div>
+        <div class="metric-name">Entropy</div>
+        <div class="metric-value" id={`${componentId}-entropy`}>1.000</div>
+        <div class="metric-formula">-Σ P × log₂(P)</div>
+        <div class="metric-range">Діапазон / Range: 0.0 - 1.0</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-container"></div>
+    </div>
+
+    <div class="interpretation-section">
+      <h4>Інтерпретація / Interpretation</h4>
+      <div class="interpretation-content" id={`${componentId}-interpretation`}>
+        <!-- Will be populated by JavaScript -->
+      </div>
+
+      <div class="key-insights">
+        <h5>Ключові інсайти / Key Insights:</h5>
+        <ul>
+          <li>✅ Обидві метрики вимірюють "безлад" або "нечистоту"</li>
+          <li>✅ Both metrics measure "disorder" or "impurity"</li>
+          <li>📉 Нижче значення = краще (більш організовано)</li>
+          <li>📉 Lower value = better (more organized)</li>
+          <li>🎯 Gini швидше обчислюється (sklearn default)</li>
+          <li>🎯 Gini is faster to compute (sklearn default)</li>
+          <li>🔬 Entropy трохи точніша теоретично</li>
+          <li>🔬 Entropy is slightly more accurate theoretically</li>
+          <li>💡 На практиці різниця мінімальна (корел. ≈ 0.98)</li>
+          <li>💡 In practice, difference is minimal (corr. ≈ 0.98)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const slider = container.querySelector(`#${componentId}-large-pct`);
+        const chartContainer = container.querySelector('.chart-container');
+
+        // Calculate Gini impurity
+        function calculateGini(pLarge) {
+          const pSmall = 1 - pLarge;
+          return 1 - (pLarge * pLarge + pSmall * pSmall);
+        }
+
+        // Calculate Entropy
+        function calculateEntropy(pLarge) {
+          const pSmall = 1 - pLarge;
+          if (pLarge === 0 || pLarge === 1) return 0;
+
+          const entropyLarge = pLarge > 0 ? -pLarge * Math.log2(pLarge) : 0;
+          const entropySmall = pSmall > 0 ? -pSmall * Math.log2(pSmall) : 0;
+          return entropyLarge + entropySmall;
+        }
+
+        // Update bag visualization
+        function updateBag(percentage) {
+          const bagContainer = container.querySelector(`#${componentId}-bag`);
+          const numItems = 20;
+          const numLarge = Math.round((percentage / 100) * numItems);
+
+          let html = '';
+          for (let i = 0; i < numItems; i++) {
+            if (i < numLarge) {
+              html += '<span class="bag-item large" title="Large">B</span>';
+            } else {
+              html += '<span class="bag-item small" title="Small">M</span>';
+            }
+          }
+          bagContainer.innerHTML = html;
+        }
+
+        // Get interpretation text
+        function getInterpretation(percentage, gini, entropy) {
+          if (percentage === 0 || percentage === 100) {
+            return `<strong>Ідеально чисто! / Perfectly Pure!</strong><br>
+                    Всі замовлення одного розміру. Немає невизначеності.<br>
+                    All orders are the same size. No uncertainty.`;
+          } else if (percentage === 50) {
+            return `<strong>Максимальний хаос! / Maximum Chaos!</strong><br>
+                    50-50 розподіл. Найвища невизначеність.<br>
+                    50-50 split. Highest uncertainty.`;
+          } else if (percentage < 20 || percentage > 80) {
+            return `<strong>Переважно один клас / Mostly one class</strong><br>
+                    Відносно низька невизначеність. Один клас домінує.<br>
+                    Relatively low uncertainty. One class dominates.`;
+          } else {
+            return `<strong>Змішаний розподіл / Mixed distribution</strong><br>
+                    Помірна невизначеність. Обидва класи присутні.<br>
+                    Moderate uncertainty. Both classes are present.`;
+          }
+        }
+
+        // Update display
+        function updateDisplay() {
+          const percentage = parseInt(slider.value);
+          const pLarge = percentage / 100;
+
+          const gini = calculateGini(pLarge);
+          const entropy = calculateEntropy(pLarge);
+
+          // Update displays
+          container.querySelector(`#${componentId}-large-display`).textContent = `${percentage}%`;
+          container.querySelector(`#${componentId}-gini`).textContent = gini.toFixed(3);
+          container.querySelector(`#${componentId}-entropy`).textContent = entropy.toFixed(3);
+          container.querySelector(`#${componentId}-interpretation`).innerHTML =
+            getInterpretation(percentage, gini, entropy);
+
+          // Update bag
+          updateBag(percentage);
+
+          // Update chart
+          updateChart();
+        }
+
+        // Create comparison chart
+        function updateChart() {
+          const percentages = [];
+          const giniValues = [];
+          const entropyValues = [];
+
+          for (let p = 0; p <= 100; p += 1) {
+            percentages.push(p);
+            const pLarge = p / 100;
+            giniValues.push(calculateGini(pLarge));
+            entropyValues.push(calculateEntropy(pLarge));
+          }
+
+          const currentPct = parseInt(slider.value);
+          const currentPLarge = currentPct / 100;
+
+          const traces = [
+            {
+              x: percentages,
+              y: giniValues,
+              type: 'scatter',
+              mode: 'lines',
+              name: 'Gini Impurity',
+              line: {
+                color: '#e74c3c',
+                width: 3
+              }
+            },
+            {
+              x: percentages,
+              y: entropyValues,
+              type: 'scatter',
+              mode: 'lines',
+              name: 'Entropy',
+              line: {
+                color: '#3498db',
+                width: 3
+              },
+              yaxis: 'y2'
+            },
+            {
+              x: [currentPct],
+              y: [calculateGini(currentPLarge)],
+              type: 'scatter',
+              mode: 'markers',
+              name: 'Current (Gini)',
+              marker: {
+                size: 12,
+                color: '#c0392b',
+                symbol: 'circle',
+                line: {
+                  color: 'white',
+                  width: 2
+                }
+              },
+              showlegend: false
+            },
+            {
+              x: [currentPct],
+              y: [calculateEntropy(currentPLarge)],
+              type: 'scatter',
+              mode: 'markers',
+              name: 'Current (Entropy)',
+              marker: {
+                size: 12,
+                color: '#2980b9',
+                symbol: 'circle',
+                line: {
+                  color: 'white',
+                  width: 2
+                }
+              },
+              yaxis: 'y2',
+              showlegend: false
+            }
+          ];
+
+          const layout = {
+            title: {
+              text: 'Gini vs Entropy Comparison',
+              font: { size: 16 }
+            },
+            xaxis: {
+              title: 'Percentage of Large Orders (%)',
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis: {
+              title: 'Gini Impurity',
+              titlefont: { color: '#e74c3c' },
+              tickfont: { color: '#e74c3c' },
+              range: [0, 0.55],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis2: {
+              title: 'Entropy',
+              titlefont: { color: '#3498db' },
+              tickfont: { color: '#3498db' },
+              overlaying: 'y',
+              side: 'right',
+              range: [0, 1.1],
+              showgrid: false
+            },
+            height: 400,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            },
+            showlegend: true,
+            legend: {
+              x: 0.5,
+              y: 1.15,
+              xanchor: 'center',
+              orientation: 'h',
+              bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+            },
+            hovermode: 'closest'
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+          };
+
+          window.Plotly.newPlot(chartContainer, traces, layout, config);
+        }
+
+        // Event listener
+        slider.addEventListener('input', updateDisplay);
+
+        // Initial render
+        updateDisplay();
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .splitting-criteria-compare {
+    margin: 2rem 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .compare-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .compare-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .compare-content {
+    padding: 2rem;
+    background: white;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .controls-section {
+    margin-bottom: 2rem;
+  }
+
+  .control-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .control-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+  }
+
+  .value-display {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    font-family: monospace;
+    font-size: 1.1rem;
+  }
+
+  .slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #e74c3c 0%, #f39c12 50%, #2ecc71 100%);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .sample-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .preview-label {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  }
+
+  .bag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .bag-item {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    cursor: help;
+    transition: transform 0.2s;
+  }
+
+  .bag-item:hover {
+    transform: scale(1.1);
+  }
+
+  .bag-item.large {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .bag-item.small {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .metrics-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .metric-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .metric-card.gini {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  .metric-card.entropy {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  }
+
+  .metric-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+
+  .metric-formula {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    font-family: 'Courier New', monospace;
+    margin: 0.5rem 0;
+  }
+
+  .metric-range {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .chart-section {
+    margin: 2rem 0;
+  }
+
+  .chart-container {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  .interpretation-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+  }
+
+  .interpretation-section h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  .interpretation-content {
+    padding: 1rem;
+    background: white;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .key-insights h5 {
+    margin: 0 0 0.75rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+
+  .key-insights ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .key-insights li {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  @media (max-width: 768px) {
+    .metrics-section {
+      grid-template-columns: 1fr;
+    }
+
+    .bag-item {
+      width: 30px;
+      height: 30px;
+      font-size: 1rem;
+    }
+  }
+</style>

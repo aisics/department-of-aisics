@@ -1,0 +1,736 @@
+---
+export interface Props {
+  title?: string;
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Побудуйте дерево рішень / Build a Decision Tree',
+  darkMode = false
+} = Astro.props;
+
+const componentId = `tree-builder-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="tree-builder">
+  <div class="builder-header">
+    <h3>{title}</h3>
+    <p class="header-subtitle">
+      Додавайте розділення і дивіться, як дерево вчиться класифікувати замовлення піци
+      / Add splits and watch the tree learn to classify pizza orders
+    </p>
+  </div>
+
+  <div class="builder-content">
+    <div class="controls-panel">
+      <div class="metrics-display">
+        <div class="metric">
+          <span class="metric-label">Current Entropy:</span>
+          <span class="metric-value" id={`${componentId}-entropy`}>1.000</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Current Gini:</span>
+          <span class="metric-value" id={`${componentId}-gini`}>0.500</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Accuracy:</span>
+          <span class="metric-value" id={`${componentId}-accuracy`}>50%</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Splits:</span>
+          <span class="metric-value" id={`${componentId}-splits`}>0</span>
+        </div>
+      </div>
+
+      <div class="split-controls">
+        <h4>Додати розділення / Add Split:</h4>
+        <div class="split-buttons">
+          <button class="split-btn temp" data-feature="temperature" data-value="15">
+            🌡️ Temperature &lt; 15°C
+          </button>
+          <button class="split-btn friday" data-feature="friday" data-value="1">
+            📅 is_friday_evening = Yes
+          </button>
+          <button class="split-btn rolling" data-feature="rolling" data-value="25">
+            📊 rolling_avg &lt; 25
+          </button>
+          <button class="split-btn peak" data-feature="peak" data-value="1">
+            ⏰ is_peak_hour = Yes
+          </button>
+        </div>
+
+        <button class="reset-btn" id={`${componentId}-reset`}>
+          🔄 Скинути / Reset
+        </button>
+      </div>
+
+      <div class="tree-visualization">
+        <h4>Структура дерева / Tree Structure:</h4>
+        <div class="tree-display" id={`${componentId}-tree`}>
+          <svg id={`${componentId}-tree-svg`} width="100%" height="400">
+            <!-- Tree will be drawn here dynamically -->
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="visualization-panel">
+      <div class="plot-container"></div>
+
+      <div class="legend">
+        <h5>Легенда / Legend:</h5>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-marker large"></span>
+            <span>Велике замовлення / Large Order</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker small"></span>
+            <span>Мале замовлення / Small Order</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        const container = document.querySelector(`#${componentId}`);
+        if (!container) return;
+
+        const plotContainer = container.querySelector('.plot-container');
+
+        // Generate synthetic pizza order data
+        function generateData(n = 100) {
+          const data = [];
+          for (let i = 0; i < n; i++) {
+            const temp = Math.random() * 35;
+            const isFriday = Math.random() < 0.15 ? 1 : 0;
+            const isPeak = Math.random() < 0.3 ? 1 : 0;
+            const rolling = 15 + Math.random() * 20;
+
+            // Determine if large order (simplified logic)
+            const score = (isFriday * 15) + (isPeak * 8) + (-0.3 * temp) + (0.5 * rolling);
+            const isLarge = score + (Math.random() - 0.5) * 10 > 30 ? 1 : 0;
+
+            data.push({
+              temperature: temp,
+              isFriday,
+              isPeak,
+              rolling,
+              isLarge
+            });
+          }
+          return data;
+        }
+
+        let dataset = generateData(100);
+        let splits = [];
+
+        // Calculate metrics
+        function calculateMetrics(data) {
+          const numLarge = data.filter(d => d.isLarge === 1).length;
+          const numSmall = data.filter(d => d.isLarge === 0).length;
+          const total = data.length;
+
+          if (total === 0) {
+            return { entropy: 0, gini: 0, accuracy: 0, numLarge, numSmall };
+          }
+
+          const pLarge = numLarge / total;
+          const pSmall = numSmall / total;
+
+          // Entropy
+          const entropy = pLarge > 0 && pSmall > 0
+            ? -(pLarge * Math.log2(pLarge) + pSmall * Math.log2(pSmall))
+            : 0;
+
+          // Gini
+          const gini = 1 - (pLarge * pLarge + pSmall * pSmall);
+
+          // Accuracy (predict majority class)
+          const accuracy = Math.max(numLarge, numSmall) / total;
+
+          return { entropy, gini, accuracy, numLarge, numSmall };
+        }
+
+        // Apply splits to get prediction
+        function getPrediction(point, splits) {
+          for (const split of splits) {
+            if (split.feature === 'temperature' && point.temperature < split.value) {
+              return split.prediction || 0;
+            } else if (split.feature === 'friday' && point.isFriday === split.value) {
+              return split.prediction || 1;
+            } else if (split.feature === 'rolling' && point.rolling < split.value) {
+              return split.prediction || 1;
+            } else if (split.feature === 'peak' && point.isPeak === split.value) {
+              return split.prediction || 1;
+            }
+          }
+          // Default prediction
+          return dataset.filter(d => d.isLarge === 1).length > dataset.length / 2 ? 1 : 0;
+        }
+
+        // Update display
+        function updateDisplay() {
+          const metrics = calculateMetrics(dataset);
+
+          container.querySelector(`#${componentId}-entropy`).textContent = metrics.entropy.toFixed(3);
+          container.querySelector(`#${componentId}-gini`).textContent = metrics.gini.toFixed(3);
+          container.querySelector(`#${componentId}-accuracy`).textContent = (metrics.accuracy * 100).toFixed(0) + '%';
+          container.querySelector(`#${componentId}-splits`).textContent = splits.length;
+
+          updatePlot();
+          updateTree();
+        }
+
+        // Update plot
+        function updatePlot() {
+          const largePts = dataset.filter(d => d.isLarge === 1);
+          const smallPts = dataset.filter(d => d.isLarge === 0);
+
+          const traces = [
+            {
+              x: smallPts.map(d => d.temperature),
+              y: smallPts.map(d => d.rolling),
+              mode: 'markers',
+              type: 'scatter',
+              name: 'Мале / Small',
+              marker: {
+                size: 10,
+                color: '#f093fb',
+                opacity: 0.7,
+                line: {
+                  color: '#f5576c',
+                  width: 1
+                }
+              }
+            },
+            {
+              x: largePts.map(d => d.temperature),
+              y: largePts.map(d => d.rolling),
+              mode: 'markers',
+              type: 'scatter',
+              name: 'Велике / Large',
+              marker: {
+                size: 10,
+                color: '#667eea',
+                opacity: 0.7,
+                line: {
+                  color: '#764ba2',
+                  width: 1
+                }
+              }
+            }
+          ];
+
+          // Add split lines
+          splits.forEach((split, idx) => {
+            if (split.feature === 'temperature') {
+              traces.push({
+                x: [split.value, split.value],
+                y: [10, 40],
+                mode: 'lines',
+                type: 'scatter',
+                name: `Split ${idx + 1}: temp<${split.value}°C`,
+                line: {
+                  color: '#e74c3c',
+                  width: 3,
+                  dash: 'dash'
+                },
+                showlegend: false
+              });
+            } else if (split.feature === 'rolling') {
+              traces.push({
+                x: [0, 35],
+                y: [split.value, split.value],
+                mode: 'lines',
+                type: 'scatter',
+                name: `Split ${idx + 1}: rolling<${split.value}`,
+                line: {
+                  color: '#3498db',
+                  width: 3,
+                  dash: 'dash'
+                },
+                showlegend: false
+              });
+            }
+          });
+
+          const layout = {
+            title: {
+              text: 'Температура vs Середній продаж (3 год)',
+              font: { size: 16 }
+            },
+            xaxis: {
+              title: 'Температура (°C) / Temperature',
+              range: [0, 35],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            yaxis: {
+              title: 'Середній продаж (3 год) / Rolling Avg (3h)',
+              range: [10, 40],
+              showgrid: true,
+              gridcolor: darkMode ? '#444' : '#ddd'
+            },
+            height: 500,
+            paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+            plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+            font: {
+              color: darkMode ? '#ffffff' : '#000000'
+            },
+            showlegend: true,
+            legend: {
+              x: 0.02,
+              y: 0.98,
+              bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+            },
+            hovermode: 'closest'
+          };
+
+          const config = {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+          };
+
+          window.Plotly.newPlot(plotContainer, traces, layout, config);
+        }
+
+        // Update tree visualization with improved D3-style rendering
+        function updateTree() {
+          const svg = container.querySelector(`#${componentId}-tree-svg`);
+          svg.innerHTML = ''; // Clear previous tree
+
+          const width = 350;
+          const height = 400;
+          const nodeWidth = 120;
+          const nodeHeight = 70;
+
+          // Build tree structure based on splits
+          function buildTreeStructure() {
+            const root = {
+              id: 'root',
+              label: 'Root',
+              question: 'All Data',
+              data: dataset,
+              depth: 0,
+              children: []
+            };
+
+            if (splits.length === 0) {
+              return root;
+            }
+
+            // Apply first split
+            const split = splits[0];
+            let leftData, rightData;
+
+            if (split.feature === 'temperature') {
+              leftData = dataset.filter(d => d.temperature < split.value);
+              rightData = dataset.filter(d => d.temperature >= split.value);
+              root.question = `Temp < ${split.value}°C?`;
+            } else if (split.feature === 'friday') {
+              leftData = dataset.filter(d => d.isFriday === split.value);
+              rightData = dataset.filter(d => d.isFriday !== split.value);
+              root.question = 'Friday Evening?';
+            } else if (split.feature === 'rolling') {
+              leftData = dataset.filter(d => d.rolling < split.value);
+              rightData = dataset.filter(d => d.rolling >= split.value);
+              root.question = `Avg < ${split.value}?`;
+            } else if (split.feature === 'peak') {
+              leftData = dataset.filter(d => d.isPeak === split.value);
+              rightData = dataset.filter(d => d.isPeak !== split.value);
+              root.question = 'Peak Hour?';
+            }
+
+            const leftMetrics = calculateMetrics(leftData);
+            const rightMetrics = calculateMetrics(rightData);
+
+            root.children = [
+              {
+                id: 'left',
+                label: leftMetrics.numLarge > leftMetrics.numSmall ? '🟢 Large' : '🔴 Small',
+                data: leftData,
+                depth: 1,
+                edge: 'Yes',
+                metrics: leftMetrics,
+                isLeaf: true
+              },
+              {
+                id: 'right',
+                label: rightMetrics.numLarge > rightMetrics.numSmall ? '🟢 Large' : '🔴 Small',
+                data: rightData,
+                depth: 1,
+                edge: 'No',
+                metrics: rightMetrics,
+                isLeaf: true
+              }
+            ];
+
+            return root;
+          }
+
+          const treeData = buildTreeStructure();
+
+          // Manual layout for simple tree
+          const positions = {
+            root: { x: width / 2, y: 50 },
+            left: { x: width / 3, y: 180 },
+            right: { x: (2 * width) / 3, y: 180 }
+          };
+
+          // Draw edges with smooth curves
+          if (treeData.children && treeData.children.length > 0) {
+            treeData.children.forEach(child => {
+              const fromPos = positions.root;
+              const toPos = positions[child.id];
+
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              const d = `M${fromPos.x},${fromPos.y + nodeHeight/2}
+                        C${fromPos.x},${(fromPos.y + toPos.y) / 2}
+                         ${toPos.x},${(fromPos.y + toPos.y) / 2}
+                         ${toPos.x},${toPos.y - nodeHeight/2}`;
+              path.setAttribute('d', d);
+              path.setAttribute('fill', 'none');
+              path.setAttribute('stroke', '#667eea');
+              path.setAttribute('stroke-width', '2.5');
+              path.setAttribute('opacity', '0.6');
+              svg.appendChild(path);
+
+              // Edge label
+              const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              text.setAttribute('x', (fromPos.x + toPos.x) / 2);
+              text.setAttribute('y', (fromPos.y + toPos.y) / 2 - 5);
+              text.setAttribute('text-anchor', 'middle');
+              text.setAttribute('fill', '#667eea');
+              text.setAttribute('font-size', '11');
+              text.setAttribute('font-weight', 'bold');
+              text.textContent = child.edge;
+              svg.appendChild(text);
+            });
+          }
+
+          // Draw nodes
+          function drawNode(node, pos) {
+            const metrics = calculateMetrics(node.data);
+            const isLeaf = node.isLeaf;
+            const prediction = metrics.numLarge > metrics.numSmall ? 'Large' : 'Small';
+            const predictionColor = metrics.numLarge > metrics.numSmall ? '#667eea' : '#f093fb';
+
+            // Node group for shadow effect
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))');
+
+            // Node rectangle
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', pos.x - nodeWidth/2);
+            rect.setAttribute('y', pos.y - nodeHeight/2);
+            rect.setAttribute('width', nodeWidth);
+            rect.setAttribute('height', nodeHeight);
+            rect.setAttribute('fill', isLeaf ? predictionColor : 'white');
+            rect.setAttribute('stroke', isLeaf ? 'none' : '#667eea');
+            rect.setAttribute('stroke-width', '3');
+            rect.setAttribute('rx', '10');
+            g.appendChild(rect);
+
+            // Node text
+            const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text1.setAttribute('x', pos.x);
+            text1.setAttribute('y', pos.y - 10);
+            text1.setAttribute('text-anchor', 'middle');
+            text1.setAttribute('fill', isLeaf ? 'white' : '#2c3e50');
+            text1.setAttribute('font-weight', 'bold');
+            text1.setAttribute('font-size', '12');
+            text1.textContent = node.question || node.label;
+            g.appendChild(text1);
+
+            // Stats
+            const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text2.setAttribute('x', pos.x);
+            text2.setAttribute('y', pos.y + 8);
+            text2.setAttribute('text-anchor', 'middle');
+            text2.setAttribute('fill', isLeaf ? 'white' : '#555');
+            text2.setAttribute('font-size', '10');
+            text2.textContent = `L:${metrics.numLarge} S:${metrics.numSmall}`;
+            g.appendChild(text2);
+
+            if (isLeaf) {
+              const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              text3.setAttribute('x', pos.x);
+              text3.setAttribute('y', pos.y + 23);
+              text3.setAttribute('text-anchor', 'middle');
+              text3.setAttribute('fill', 'white');
+              text3.setAttribute('font-size', '10');
+              text3.setAttribute('font-weight', 'bold');
+              text3.textContent = `→ ${prediction}`;
+              g.appendChild(text3);
+            }
+
+            svg.appendChild(g);
+          }
+
+          // Draw root
+          drawNode(treeData, positions.root);
+
+          // Draw children
+          if (treeData.children && treeData.children.length > 0) {
+            treeData.children.forEach(child => {
+              drawNode(child, positions[child.id]);
+            });
+          }
+        }
+
+        // Add split button handlers
+        const splitButtons = container.querySelectorAll('.split-btn');
+        splitButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const feature = btn.dataset.feature;
+            const value = parseFloat(btn.dataset.value);
+
+            splits.push({ feature, value });
+            updateDisplay();
+
+            // Disable button after use
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+          });
+        });
+
+        // Reset button
+        container.querySelector(`#${componentId}-reset`).addEventListener('click', () => {
+          splits = [];
+          dataset = generateData(100);
+
+          // Re-enable all buttons
+          splitButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+          });
+
+          updateDisplay();
+        });
+
+        // Initial render
+        updateDisplay();
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .tree-builder {
+    margin: 2rem 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .builder-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .builder-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .header-subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.95;
+    color: white;
+  }
+
+  .builder-content {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .metrics-display {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .metric {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .metric:last-child {
+    border-bottom: none;
+  }
+
+  .metric-label {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .metric-value {
+    font-weight: 700;
+    color: #667eea;
+    font-family: monospace;
+  }
+
+  .split-controls h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+  }
+
+  .split-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .split-btn {
+    padding: 1rem;
+    border: 2px solid #667eea;
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .split-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  .split-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    transform: none;
+  }
+
+  .reset-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .reset-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.4);
+  }
+
+  .tree-visualization {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .tree-visualization h4 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+  }
+
+  .tree-display {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 400px;
+  }
+
+  .tree-display svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .visualization-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .plot-container {
+    width: 100%;
+    min-height: 500px;
+  }
+
+  .legend {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .legend h5 {
+    margin: 0 0 0.75rem 0;
+    color: #2c3e50;
+  }
+
+  .legend-items {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+
+  .legend-marker.large {
+    background: #667eea;
+    border-color: #764ba2;
+  }
+
+  .legend-marker.small {
+    background: #f093fb;
+    border-color: #f5576c;
+  }
+
+  @media (max-width: 1024px) {
+    .builder-content {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

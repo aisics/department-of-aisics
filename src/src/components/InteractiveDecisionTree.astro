@@ -1,0 +1,454 @@
+---
+export interface Props {
+  title?: string;
+  example?: 'umbrella' | 'weekend' | 'pizza';
+  darkMode?: boolean;
+}
+
+const {
+  title = 'Інтерактивне дерево рішень / Interactive Decision Tree',
+  example = 'umbrella',
+  darkMode = false
+} = Astro.props;
+
+const componentId = `tree-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={componentId} class="interactive-tree">
+  <div class="tree-header">
+    <h3>{title}</h3>
+  </div>
+
+  <div class="tree-content">
+    <div id={`${componentId}-container`} class="tree-visualization"></div>
+
+    <div class="tree-legend">
+      <div class="legend-item">
+        <div class="legend-box decision"></div>
+        <span>Питання / Question</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box leaf"></div>
+        <span>Результат / Result</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-arrow">→</div>
+        <span>Так / Yes</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-arrow left">→</div>
+        <span>Ні / No</span>
+      </div>
+    </div>
+
+    <div class="tree-instructions">
+      <p>💡 <strong>Порада / Tip:</strong> Наведіть на вузли, щоб побачити деталі / Hover over nodes to see details</p>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ componentId, example, darkMode }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      // Load D3.js
+      const d3Script = document.createElement('script');
+      d3Script.src = 'https://d3js.org/d3.v7.min.js';
+      d3Script.onload = () => {
+        const container = document.getElementById(componentId);
+        if (!container) return;
+
+        const treeContainer = container.querySelector(`#${componentId}-container`);
+
+        // Tree data structures
+        const trees = {
+          umbrella: {
+            name: "Чи йде дощ?\nIs it raining?",
+            type: "decision",
+            children: [
+              {
+                name: "☂️ Візьми парасольку\nTake umbrella",
+                type: "leaf",
+                color: "#667eea",
+                edge: "Так / Yes"
+              },
+              {
+                name: "Чи хмарно?\nIs it cloudy?",
+                type: "decision",
+                edge: "Ні / No",
+                children: [
+                  {
+                    name: "🌂 Візьми на всяк\nTake just in case",
+                    type: "leaf",
+                    color: "#9333ea",
+                    edge: "Так / Yes"
+                  },
+                  {
+                    name: "☀️ Не потрібна\nNo need",
+                    type: "leaf",
+                    color: "#f093fb",
+                    edge: "Ні / No"
+                  }
+                ]
+              }
+            ]
+          },
+          weekend: {
+            name: "Погода хороша?\nNice weather?",
+            type: "decision",
+            children: [
+              {
+                name: "Є компанія?\nHave company?",
+                type: "decision",
+                edge: "Так / Yes",
+                children: [
+                  {
+                    name: "🏞️ Пікнік\nPicnic",
+                    type: "leaf",
+                    color: "#10b981",
+                    edge: "Так / Yes"
+                  },
+                  {
+                    name: "🚴 Велопрогулянка\nBike ride",
+                    type: "leaf",
+                    color: "#3b82f6",
+                    edge: "Ні / No"
+                  }
+                ]
+              },
+              {
+                name: "Є настрій?\nFeeling good?",
+                type: "decision",
+                edge: "Ні / No",
+                children: [
+                  {
+                    name: "🎬 Кіно\nMovie",
+                    type: "leaf",
+                    color: "#8b5cf6",
+                    edge: "Так / Yes"
+                  },
+                  {
+                    name: "😴 Поспати\nSleep",
+                    type: "leaf",
+                    color: "#6366f1",
+                    edge: "Ні / No"
+                  }
+                ]
+              }
+            ]
+          },
+          pizza: {
+            name: "Температура < 15°C?\nTemperature < 15°C?",
+            type: "decision",
+            children: [
+              {
+                name: "П'ятниця ввечері?\nFriday evening?",
+                type: "decision",
+                edge: "Так / Yes",
+                children: [
+                  {
+                    name: "🍕 Велике замовлення\nLarge order",
+                    type: "leaf",
+                    color: "#667eea",
+                    edge: "Так / Yes"
+                  },
+                  {
+                    name: "🍕 Мале замовлення\nSmall order",
+                    type: "leaf",
+                    color: "#f093fb",
+                    edge: "Ні / No"
+                  }
+                ]
+              },
+              {
+                name: "Середній продаж > 25?\nRolling avg > 25?",
+                type: "decision",
+                edge: "Ні / No",
+                children: [
+                  {
+                    name: "🍕 Велике замовлення\nLarge order",
+                    type: "leaf",
+                    color: "#667eea",
+                    edge: "Так / Yes"
+                  },
+                  {
+                    name: "🍕 Мале замовлення\nSmall order",
+                    type: "leaf",
+                    color: "#f093fb",
+                    edge: "Ні / No"
+                  }
+                ]
+              }
+            ]
+          }
+        };
+
+        const treeData = trees[example];
+
+        // Set up dimensions
+        const width = 800;
+        const height = 450;
+
+        // Create SVG
+        const svg = d3.select(treeContainer)
+          .append('svg')
+          .attr('width', '100%')
+          .attr('height', height)
+          .attr('viewBox', `0 0 ${width} ${height}`)
+          .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        // Create tree layout with separation function to prevent overlap
+        const treeLayout = d3.tree()
+          .size([width - 100, height - 100])
+          .separation((a, b) => {
+            // Increase separation between sibling nodes
+            return a.parent === b.parent ? 2 : 2.5;
+          });
+
+        // Convert data to hierarchy
+        const root = d3.hierarchy(treeData);
+        treeLayout(root);
+
+        // Create links (paths between nodes)
+        const links = svg.append('g')
+          .attr('class', 'links')
+          .attr('transform', 'translate(50, 50)');
+
+        links.selectAll('path')
+          .data(root.links())
+          .join('path')
+          .attr('d', d => {
+            return `M${d.source.x},${d.source.y}
+                    C${d.source.x},${(d.source.y + d.target.y) / 2}
+                     ${d.target.x},${(d.source.y + d.target.y) / 2}
+                     ${d.target.x},${d.target.y}`;
+          })
+          .attr('fill', 'none')
+          .attr('stroke', '#667eea')
+          .attr('stroke-width', 2.5)
+          .attr('opacity', 0.6);
+
+        // Add edge labels
+        const edgeLabels = svg.append('g')
+          .attr('class', 'edge-labels')
+          .attr('transform', 'translate(50, 50)');
+
+        edgeLabels.selectAll('text')
+          .data(root.links())
+          .join('text')
+          .attr('x', d => (d.source.x + d.target.x) / 2)
+          .attr('y', d => (d.source.y + d.target.y) / 2 - 5)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', '11px')
+          .attr('font-weight', 'bold')
+          .attr('fill', '#667eea')
+          .text(d => d.target.data.edge || '');
+
+        // Create nodes
+        const nodes = svg.append('g')
+          .attr('class', 'nodes')
+          .attr('transform', 'translate(50, 50)');
+
+        const node = nodes.selectAll('g')
+          .data(root.descendants())
+          .join('g')
+          .attr('transform', d => `translate(${d.x},${d.y})`)
+          .style('cursor', 'pointer');
+
+        // Add node background (slightly narrower to prevent overlap)
+        node.append('rect')
+          .attr('x', -70)
+          .attr('y', -35)
+          .attr('width', 140)
+          .attr('height', 70)
+          .attr('rx', 10)
+          .attr('fill', d => {
+            if (d.data.type === 'leaf') {
+              return d.data.color || '#f093fb';
+            }
+            return 'white';
+          })
+          .attr('stroke', d => d.data.type === 'leaf' ? 'none' : '#667eea')
+          .attr('stroke-width', 3)
+          .attr('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))')
+          .on('mouseover', function() {
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr('filter', 'drop-shadow(0 8px 12px rgba(102, 126, 234, 0.3))')
+              .attr('transform', 'scale(1.05)');
+          })
+          .on('mouseout', function() {
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))')
+              .attr('transform', 'scale(1)');
+          });
+
+        // Add node text
+        node.each(function(d) {
+          const textGroup = d3.select(this);
+          const lines = d.data.name.split('\n');
+
+          lines.forEach((line, i) => {
+            textGroup.append('text')
+              .attr('y', -10 + (i * 15))
+              .attr('text-anchor', 'middle')
+              .attr('font-size', i === 0 ? '12px' : '10px')
+              .attr('font-weight', i === 0 ? 'bold' : 'normal')
+              .attr('fill', d.data.type === 'leaf' ? 'white' : '#2c3e50')
+              .text(line);
+          });
+        });
+
+        // Add icons for decision nodes
+        node.filter(d => d.data.type === 'decision')
+          .append('text')
+          .attr('y', 25)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', '18px')
+          .text('❓');
+
+        // Add animation
+        node.style('opacity', 0)
+          .transition()
+          .duration(800)
+          .delay((d, i) => i * 100)
+          .style('opacity', 1);
+
+        links.selectAll('path')
+          .style('opacity', 0)
+          .transition()
+          .duration(800)
+          .delay((d, i) => i * 100 + 400)
+          .style('opacity', 0.6);
+      };
+      document.head.appendChild(d3Script);
+    });
+  }
+</script>
+
+<style>
+  .interactive-tree {
+    margin: 2rem 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .tree-header {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .tree-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .tree-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .tree-visualization {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    min-height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tree-visualization svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .tree-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    justify-content: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  .legend-box {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .legend-box.decision {
+    background: white;
+    border: 3px solid #667eea;
+  }
+
+  .legend-box.leaf {
+    background: linear-gradient(135deg, #667eea 0%, #f093fb 100%);
+  }
+
+  .legend-arrow {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #667eea;
+  }
+
+  .legend-arrow.left {
+    transform: scaleX(-1);
+  }
+
+  .tree-instructions {
+    padding: 1rem;
+    background: linear-gradient(135deg, #e0e7ff 0%, #fce7f3 100%);
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+  }
+
+  .tree-instructions p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #2c3e50;
+  }
+
+  @media (max-width: 768px) {
+    .tree-content {
+      padding: 1rem;
+    }
+
+    .tree-visualization {
+      padding: 0.5rem;
+      min-height: 400px;
+    }
+
+    .tree-legend {
+      gap: 1rem;
+    }
+
+    .legend-item {
+      font-size: 0.85rem;
+    }
+
+    .tree-header h3 {
+      font-size: 1.2rem;
+    }
+  }
+</style>

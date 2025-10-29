@@ -13,6 +13,8 @@ prerequisites: ["04-train-test-split", "03-feature-engineering", "00-python-setu
 relatedArticles: ["06-model-evaluation", "07-decision-trees"]
 ---
 
+import LinearRegressionScatter from '../../../../../components/LinearRegressionScatter.astro';
+
 > **📌 New to Python?** This article uses Python code examples. If you haven't used Python before, start with our [Python Setup for ML](/article/tutorials-en-00-python-setup-basics) guide first!
 
 # Your First ML Model - Linear Regression 🎯
@@ -87,47 +89,48 @@ Before we start, quick clarification:
 
 Imagine you only have temperature data:
 
-```
-Temperature | Pizzas Sold
-------------|------------
-5°C         | 32
-10°C        | 28
-15°C        | 25
-20°C        | 21
-25°C        | 18
-30°C        | 15
-```
-
-Plot it:
-
-```
-Pizzas Sold
-    |
- 35 |  •
- 30 |     •
- 25 |        •
- 20 |           •
- 15 |              •
-    |_____________________ Temperature (°C)
-    0   10   20   30
-```
+<LinearRegressionScatter
+  title="Temperature vs Pizza Sales"
+  xLabel="Temperature (°C)"
+  yLabel="Pizzas Sold"
+  height={400}
+  showRegressionLine={false}
+  data={JSON.stringify([
+    {x: 5, y: 32},
+    {x: 10, y: 28},
+    {x: 15, y: 25},
+    {x: 20, y: 21},
+    {x: 25, y: 18},
+    {x: 30, y: 15}
+  ])}
+/>
 
 **Your brain immediately sees:** "As temperature goes up, pizza sales go down!"
 
 **Linear regression does exactly this:** Find the best straight line through these points.
 
-```
-Pizzas Sold
-    |
- 35 |  •
- 30 |    •\
- 25 |      •\___  Line of best fit
- 20 |         •\___
- 15 |            •\___
-    |_____________________ Temperature (°C)
-```
+<LinearRegressionScatter
+  title="Line of Best Fit"
+  xLabel="Temperature (°C)"
+  yLabel="Pizzas Sold"
+  height={400}
+  showRegressionLine={true}
+  data={JSON.stringify([
+    {x: 5, y: 32},
+    {x: 10, y: 28},
+    {x: 15, y: 25},
+    {x: 20, y: 21},
+    {x: 25, y: 18},
+    {x: 30, y: 15}
+  ])}
+  regressionParams={JSON.stringify({intercept: 35, slope: -0.5})}
+/>
 
-The line formula: **pizzas = 35 - 0.5 × temperature**
+The line formula:
+
+```
+pizzas = 35 - 0.5 × temperature
+```
 
 **What this means:**
 - Start at 35 pizzas (when it's 0°C)

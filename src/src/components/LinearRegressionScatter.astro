@@ -1,0 +1,161 @@
+---
+export interface Props {
+  title?: string;
+  xLabel?: string;
+  yLabel?: string;
+  height?: number;
+  darkMode?: boolean;
+  showRegressionLine?: boolean;
+  data: string; // JSON string of {x, y} points
+  regressionParams?: string; // JSON string of {intercept, slope}
+}
+
+const {
+  title = 'Scatter Plot',
+  xLabel = 'X',
+  yLabel = 'Y',
+  height = 400,
+  darkMode = false,
+  showRegressionLine = false,
+  data,
+  regressionParams
+} = Astro.props;
+
+// Generate a unique ID for this plot
+const plotId = `scatter-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div id={plotId} class="linear-regression-wrapper">
+  <div class="plot-container"></div>
+</div>
+
+<script define:vars={{ plotId, title, xLabel, yLabel, height, darkMode, showRegressionLine, data, regressionParams }}>
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+      script.onload = () => {
+        const container = document.querySelector(`#${plotId} .plot-container`);
+        if (!container) return;
+
+        // Parse data points
+        let dataPoints;
+        try {
+          dataPoints = JSON.parse(data);
+        } catch (e) {
+          console.error('Failed to parse data:', e);
+          return;
+        }
+
+        const plotData = [];
+
+        // Add scatter plot
+        const xVals = dataPoints.map(p => p.x);
+        const yVals = dataPoints.map(p => p.y);
+
+        plotData.push({
+          x: xVals,
+          y: yVals,
+          mode: 'markers',
+          type: 'scatter',
+          name: 'Дані' + ' / Data',
+          marker: {
+            size: 10,
+            color: '#FF6B6B',
+            opacity: 0.7,
+            line: {
+              color: '#C92A2A',
+              width: 1
+            }
+          }
+        });
+
+        // Add regression line if requested
+        if (showRegressionLine && regressionParams) {
+          let params;
+          try {
+            params = JSON.parse(regressionParams);
+          } catch (e) {
+            console.error('Failed to parse regression params:', e);
+            return;
+          }
+
+          const xMin = Math.min(...xVals);
+          const xMax = Math.max(...xVals);
+          const xLine = [xMin, xMax];
+          const yLine = xLine.map(x => params.intercept + params.slope * x);
+
+          plotData.push({
+            x: xLine,
+            y: yLine,
+            mode: 'lines',
+            type: 'scatter',
+            name: 'Лінія регресії' + ' / Regression Line',
+            line: {
+              color: '#4ECDC4',
+              width: 3
+            }
+          });
+        }
+
+        const layout = {
+          title: {
+            text: title,
+            font: { size: 18 }
+          },
+          height: height,
+          paper_bgcolor: darkMode ? '#1a1a1a' : '#ffffff',
+          plot_bgcolor: darkMode ? '#2a2a2a' : '#f8f8f8',
+          font: {
+            color: darkMode ? '#ffffff' : '#000000'
+          },
+          xaxis: {
+            title: xLabel,
+            showgrid: true,
+            gridcolor: darkMode ? '#444' : '#ddd',
+            zeroline: true,
+            zerolinecolor: darkMode ? '#666' : '#999'
+          },
+          yaxis: {
+            title: yLabel,
+            showgrid: true,
+            gridcolor: darkMode ? '#444' : '#ddd',
+            zeroline: true,
+            zerolinecolor: darkMode ? '#666' : '#999'
+          },
+          showlegend: true,
+          legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: darkMode ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
+          },
+          hovermode: 'closest'
+        };
+
+        const config = {
+          responsive: true,
+          displayModeBar: true,
+          displaylogo: false,
+          modeBarButtonsToRemove: ['lasso2d', 'select2d']
+        };
+
+        window.Plotly.newPlot(container, plotData, layout, config);
+      };
+      document.head.appendChild(script);
+    });
+  }
+</script>
+
+<style>
+  .linear-regression-wrapper {
+    margin: 2rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .plot-container {
+    width: 100%;
+    min-height: 400px;
+  }
+</style>

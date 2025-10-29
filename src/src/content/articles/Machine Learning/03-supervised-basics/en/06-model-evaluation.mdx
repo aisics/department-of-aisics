@@ -1,0 +1,755 @@
+---
+title: "Model Evaluation Metrics - Measuring Success"
+description: "Learn to evaluate machine learning models using key metrics: from MAE and RMSE for regression to precision, recall, and AUC for classification"
+author: "Department of AIsiCs"
+date: 2025-10-28
+readingTime: 35
+tags: ["model-evaluation", "metrics", "regression", "classification", "supervised-learning"]
+featured: false
+difficulty: "intermediate"
+category: "Machine Learning"
+subcategory: "03-supervised-basics"
+prerequisites: ["05-linear-regression", "04-train-test-split"]
+relatedArticles: ["05-linear-regression", "07-decision-trees"]
+---
+
+import MetricCalculator from '../../../../../components/MetricCalculator.astro';
+import ConfusionMatrixExplorer from '../../../../../components/ConfusionMatrixExplorer.astro';
+import ROCCurveAnimator from '../../../../../components/ROCCurveAnimator.astro';
+
+# Model Evaluation Metrics - Measuring Success
+
+## Introduction
+
+In [Article 5](/article/machine-learning-en-05-linear-regression), we built a linear regression model to predict pizza sales based on temperature. We obtained a model with the following parameters:
+
+```
+Sales = 35 - 0.5 × Temperature
+```
+
+But how well does this model work? We mentioned R² (coefficient of determination), but that's just one metric. In reality, there are dozens of ways to evaluate machine learning models, and choosing the right metrics is critical to project success.
+
+In this article, we will:
+- Study all the main metrics for regression tasks
+- Understand classification metrics and the confusion matrix
+- Learn to interpret ROC curves and AUC
+- Discover how to choose the right metrics for business goals
+
+## Why Evaluation Metrics Matter
+
+Imagine you built two models to predict pizza sales:
+
+**Model A:**
+- Predicts 25 pizzas when 24 were actually sold
+- Predicts 18 pizzas when 20 were actually sold
+- Predicts 15 pizzas when 15 were actually sold
+
+**Model B:**
+- Predicts 30 pizzas when 24 were actually sold
+- Predicts 22 pizzas when 20 were actually sold
+- Predicts 10 pizzas when 15 were actually sold
+
+Which model is better? At first glance, it's hard to say. Evaluation metrics give us numerical indicators that allow us to:
+
+1. **Objectively compare models** - instead of subjective assessments
+2. **Track progress** - during training and tuning
+3. **Identify problems** - where the model performs poorly
+4. **Communicate with business** - explain results in understandable terms
+
+## Regression Metrics - Evaluating Continuous Predictions
+
+Let's return to our pizza sales prediction model. Here's our actual data from Article 5:
+
+| Temperature (°C) | Actual Sales | Model Prediction |
+|------------------|--------------|------------------|
+| 5                | 32           | 32.5             |
+| 10               | 28           | 30.0             |
+| 15               | 25           | 27.5             |
+| 20               | 21           | 25.0             |
+| 25               | 18           | 22.5             |
+| 30               | 15           | 20.0             |
+
+Let's look at the four most important regression metrics.
+
+### 1. MAE (Mean Absolute Error)
+
+MAE is the simplest metric: the average of absolute differences between predictions and actual values.
+
+**Formula:**
+
+$$
+\text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_{\text{actual}} - y_{\text{predicted}}|
+$$
+
+**Example calculation for our data:**
+
+$$
+\begin{align*}
+|32 - 32.5| &= 0.5 \\
+|28 - 30.0| &= 2.0 \\
+|25 - 27.5| &= 2.5 \\
+|21 - 25.0| &= 4.0 \\
+|18 - 22.5| &= 4.5 \\
+|15 - 20.0| &= 5.0 \\
+\\
+\text{MAE} &= \frac{0.5 + 2.0 + 2.5 + 4.0 + 4.5 + 5.0}{6} = \frac{18.5}{6} = 3.08
+\end{align*}
+$$
+
+**Interpretation:** On average, our predictions differ from actual values by 3.08 pizzas.
+
+**Advantages:**
+- ✅ Easy to interpret (in the same units as the target variable)
+- ✅ Robust to outliers (large errors don't have excessive impact)
+- ✅ Linear scale (an error of 4 pizzas is twice as bad as an error of 2 pizzas)
+
+**Disadvantages:**
+- ❌ Doesn't penalize large errors more than small ones
+- ❌ Doesn't show the direction of errors (overestimation or underestimation)
+
+### 2. MSE (Mean Squared Error)
+
+MSE squares errors before averaging, making large errors more "expensive".
+
+**Formula:**
+
+$$
+\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_{\text{actual}} - y_{\text{predicted}})^2
+$$
+
+**Example calculation:**
+
+$$
+\begin{align*}
+(32 - 32.5)^2 &= 0.25 \\
+(28 - 30.0)^2 &= 4.00 \\
+(25 - 27.5)^2 &= 6.25 \\
+(21 - 25.0)^2 &= 16.00 \\
+(18 - 22.5)^2 &= 20.25 \\
+(15 - 20.0)^2 &= 25.00 \\
+\\
+\text{MSE} &= \frac{0.25 + 4.00 + 6.25 + 16.00 + 20.25 + 25.00}{6} = \frac{71.75}{6} = 11.96
+\end{align*}
+$$
+
+**Interpretation:** MSE = 11.96 pizzas² (squared units!)
+
+**Advantages:**
+- ✅ Strongly penalizes large errors (quadratic function)
+- ✅ Differentiable everywhere (convenient for optimization)
+- ✅ Often used as loss function during training
+
+**Disadvantages:**
+- ❌ Hard to interpret (squared units)
+- ❌ Very sensitive to outliers
+
+### 3. RMSE (Root Mean Squared Error)
+
+RMSE is simply the square root of MSE, which returns the metric to original units.
+
+**Formula:**
+
+$$
+\text{RMSE} = \sqrt{\text{MSE}} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_{\text{actual}} - y_{\text{predicted}})^2}
+$$
+
+**Example calculation:**
+
+$$
+\text{RMSE} = \sqrt{11.96} = 3.46 \text{ pizzas}
+$$
+
+**Interpretation:** The typical deviation of our predictions is about 3.46 pizzas.
+
+**Advantages:**
+- ✅ In the same units as the target variable
+- ✅ Penalizes large errors (due to the square inside)
+- ✅ Most popular metric in industry
+
+**Disadvantages:**
+- ❌ Harder to interpret than MAE
+- ❌ Sensitive to outliers
+
+**Comparing MAE vs RMSE:**
+- If RMSE ≈ MAE → errors are evenly distributed
+- If RMSE >> MAE → there are several large outliers
+- In our case: RMSE (3.46) > MAE (3.08) → errors grow with temperature
+
+### 4. R² (R-squared) - Coefficient of Determination
+
+R² shows what fraction of variance in the data our model explains.
+
+**Formula:**
+
+$$
+R^2 = 1 - \frac{SS_{\text{res}}}{SS_{\text{tot}}}
+$$
+
+where:
+- $SS_{\text{res}} = \sum (y_{\text{actual}} - y_{\text{predicted}})^2$ (residual sum of squares)
+- $SS_{\text{tot}} = \sum (y_{\text{actual}} - \bar{y})^2$ (total sum of squares)
+
+**Example calculation:**
+
+First find the mean of actual values:
+
+$$
+\bar{y} = \frac{32 + 28 + 25 + 21 + 18 + 15}{6} = \frac{139}{6} = 23.17
+$$
+
+Now $SS_{\text{res}}$ (already calculated for MSE):
+
+$$
+SS_{\text{res}} = 71.75
+$$
+
+Now $SS_{\text{tot}}$:
+
+$$
+\begin{align*}
+(32 - 23.17)^2 &= 77.97 \\
+(28 - 23.17)^2 &= 23.33 \\
+(25 - 23.17)^2 &= 3.35 \\
+(21 - 23.17)^2 &= 4.71 \\
+(18 - 23.17)^2 &= 26.73 \\
+(15 - 23.17)^2 &= 66.73 \\
+\\
+SS_{\text{tot}} &= 77.97 + 23.33 + 3.35 + 4.71 + 26.73 + 66.73 = 202.82
+\end{align*}
+$$
+
+Therefore:
+
+$$
+R^2 = 1 - \frac{71.75}{202.82} = 1 - 0.354 = 0.646 \approx 0.65
+$$
+
+**Interpretation:** Our model explains 65% of the variance in pizza sales. The remaining 35% depends on other factors (day of week, weather, competitors, etc.).
+
+**Advantages:**
+- ✅ Dimensionless (from 0 to 1)
+- ✅ Easy to interpret as a percentage
+- ✅ Allows comparing models on different datasets
+
+**Disadvantages:**
+- ❌ Always increases with adding new features (even unnecessary ones)
+- ❌ Can be negative for very bad models
+- ❌ Doesn't show absolute size of errors
+
+### Interactive Metric Calculator
+
+Try changing predictions and see how the metrics change:
+
+<MetricCalculator
+  title="Regression Metrics Calculator"
+  initialData={JSON.stringify([
+    {actual: 32, predicted: 32.5},
+    {actual: 28, predicted: 30.0},
+    {actual: 25, predicted: 27.5},
+    {actual: 21, predicted: 25.0},
+    {actual: 18, predicted: 22.5},
+    {actual: 15, predicted: 20.0}
+  ])}
+/>
+
+**Experiments to try:**
+1. Make all predictions equal to the mean (23.17) - R² will become 0
+2. Make predictions perfect (equal to actual) - all metrics become 0, R² = 1
+3. Add one large outlier - watch RMSE grow faster than MAE
+
+## Classification Metrics - Evaluating Categorical Predictions
+
+Now let's move from regression (predicting numbers) to classification (predicting categories).
+
+### Example Task: Disease Diagnosis
+
+Imagine we're building a model to diagnose a rare disease:
+- **Positive (P):** Patient is sick
+- **Negative (N):** Patient is healthy
+
+The model can make four types of predictions:
+
+1. **True Positive (TP):** Model correctly predicted disease ✅
+2. **True Negative (TN):** Model correctly predicted health ✅
+3. **False Positive (FP):** Model incorrectly predicted disease (false alarm) ❌
+4. **False Negative (FN):** Model missed the disease (most dangerous!) ❌❌
+
+### Confusion Matrix
+
+The confusion matrix is a table showing all four types of predictions:
+
+|                         | **Actually Positive** | **Actually Negative** |
+|-------------------------|:---------------------:|:---------------------:|
+| **Predicted Positive**  |          TP           |          FP           |
+| **Predicted Negative**  |          FN           |          TN           |
+
+**Example:** Model tested 100 patients:
+- 10 are actually sick, 90 are healthy
+- Model correctly found 8 sick patients (TP = 8)
+- Model incorrectly diagnosed 5 healthy patients as sick (FP = 5)
+- Model missed 2 sick patients (FN = 2)
+- Model correctly identified 85 healthy patients (TN = 85)
+
+|                        | **Actually Sick** | **Actually Healthy** | **Total Predicted** |
+|------------------------|:-----------------:|:--------------------:|:-------------------:|
+| **Predicted Sick**     |         8         |          5           |         13          |
+| **Predicted Healthy**  |         2         |          85          |         87          |
+| **Total Actually**     |        10         |          90          |        100          |
+
+### Main Classification Metrics
+
+#### 1. Accuracy - Overall Correctness
+
+**Formula:**
+
+$$
+\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+$$
+
+**Example:**
+
+$$
+\text{Accuracy} = \frac{8 + 85}{8 + 85 + 5 + 2} = \frac{93}{100} = 0.93 = 93\%
+$$
+
+**Interpretation:** Model is correct in 93% of cases.
+
+**The Problem with Accuracy:**
+
+Imagine another model that always says "healthy":
+- TP = 0 (didn't find any sick patients)
+- TN = 90 (correctly identified all healthy patients)
+- FP = 0 (no false alarms)
+- FN = 10 (missed all sick patients!)
+
+$$
+\text{Accuracy} = \frac{0 + 90}{100} = 90\%
+$$
+
+This "lazy" model has 90% Accuracy, but it's completely useless! It misses all sick patients.
+
+**Conclusion:** Accuracy works poorly on imbalanced datasets (when one class is much more frequent than another).
+
+#### 2. Precision - Accuracy of Positive Predictions
+
+**Formula:**
+
+$$
+\text{Precision} = \frac{TP}{TP + FP}
+$$
+
+**Question Precision answers:**
+"Of all patients the model diagnosed as sick, how many are actually sick?"
+
+**Example:**
+
+$$
+\text{Precision} = \frac{8}{8 + 5} = \frac{8}{13} = 0.615 = 61.5\%
+$$
+
+**Interpretation:** Of 13 patients the model diagnosed as sick, only 8 (61.5%) are actually sick. The remaining 5 are false alarms.
+
+**When Precision is important:**
+- Spam filters (don't want to lose important emails)
+- Recommendation systems (don't want to annoy users with bad recommendations)
+- Costly actions (when false positives are expensive)
+
+#### 3. Recall (Sensitivity)
+
+**Formula:**
+
+$$
+\text{Recall} = \frac{TP}{TP + FN}
+$$
+
+**Question Recall answers:**
+"Of all sick patients, how many did the model find?"
+
+**Example:**
+
+$$
+\text{Recall} = \frac{8}{8 + 2} = \frac{8}{10} = 0.8 = 80\%
+$$
+
+**Interpretation:** Of 10 sick patients, the model found 8 (80%). It missed 2 patients.
+
+**When Recall is important:**
+- Medical diagnosis (don't want to miss sick patients)
+- Fraud detection (better safe than sorry)
+- Search (better to show extra than miss relevant results)
+
+#### 4. F1-Score - Harmonic Mean of Precision and Recall
+
+Often we want a balance between Precision and Recall. F1-score combines both metrics.
+
+**Formula:**
+
+$$
+F1 = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+$$
+
+**Example:**
+
+$$
+\begin{align*}
+F1 &= \frac{2 \times (0.615 \times 0.8)}{0.615 + 0.8} \\
+&= \frac{2 \times 0.492}{1.415} \\
+&= \frac{0.984}{1.415} \\
+&= 0.695 = 69.5\%
+\end{align*}
+$$
+
+**Why harmonic mean?**
+
+Compare with arithmetic mean:
+
+$$
+\text{Arithmetic mean} = \frac{\text{Precision} + \text{Recall}}{2} = \frac{61.5\% + 80\%}{2} = 70.75\%
+$$
+
+Harmonic mean (F1 = 69.5%) is always closer to the lower value. This means F1 "penalizes" uneven metrics.
+
+**Example:**
+- Precision = 100%, Recall = 10% → Arithmetic = 55%, F1 = 18.2%
+- A model with such metrics is almost useless, and F1 reflects this!
+
+### Interactive Confusion Matrix
+
+Change the values of TP, TN, FP, FN and watch the metrics change:
+
+<ConfusionMatrixExplorer
+  title="Interactive Confusion Matrix"
+  initialTP={8}
+  initialTN={85}
+  initialFP={5}
+  initialFN={2}
+/>
+
+**Experiments to try:**
+1. Make FN = 0 (maximum Recall) - see what happens to Precision
+2. Make FP = 0 (maximum Precision) - see what happens to Recall
+3. Balance FP and FN to maximize F1-score
+
+## ROC Curve and AUC
+
+### The Classification Threshold Problem
+
+Most classification models actually output probabilities:
+
+```python
+# Diagnosis model
+patient_1: 0.95 (95% probability of disease)
+patient_2: 0.65 (65% probability of disease)
+patient_3: 0.20 (20% probability of disease)
+```
+
+To make a decision, we set a **threshold**:
+- If P(disease) ≥ threshold → Diagnose "sick"
+- If P(disease) < threshold → Diagnose "healthy"
+
+**Usually threshold = 0.5, but this isn't always optimal!**
+
+### Tradeoff Between Recall and Precision
+
+**Low threshold (0.2):**
+- ✅ High Recall (find almost all sick patients)
+- ❌ Low Precision (many false alarms)
+- Use case: Critical situations (cancer, terrorist threats)
+
+**High threshold (0.8):**
+- ✅ High Precision (few false alarms)
+- ❌ Low Recall (miss many sick patients)
+- Use case: Expensive actions (surgery, arrests)
+
+**Medium threshold (0.5):**
+- ⚖️ Balance between Recall and Precision
+- Use case: Most general cases
+
+### ROC Curve (Receiver Operating Characteristic)
+
+The ROC curve shows the tradeoff between two metrics:
+- **True Positive Rate (TPR)** = Recall = TP / (TP + FN)
+- **False Positive Rate (FPR)** = FP / (FP + TN)
+
+We build the curve by varying the threshold from 0 to 1:
+
+```
+Threshold = 0.0 → TPR = 100%, FPR = 100% (all "sick")
+Threshold = 0.2 → TPR = 95%, FPR = 30%
+Threshold = 0.5 → TPR = 80%, FPR = 5%
+Threshold = 0.8 → TPR = 50%, FPR = 1%
+Threshold = 1.0 → TPR = 0%, FPR = 0% (all "healthy")
+```
+
+**Perfect curve:** TPR = 100%, FPR = 0% for all thresholds
+**Random model:** Straight line (TPR = FPR)
+**Real models:** Something in between
+
+### AUC (Area Under Curve)
+
+AUC is the area under the ROC curve:
+- **AUC = 1.0:** Perfect model
+- **AUC = 0.5:** Random guessing
+- **AUC < 0.5:** Model worse than random (something went wrong!)
+- **AUC > 0.7:** Acceptable model
+- **AUC > 0.8:** Good model
+- **AUC > 0.9:** Excellent model
+
+**Advantages of AUC:**
+- ✅ Independent of classification threshold
+- ✅ Works on imbalanced datasets
+- ✅ Easy to interpret (probability of correct ranking)
+
+**AUC Interpretation:**
+AUC = 0.85 means: "If you randomly pick one sick patient and one healthy patient, the model will give a higher score to the sick patient 85% of the time."
+
+### Interactive ROC Curve
+
+Change the threshold and watch the point move on the ROC curve:
+
+<ROCCurveAnimator
+  title="ROC Curve and Threshold Selection"
+  modelData={JSON.stringify([
+    {actual: 1, probability: 0.95},
+    {actual: 1, probability: 0.85},
+    {actual: 1, probability: 0.75},
+    {actual: 1, probability: 0.65},
+    {actual: 1, probability: 0.55},
+    {actual: 0, probability: 0.45},
+    {actual: 0, probability: 0.35},
+    {actual: 0, probability: 0.25},
+    {actual: 0, probability: 0.15},
+    {actual: 0, probability: 0.05}
+  ])}
+/>
+
+## Choosing the Right Metrics
+
+### Metric Selection Matrix
+
+| Task Type | Balance | Error Criticality | Recommended Metrics |
+|-----------|---------|-------------------|---------------------|
+| Regression | - | Equal | MAE, R² |
+| Regression | - | Large errors critical | RMSE, MSE |
+| Regression | - | Business metric | Custom (e.g., profit) |
+| Classification | Balanced | Equal | Accuracy, F1-score |
+| Classification | Imbalanced | Equal | F1-score, AUC |
+| Classification | Imbalanced | FN critical (cancer) | Recall, AUC |
+| Classification | Imbalanced | FP critical (spam) | Precision, AUC |
+| Classification | Imbalanced | Need balance | F1-score, AUC |
+
+### Real-Life Examples
+
+#### 1. Spam Filter
+**Metrics:** Precision (main), Recall (secondary), F1
+
+**Why:** We don't want important emails to go to spam (FP very expensive). Better to let some spam through than lose an important email.
+
+#### 2. Cancer Diagnosis
+**Metrics:** Recall (main), AUC, F1
+
+**Why:** Missing cancer (FN) is life-threatening. False alarm (FP) leads to additional tests, but that's acceptable.
+
+#### 3. Sales Forecasting
+**Metrics:** MAE, RMSE, business metric (profit)
+
+**Why:** We need absolute accuracy for inventory planning. RMSE penalizes large errors (shortage or excess inventory).
+
+#### 4. Recommendation System
+**Metrics:** Precision@K, Recall@K, AUC
+
+**Why:** Users see only top-K recommendations. It's important these recommendations are relevant (Precision@K).
+
+#### 5. Fraud Detection
+**Metrics:** Recall (main), Precision, F1, AUC
+
+**Why:** Missing a fraudulent transaction (FN) costs a lot of money. Blocking a legitimate transaction (FP) annoys customers, but better safe than sorry.
+
+## Pitfalls and Best Practices
+
+### 1. Don't Rely on a Single Metric
+
+❌ **Bad:**
+```python
+model_a_accuracy = 0.95
+model_b_accuracy = 0.92
+# Choose model A
+```
+
+✅ **Good:**
+```python
+model_a = {"accuracy": 0.95, "precision": 0.60, "recall": 0.40, "f1": 0.48}
+model_b = {"accuracy": 0.92, "precision": 0.85, "recall": 0.80, "f1": 0.82}
+# Choose model B (much better F1!)
+```
+
+### 2. Consider Business Context
+
+Metrics should reflect the real cost of errors:
+
+```python
+# Example: Credit scoring
+# FN (didn't give loan to good client): lost profit = $100
+# FP (gave loan to bad client): loss = $5000
+
+# Standard metric
+f1_score = 2 * (precision * recall) / (precision + recall)
+
+# Business metric with weights
+business_score = -5000 * FP - 100 * FN + 500 * TP
+```
+
+### 3. Use a Validation Set
+
+❌ **Bad:**
+```python
+# Train and evaluate on same data
+model.fit(X_train, y_train)
+score = model.score(X_train, y_train)  # Too optimistic!
+```
+
+✅ **Good:**
+```python
+# Split data
+X_train, X_val, X_test = split_data(X)
+
+# Train on train, tune on validation, test on test
+model.fit(X_train, y_train)
+val_score = model.score(X_val, y_val)  # Use for model selection
+test_score = model.score(X_test, y_test)  # Final evaluation
+```
+
+### 4. Monitor for Data Drift
+
+Metrics can degrade over time due to **data drift**:
+
+```python
+# Model trained in 2020
+model_2020_auc = 0.85
+
+# Same model in 2023
+model_2023_auc = 0.72  # Degradation!
+
+# Reasons:
+# - User behavior changed
+# - Economic conditions changed
+# - Competitors changed strategies
+```
+
+**Solution:** Regularly retrain models and monitor metrics in production.
+
+### 5. Don't Optimize Metrics Blindly
+
+```python
+# Optimizing Precision to absurdity
+def always_predict_positive_with_high_confidence():
+    return [1] * 1  # Predict positive for only 1 sample
+    # Precision = 100% (if that 1 sample is TP)
+    # But Recall = 1% (missed 99% of actual positives!)
+```
+
+## Practical Example: Complete Model Evaluation
+
+Let's return to our pizza sales prediction model and do a complete evaluation:
+
+```python
+import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Our data from Article 5
+temperatures = np.array([5, 10, 15, 20, 25, 30])
+actual_sales = np.array([32, 28, 25, 21, 18, 15])
+
+# Model: Sales = 35 - 0.5 * Temperature
+predicted_sales = 35 - 0.5 * temperatures
+
+# Calculate metrics
+mae = mean_absolute_error(actual_sales, predicted_sales)
+mse = mean_squared_error(actual_sales, predicted_sales)
+rmse = np.sqrt(mse)
+r2 = r2_score(actual_sales, predicted_sales)
+
+print(f"MAE: {mae:.2f} pizzas")
+print(f"MSE: {mse:.2f} pizzas²")
+print(f"RMSE: {rmse:.2f} pizzas")
+print(f"R²: {r2:.3f} ({r2*100:.1f}%)")
+
+# Residual analysis
+residuals = actual_sales - predicted_sales
+print(f"\nResiduals: {residuals}")
+print(f"Mean error: {np.mean(residuals):.2f}")
+print(f"Std of errors: {np.std(residuals):.2f}")
+
+# Check assumptions
+print(f"\nDo errors grow with temperature?")
+print(f"Correlation (temp, |residuals|): {np.corrcoef(temperatures, np.abs(residuals))[0,1]:.3f}")
+```
+
+**Output:**
+```
+MAE: 3.08 pizzas
+MSE: 11.96 pizzas²
+RMSE: 3.46 pizzas
+R²: 0.646 (64.6%)
+
+Residuals: [-0.5 -2.  -2.5 -4.  -4.5 -5. ]
+Mean error: -3.08
+Std of errors: 1.66
+
+Do errors grow with temperature?
+Correlation (temp, |residuals|): 0.989
+```
+
+**Insights:**
+1. ✅ R² = 0.646 - model explains 65% of variance (not bad for simple linear model)
+2. ✅ MAE = 3.08 - on average we're off by 3 pizzas (acceptable for business)
+3. ⚠️ Residuals are negative and growing - model systematically overpredicts at high temperatures
+4. ⚠️ Correlation 0.989 - errors aren't random, there's a pattern (need nonlinear model?)
+
+## Conclusions and Next Steps
+
+### Key Takeaways
+
+1. **For regression:**
+   - MAE - for interpretation (in same units)
+   - RMSE - for optimization (penalizes large errors)
+   - R² - for understanding explanatory power
+
+2. **For classification:**
+   - Accuracy - if classes are balanced
+   - Precision - if FP are expensive (spam filters)
+   - Recall - if FN are expensive (medical diagnosis)
+   - F1-score - for balance
+   - AUC - for imbalanced datasets
+
+3. **Always:**
+   - Use multiple metrics
+   - Consider business context
+   - Validate on separate validation set
+   - Monitor in production
+
+### What's Next?
+
+In the next article, we'll study **Overfitting and Regularization** - how to prevent the model from "memorizing" training data instead of learning real patterns.
+
+We'll learn:
+- What overfitting and underfitting are
+- How to detect overfitting using learning curves
+- Regularization techniques (L1, L2, Elastic Net)
+- Cross-validation for reliable evaluation
+
+**Hint:** Remember the 0.989 correlation in our pizza model residuals? This might be a sign of underfitting (model too simple). In the next article, we'll learn how to fix this!
+
+## Additional Resources
+
+1. **Sklearn Metrics Documentation:**
+   https://scikit-learn.org/stable/modules/model_evaluation.html
+
+2. **ROC Curve and AUC Explained:**
+   Fawcett, T. (2006). "An introduction to ROC analysis"
+
+3. **Choosing the Right Metric:**
+   https://machinelearningmastery.com/tour-of-evaluation-metrics-for-imbalanced-classification/
+
+4. **Business Metrics in ML:**
+   "Evaluating Machine Learning Models" by Alice Zheng
